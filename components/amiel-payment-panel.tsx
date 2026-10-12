@@ -2,11 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  updatePaymentStatus,
-  PAYMENT_STATUSES,
-  type PaymentStatus,
-} from "@/lib/actions/invoices";
+import { updatePaymentStatus } from "@/lib/actions/invoices";
+import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/invoices/payment-status";
 
 const STATUS_LABEL: Record<PaymentStatus, string> = {
   received_for_review: "התקבל לבדיקה",

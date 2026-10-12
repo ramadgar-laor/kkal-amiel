@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { invoiceSchema, type InvoiceInput } from "@/lib/validation/invoice";
+import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/invoices/payment-status";
 
 export async function submitInvoice(input: InvoiceInput) {
   const parsed = invoiceSchema.safeParse(input);
@@ -86,20 +87,6 @@ export async function decideInvoice(input: {
 
   return { success: true as const };
 }
-
-// The 3 Amiel-side payment stages, matching the DB check constraint on
-// `invoices.payment_status` exactly (the implicit starting value is
-// "not_sent", before KKAL has even approved the invoice — Amiel only ever
-// sets it to one of these 3, never back to "not_sent"). Per the original
-// spec (אפיון למערכת ניהול חשבוניות.docx, section 7), this payment stage is
-// the only one in the whole system meant to have a full management
-// Dashboard — everything upstream stays a simple list by design.
-export const PAYMENT_STATUSES = [
-  "received_for_review",
-  "approved_for_payment",
-  "paid",
-] as const;
-export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export async function updatePaymentStatus(input: {
   id: string;
