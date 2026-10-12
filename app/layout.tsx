@@ -7,6 +7,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { KklLogo } from "@/components/kkl-logo";
 import { KkalNav } from "@/components/kkal-nav";
+import { AmielNav } from "@/components/amiel-nav";
 import { ProfileMenu } from "@/components/profile-menu";
 import { createClient } from "@/lib/supabase/server";
 
@@ -57,6 +58,7 @@ export default async function RootLayout({
             </Link>
 
             {profile?.role === "kkal" && <KkalNav labels={dict.nav} />}
+            {profile?.role === "amiel" && <AmielNav labels={dict.nav} />}
 
             <div className="flex items-center gap-4 ms-auto">
               {!user && (

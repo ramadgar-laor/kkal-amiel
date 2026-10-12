@@ -86,3 +86,73 @@ export async function decideInvoice(input: {
 
   return { success: true as const };
 }
+
+// The 3 Amiel-side payment stages, matching the DB check constraint on
+// `invoices.payment_status` exactly (the implicit starting value is
+// "not_sent", before KKAL has even approved the invoice — Amiel only ever
+// sets it to one of these 3, never back to "not_sent"). Per the original
+// spec (אפיון למערכת ניהול חשבוניות.docx, section 7), this payment stage is
+// the only one in the whole system meant to have a full management
+// Dashboard — everything upstream stays a simple list by design.
+export const PAYMENT_STATUSES = [
+  "received_for_review",
+  "approved_for_payment",
+  "paid",
+] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+export async function updatePaymentStatus(input: {
+  id: string;
+  paymentStatus: PaymentStatus;
+  paidAmount?: number | null;
+  paymentCurrency?: string | null;
+  amielNotes?: string | null;
+}) {
+  if (!PAYMENT_STATUSES.includes(input.paymentStatus)) {
+    return { error: "invalid_input" as const };
+  }
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return { error: "not_authenticated" as const };
+  }
+
+  const { data: before } = await supabase
+    .from("invoices")
+    .select("payment_status")
+    .eq("id", input.id)
+    .single();
+
+  // Deliberately a single select-plus-fields-plus-save form rather than a
+  // forward-only wizard, so Amiel can correct a mistaken status at any
+  // time, not just progress through the 3 stages in order. paid_at is
+  // stamped only while the status is actually "paid", and cleared again if
+  // corrected away from it.
+  const { error } = await supabase
+    .from("invoices")
+    .update({
+      payment_status: input.paymentStatus,
+      paid_amount: input.paidAmount ?? null,
+      payment_currency: input.paymentCurrency || null,
+      paid_at: input.paymentStatus === "paid" ? new Date().toISOString() : null,
+      amiel_notes: input.amielNotes || null,
+    })
+    .eq("id", input.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  await supabase.from("status_audit_log").insert({
+    entity_type: "invoice",
+    entity_id: input.id,
+    actor_id: userData.user.id,
+    action: "payment_update",
+    from_value: before?.payment_status ?? null,
+    to_value: input.paymentStatus,
+    notes: input.amielNotes || null,
+  });
+
+  return { success: true as const };
+}

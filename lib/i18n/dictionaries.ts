@@ -10,6 +10,8 @@ export const dictionaries = {
       kkalReps: "שליחים לאישור",
       kkalEvents: "בקשות תקציב לאישור",
       kkalInvoices: "חשבוניות לאישור",
+      amielDashboard: "לוח בקרה",
+      amielInvoices: "חשבוניות ותשלומים",
     },
     roles: {
       rep: "שליח",
@@ -185,6 +187,8 @@ export const dictionaries = {
       kkalReps: "Ambassadors to approve",
       kkalEvents: "Budget requests to approve",
       kkalInvoices: "Invoices to approve",
+      amielDashboard: "Dashboard",
+      amielInvoices: "Invoices & payments",
     },
     roles: {
       rep: "Ambassador",
