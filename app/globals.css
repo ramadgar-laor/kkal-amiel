@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  /* Official KKL-JNF brand palette, taken directly from the client's logo
+     file (public/kkl-logo.svg): blue #0572ba, green #51b848, brown #926427. */
+  --kkl-blue-900: #063e61;
+  --kkl-blue-700: #045a91;
+  --kkl-blue-600: #0572ba;
+  --kkl-blue-100: #e7f1fa;
+  --kkl-green-700: #3d8a36;
+  --kkl-green-500: #51b848;
+  --kkl-green-100: #e9f7e7;
+  --kkl-brown-700: #926427;
+  --kkl-brown-100: #f5efe3;
+
+  --background: #ffffff;
+  --foreground: #221f20;
+
+  --color-brand: var(--kkl-blue-600);
+  --color-brand-dark: var(--kkl-blue-900);
+  --color-brand-light: var(--kkl-blue-100);
+  --color-accent: var(--kkl-green-500);
+  --color-accent-dark: var(--kkl-green-700);
+  --color-accent-light: var(--kkl-green-100);
+  --color-gold: var(--kkl-brown-700);
+  --color-gold-light: var(--kkl-brown-100);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand: var(--color-brand);
+  --color-brand-dark: var(--color-brand-dark);
+  --color-brand-light: var(--color-brand-light);
+  --color-accent: var(--color-accent);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent-light: var(--color-accent-light);
+  --color-gold: var(--color-gold);
+  --font-sans: "Segoe UI", system-ui, "Noto Sans Hebrew", "Arial Hebrew", Arial,
+    sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+[dir="rtl"] {
+  text-align: right;
+}
