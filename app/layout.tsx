@@ -56,9 +56,7 @@ export default async function RootLayout({
               <KklLogo className="h-12 w-auto py-1" />
             </Link>
 
-            {profile?.role === "kkal" && (
-              <KkalNav labels={dict.nav} comingSoonLabel={dict.common.comingSoon} />
-            )}
+            {profile?.role === "kkal" && <KkalNav labels={dict.nav} />}
 
             <div className="flex items-center gap-4 ms-auto">
               {!user && (

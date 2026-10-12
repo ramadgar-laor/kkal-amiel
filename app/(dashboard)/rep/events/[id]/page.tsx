@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/status-badge";
 import { getCountryName } from "@/lib/data/countries";
+import { InvoiceForm } from "@/components/invoice-form";
 
 export default async function RepEventDetailPage({
   params,
@@ -21,9 +22,17 @@ export default async function RepEventDetailPage({
 
   const { data: suppliers } = await supabase
     .from("event_suppliers")
-    .select("name, field, bank_details_known")
+    .select(
+      "id, name, field, bank_details_known, beneficiary_name, bank_name, account_number, swift_number"
+    )
     .eq("event_id", event.id)
     .order("sort_order", { ascending: true });
+
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("id, supplier_name, amount, currency, invoice_date, kkal_status, payment_status")
+    .eq("event_id", event.id)
+    .order("created_at", { ascending: false });
 
   const suppliersSummary = (suppliers ?? []).length
     ? (suppliers ?? [])
@@ -115,8 +124,48 @@ export default async function RepEventDetailPage({
       )}
 
       {(event.status === "approved" || event.status === "partially_approved") && (
-        <div className="mt-6 rounded-xl border border-dashed border-black/15 p-6 text-sm text-black/50">
-          הכנסת חשבוניות עבור אירוע זה — בבנייה, השלב הבא בתהליך.
+        <div className="mt-6 space-y-4">
+          {invoices && invoices.length > 0 && (
+            <div className="rounded-xl bg-white border border-black/5 p-4 shadow-sm">
+              <h2 className="font-semibold text-(--color-brand-dark) mb-2">
+                חשבוניות שהוזנו
+              </h2>
+              <div className="divide-y divide-black/5">
+                {invoices.map((inv) => (
+                  <div
+                    key={inv.id}
+                    className="py-2 flex items-center justify-between text-sm gap-3"
+                  >
+                    <div>
+                      {inv.supplier_name} · {inv.amount} {inv.currency} ·{" "}
+                      {inv.invoice_date}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge status={inv.kkal_status} />
+                      {inv.kkal_status === "approved" && (
+                        <StatusBadge status={inv.payment_status} />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <InvoiceForm
+            eventId={event.id}
+            defaultCurrency={event.requested_currency}
+            suppliers={(suppliers ?? []).map((s) => ({
+              id: s.id,
+              name: s.name,
+              field: s.field,
+              bankDetailsKnown: s.bank_details_known,
+              beneficiaryName: s.beneficiary_name,
+              bankName: s.bank_name,
+              accountNumber: s.account_number,
+              swiftNumber: s.swift_number,
+            }))}
+          />
         </div>
       )}
     </div>

@@ -5,16 +5,15 @@ import { usePathname } from "next/navigation";
 
 export function KkalNav({
   labels,
-  comingSoonLabel,
 }: {
   labels: { kkalReps: string; kkalEvents: string; kkalInvoices: string };
-  comingSoonLabel: string;
 }) {
   const pathname = usePathname();
 
   const items = [
     { href: "/kkal/reps", label: labels.kkalReps },
     { href: "/kkal/events", label: labels.kkalEvents },
+    { href: "/kkal/invoices", label: labels.kkalInvoices },
   ];
 
   return (
@@ -38,12 +37,6 @@ export function KkalNav({
           </Link>
         );
       })}
-      <span
-        className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium text-black/30"
-        title={comingSoonLabel}
-      >
-        {labels.kkalInvoices}
-      </span>
     </nav>
   );
 }

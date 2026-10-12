@@ -27,7 +27,11 @@ export default async function KkalDashboardPage() {
       value: pendingEvents ?? 0,
       href: "/kkal/events",
     },
-    { label: "חשבוניות לאישור", value: pendingInvoices ?? 0, href: null },
+    {
+      label: "חשבוניות לאישור",
+      value: pendingInvoices ?? 0,
+      href: "/kkal/invoices",
+    },
   ];
 
   return (
@@ -78,10 +82,6 @@ export default async function KkalDashboardPage() {
         </div>
         <span className="text-(--color-brand) text-xl">←</span>
       </Link>
-
-      <p className="text-sm text-black/50">
-        אישור חשבוניות — בבנייה, השלב הבא בתהליך.
-      </p>
     </div>
   );
 }
