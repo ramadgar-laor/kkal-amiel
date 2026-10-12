@@ -3,14 +3,17 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createUser } from "@/lib/actions/admin";
 import {
   createUserSchema,
   STAFF_ROLES,
   type CreateUserInput,
 } from "@/lib/validation/admin";
-import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
+import {
+  focusFirstInvalidField,
+  scrollElementIntoView,
+} from "@/lib/forms/scroll-to-error";
 
 const ROLE_LABEL: Record<string, string> = {
   kkal: 'קק"ל',
@@ -22,6 +25,7 @@ export function AdminCreateUserForm() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const serverErrorRef = useRef<HTMLDivElement>(null);
   const [createdEmail, setCreatedEmail] = useState<string | null>(null);
   const {
     register,
@@ -33,6 +37,10 @@ export function AdminCreateUserForm() {
     shouldFocusError: false,
     defaultValues: { role: "kkal" },
   });
+
+  useEffect(() => {
+    if (serverError) scrollElementIntoView(serverErrorRef.current);
+  }, [serverError]);
 
   async function onSubmit(values: CreateUserInput) {
     setServerError(null);
@@ -92,7 +100,10 @@ export function AdminCreateUserForm() {
         </div>
       )}
       {serverError && (
-        <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
+        <div
+          ref={serverErrorRef}
+          className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2"
+        >
           {serverError}
         </div>
       )}

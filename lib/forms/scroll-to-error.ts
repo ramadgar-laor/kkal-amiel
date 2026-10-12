@@ -102,3 +102,15 @@ export function focusFirstInvalidField(
 ) {
   scrollToErrorField(findFirstErrorFieldName(errors));
 }
+
+// A server-side submit failure (a failed upload, an RLS rejection, a
+// network error) sets a banner at the top of the form — but on a long
+// form the user may have scrolled well past the top by the time they
+// submit, so the banner can appear completely off-screen. Pair this with
+// a ref on that banner and a `useEffect` that calls it whenever the error
+// text changes, so the failure is actually visible instead of looking
+// like the submit silently did nothing.
+export function scrollElementIntoView(el: HTMLElement | null) {
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+}

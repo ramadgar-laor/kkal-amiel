@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   repRegistrationSchema,
   PARTICIPATION_LEVELS,
@@ -20,7 +20,10 @@ import { createClient } from "@/lib/supabase/client";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
 import { Required } from "@/components/form-required-mark";
-import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
+import {
+  focusFirstInvalidField,
+  scrollElementIntoView,
+} from "@/lib/forms/scroll-to-error";
 
 export function RegisterForm({
   dict,
@@ -30,6 +33,7 @@ export function RegisterForm({
   locale: Locale;
 }) {
   const [serverError, setServerError] = useState<string | null>(null);
+  const serverErrorRef = useRef<HTMLDivElement>(null);
   const [success, setSuccess] = useState(false);
   const {
     register,
@@ -48,6 +52,10 @@ export function RegisterForm({
       institutionType: "",
     },
   });
+
+  useEffect(() => {
+    if (serverError) scrollElementIntoView(serverErrorRef.current);
+  }, [serverError]);
 
   const maritalStatus = watch("maritalStatus");
   const organization = watch("organization");
@@ -136,7 +144,10 @@ export function RegisterForm({
       className="space-y-8"
     >
       {serverError && (
-        <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
+        <div
+          ref={serverErrorRef}
+          className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2"
+        >
           {serverError}
         </div>
       )}

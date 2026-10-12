@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,10 @@ import { submitInvoice } from "@/lib/actions/invoices";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
 import { Required } from "@/components/form-required-mark";
-import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
+import {
+  focusFirstInvalidField,
+  scrollElementIntoView,
+} from "@/lib/forms/scroll-to-error";
 
 export type InvoiceSupplierOption = {
   id: string;
@@ -54,6 +57,7 @@ export function InvoiceForm({
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const serverErrorRef = useRef<HTMLDivElement>(null);
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [prefillId, setPrefillId] = useState("");
@@ -82,6 +86,10 @@ export function InvoiceForm({
       file: null,
     },
   });
+
+  useEffect(() => {
+    if (serverError) scrollElementIntoView(serverErrorRef.current);
+  }, [serverError]);
 
   function applyPrefill(id: string) {
     setPrefillId(id);
@@ -176,7 +184,10 @@ export function InvoiceForm({
       </h3>
 
       {serverError && (
-        <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
+        <div
+          ref={serverErrorRef}
+          className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2"
+        >
           {serverError}
         </div>
       )}

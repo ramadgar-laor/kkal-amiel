@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   repEditSchema,
   REP_STATUSES,
@@ -17,7 +17,10 @@ import {
 } from "@/lib/data/kkal-reps-options";
 import { COUNTRIES_HE } from "@/lib/data/countries";
 import { updateRepDetails } from "@/lib/actions/reps";
-import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
+import {
+  focusFirstInvalidField,
+  scrollElementIntoView,
+} from "@/lib/forms/scroll-to-error";
 
 const STATUS_LABEL: Record<RepStatus, string> = {
   pending: "ממתין לאישור",
@@ -99,6 +102,7 @@ export function RepEditForm({
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const serverErrorRef = useRef<HTMLDivElement>(null);
   const [saved, setSaved] = useState(false);
   const {
     register,
@@ -109,6 +113,10 @@ export function RepEditForm({
     shouldFocusError: false,
     defaultValues: toInput(rep),
   });
+
+  useEffect(() => {
+    if (serverError) scrollElementIntoView(serverErrorRef.current);
+  }, [serverError]);
 
   async function onSubmit(values: RepEditInput) {
     setServerError(null);
@@ -133,7 +141,10 @@ export function RepEditForm({
       className="space-y-8"
     >
       {serverError && (
-        <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
+        <div
+          ref={serverErrorRef}
+          className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2"
+        >
           שמירת השינויים נכשלה. נסו שוב.
         </div>
       )}
