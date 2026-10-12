@@ -10,6 +10,7 @@ import {
   STAFF_ROLES,
   type CreateUserInput,
 } from "@/lib/validation/admin";
+import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
 
 const ROLE_LABEL: Record<string, string> = {
   kkal: 'קק"ל',
@@ -29,6 +30,7 @@ export function AdminCreateUserForm() {
     formState: { errors, isSubmitting },
   } = useForm<CreateUserInput>({
     resolver: zodResolver(createUserSchema),
+    shouldFocusError: false,
     defaultValues: { role: "kkal" },
   });
 
@@ -95,7 +97,10 @@ export function AdminCreateUserForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={handleSubmit(onSubmit, focusFirstInvalidField)}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>אימייל</label>

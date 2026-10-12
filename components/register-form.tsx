@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
 import { Required } from "@/components/form-required-mark";
+import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
 
 export function RegisterForm({
   dict,
@@ -37,6 +38,10 @@ export function RegisterForm({
     formState: { errors, isSubmitting },
   } = useForm<RepRegistrationInput>({
     resolver: zodResolver(repRegistrationSchema),
+    // Driven manually (see focusFirstInvalidField below) so a missing
+    // required field on this long form scrolls into view on submit,
+    // rather than the submit silently appearing to do nothing.
+    shouldFocusError: false,
     defaultValues: {
       maritalStatus: "",
       organization: "",
@@ -126,7 +131,10 @@ export function RegisterForm({
   const noteClass = "text-xs text-black/50 mt-1";
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form
+      onSubmit={handleSubmit(onSubmit, focusFirstInvalidField)}
+      className="space-y-8"
+    >
       {serverError && (
         <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
           {serverError}

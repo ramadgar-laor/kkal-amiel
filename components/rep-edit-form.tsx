@@ -17,6 +17,7 @@ import {
 } from "@/lib/data/kkal-reps-options";
 import { COUNTRIES_HE } from "@/lib/data/countries";
 import { updateRepDetails } from "@/lib/actions/reps";
+import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
 
 const STATUS_LABEL: Record<RepStatus, string> = {
   pending: "ממתין לאישור",
@@ -105,6 +106,7 @@ export function RepEditForm({
     formState: { errors, isSubmitting },
   } = useForm<RepEditInput>({
     resolver: zodResolver(repEditSchema),
+    shouldFocusError: false,
     defaultValues: toInput(rep),
   });
 
@@ -126,7 +128,10 @@ export function RepEditForm({
   const errorClass = "text-xs text-red-600 mt-1";
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form
+      onSubmit={handleSubmit(onSubmit, focusFirstInvalidField)}
+      className="space-y-8"
+    >
       {serverError && (
         <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
           שמירת השינויים נכשלה. נסו שוב.

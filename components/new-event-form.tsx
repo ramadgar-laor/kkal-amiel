@@ -13,6 +13,7 @@ import { createEvent } from "@/lib/actions/events";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
 import { COUNTRIES_HE } from "@/lib/data/countries";
+import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
 import {
   KKAL_PRESENCE_OPTIONS,
   KKAL_PRESENCE_MIN_SELECTIONS,
@@ -138,6 +139,11 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
     formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
+    // We drive focus-on-error ourselves (see focusFirstInvalidField below)
+    // so it reliably scrolls long sections (budget lines, suppliers) into
+    // view — not just .focus(), which a collapsed/off-screen field can
+    // make look like nothing happened.
+    shouldFocusError: false,
     defaultValues: {
       orgAffiliation: repDefaults.organization || "",
       registeredToProgram: undefined,
@@ -317,7 +323,10 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
   const busy = isSubmitting || uploading;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form
+      onSubmit={handleSubmit(onSubmit, focusFirstInvalidField)}
+      className="space-y-8"
+    >
       {serverError && (
         <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
           {serverError}
@@ -681,6 +690,7 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
             </label>
             <input
               type="file"
+              name="ongoingProgramFile"
               className={inputClass}
               onChange={(e) =>
                 setValue("ongoingProgramFile", e.target.files?.[0] ?? null, {
@@ -725,7 +735,7 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
           <FieldError message={errors.transferAmountNote?.message} />
         </div>
 
-        <div>
+        <div data-field-name="budgetItems">
           <div className="flex items-center justify-between">
             <label className={labelClass}>
               אומדן תקציבי מפורט
@@ -854,7 +864,7 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
       </section>
 
       {/* Suppliers */}
-      <section className={sectionClass}>
+      <section className={sectionClass} data-field-name="suppliers">
         <div className="flex items-center justify-between">
           <h2 className={sectionTitleClass}>הספק המקומי</h2>
           <button
@@ -1081,6 +1091,7 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
                 <label className={labelClass}>קובץ ההצעה</label>
                 <input
                   type="file"
+                  name={`${key}.file`}
                   className={inputClass}
                   onChange={(e) =>
                     setValue(
@@ -1148,7 +1159,7 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
           נבחרו {selections.length} מתוך {KKAL_PRESENCE_MIN_SELECTIONS} הנדרשים
           לפחות.
         </p>
-        <div className="space-y-2">
+        <div className="space-y-2" data-field-name="kkalPresenceSelections">
           {KKAL_PRESENCE_OPTIONS.map((opt) => (
             <label
               key={opt.key}

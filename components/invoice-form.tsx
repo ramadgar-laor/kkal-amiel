@@ -13,6 +13,7 @@ import { submitInvoice } from "@/lib/actions/invoices";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
 import { Required } from "@/components/form-required-mark";
+import { focusFirstInvalidField } from "@/lib/forms/scroll-to-error";
 
 export type InvoiceSupplierOption = {
   id: string;
@@ -64,6 +65,7 @@ export function InvoiceForm({
     formState: { errors, isSubmitting },
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
+    shouldFocusError: false,
     defaultValues: {
       eventId,
       supplierName: "",
@@ -166,7 +168,7 @@ export function InvoiceForm({
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, focusFirstInvalidField)}
       className="space-y-5 rounded-xl border border-black/10 bg-white p-5"
     >
       <h3 className="font-semibold text-(--color-brand-dark)">
@@ -312,6 +314,7 @@ export function InvoiceForm({
         </label>
         <input
           type="file"
+          name="file"
           className={inputClass}
           onChange={(e) =>
             setValue("file", e.target.files?.[0] ?? null, {
