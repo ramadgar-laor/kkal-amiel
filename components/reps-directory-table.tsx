@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { RepStatusSelect } from "@/components/rep-status-select";
 import { getCountryName } from "@/lib/data/countries";
@@ -50,6 +50,7 @@ function formatDate(d: string | null) {
 }
 
 export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
 
@@ -107,7 +108,9 @@ export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
       {filtered.length === 0 ? (
         <p className="text-sm text-black/50">לא נמצאו שליחים התואמים לחיפוש.</p>
       ) : (
-        <div className="rounded-xl bg-white border border-black/5 overflow-x-auto">
+        <div className="space-y-1.5">
+          <p className="text-xs text-black/40">לחיצה על שורה פותחת את פרטי השליח לעריכה.</p>
+          <div className="rounded-xl bg-white border border-black/5 overflow-x-auto">
           <table className="w-full text-xs min-w-[1100px]">
             <thead>
               <tr className="border-b border-black/10 text-black/50 text-start">
@@ -122,12 +125,26 @@ export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
                 <th className="px-3 py-2 font-medium text-start">תאריכי שליחות</th>
                 <th className="px-3 py-2 font-medium text-start">נרשם בתאריך</th>
                 <th className="px-3 py-2 font-medium text-start">סטטוס</th>
-                <th className="px-3 py-2 font-medium text-start">פעולות</th>
+                <th className="px-3 py-2 font-medium text-start">עדכון סטטוס / פרטים</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {filtered.map((r) => (
-                <tr key={r.profileId} className="hover:bg-black/[0.015]">
+              {filtered.map((r) => {
+                const href = `/kkal/reps/${r.profileId}`;
+                return (
+                <tr
+                  key={r.profileId}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => router.push(href)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      router.push(href);
+                    }
+                  }}
+                  className="cursor-pointer hover:bg-(--color-brand-light)/50"
+                >
                   <td className="px-3 py-2 font-medium whitespace-nowrap">
                     {r.displayName}
                     {r.localName && (
@@ -173,21 +190,23 @@ export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
                   <td className="px-3 py-2 whitespace-nowrap">
                     <StatusBadge status={r.status} />
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
+                  <td
+                    className="px-3 py-2 whitespace-nowrap"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="flex items-center gap-2">
                       <RepStatusSelect profileId={r.profileId} status={r.status} />
-                      <Link
-                        href={`/kkal/reps/${r.profileId}`}
-                        className="text-(--color-brand) underline"
-                      >
-                        עריכה
-                      </Link>
+                      <span className="text-(--color-brand)" aria-hidden="true">
+                        ←
+                      </span>
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

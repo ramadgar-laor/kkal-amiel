@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { getCountryName } from "@/lib/data/countries";
 
@@ -70,6 +70,7 @@ function formatAmount(amount: number | null, currency: string) {
 }
 
 export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
+  const router = useRouter();
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -167,7 +168,9 @@ export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
       {filtered.length === 0 ? (
         <p className="text-sm text-black/50">לא נמצאו אירועים התואמים לחיפוש.</p>
       ) : (
-        <div className="rounded-xl bg-white border border-black/5 overflow-x-auto">
+        <div className="space-y-1.5">
+          <p className="text-xs text-black/40">לחיצה על שורה פותחת את פרטי האירוע לבדיקה ואישור.</p>
+          <div className="rounded-xl bg-white border border-black/5 overflow-x-auto">
           <table className="w-full text-xs min-w-[1200px]">
             <thead>
               <tr className="border-b border-black/10 text-black/50 text-start">
@@ -180,20 +183,30 @@ export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
                 <th className="px-3 py-2 font-medium text-start">סכום מבוקש</th>
                 <th className="px-3 py-2 font-medium text-start">סכום מאושר</th>
                 <th className="px-3 py-2 font-medium text-start">חשבוניות</th>
-                <th className="px-3 py-2 font-medium text-start">פעולות</th>
+                <th className="px-3 py-2 font-medium text-center">פרטים</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
               {filtered.map((r) => {
                 const rowTiming = timingOf(r, todayIso);
                 const badge = TIMING_BADGE[rowTiming];
+                const href = `/kkal/events/${r.id}`;
                 return (
                   <tr
                     key={r.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => router.push(href)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        router.push(href);
+                      }
+                    }}
                     className={
                       rowTiming === "past"
-                        ? "hover:bg-black/[0.015] opacity-60"
-                        : "hover:bg-black/[0.015]"
+                        ? "cursor-pointer hover:bg-(--color-brand-light)/50 opacity-60"
+                        : "cursor-pointer hover:bg-(--color-brand-light)/50"
                     }
                   >
                     <td className="px-3 py-2 font-medium whitespace-nowrap max-w-[220px] truncate">
@@ -245,19 +258,15 @@ export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
                         "—"
                       )}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      <Link
-                        href={`/kkal/events/${r.id}`}
-                        className="text-(--color-brand) underline"
-                      >
-                        פרטים ואישור
-                      </Link>
+                    <td className="px-3 py-2 whitespace-nowrap text-(--color-brand) text-center">
+                      ←
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

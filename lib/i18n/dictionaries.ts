@@ -7,6 +7,15 @@ export const dictionaries = {
       login: "כניסה למערכת",
       register: "הרשמת שליח חדש",
       logout: "התנתקות",
+      kkalReps: "שליחים לאישור",
+      kkalEvents: "בקשות תקציב לאישור",
+      kkalInvoices: "חשבוניות לאישור",
+    },
+    roles: {
+      rep: "שליח",
+      kkal: 'קק"ל',
+      amiel: "עמיאל",
+      admin: "מנהל מערכת",
     },
     login: {
       title: "כניסה למערכת",
@@ -164,6 +173,7 @@ export const dictionaries = {
       loading: "טוען...",
       switchToEnglish: "English",
       switchToHebrew: "עברית",
+      comingSoon: "בקרוב",
     },
   },
   en: {
@@ -172,6 +182,15 @@ export const dictionaries = {
       login: "Sign in",
       register: "Register as a new ambassador",
       logout: "Sign out",
+      kkalReps: "Ambassadors to approve",
+      kkalEvents: "Budget requests to approve",
+      kkalInvoices: "Invoices to approve",
+    },
+    roles: {
+      rep: "Ambassador",
+      kkal: "KKL",
+      amiel: "Amiel",
+      admin: "Admin",
     },
     login: {
       title: "Sign in",
@@ -331,6 +350,7 @@ export const dictionaries = {
       loading: "Loading...",
       switchToEnglish: "English",
       switchToHebrew: "עברית",
+      comingSoon: "Coming soon",
     },
   },
 } satisfies Record<Locale, unknown>;
