@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AdminRoleSelect } from "@/components/admin-role-select";
 import { AdminCreateUserForm } from "@/components/admin-create-user-form";
@@ -31,9 +32,18 @@ export default async function AdminDashboardPage() {
           לוח בקרה — מנהל מערכת
         </h1>
         <p className="text-sm text-black/60 mt-1">
-          ניהול משתמשים והרשאות גישה למערכת.
+          ניהול משתמשים והרשאות גישה למערכת. יש גם גישה מלאה לכל מסכי קק&quot;ל
+          ועמיאל (ראו תפריט הניווט למעלה), ולהגדרות מערכת שניתן לערוך בלי
+          לשנות קוד.
         </p>
       </div>
+
+      <Link
+        href="/admin/settings"
+        className="inline-flex items-center gap-1 rounded-md border border-(--color-brand) text-(--color-brand) text-sm font-medium px-4 py-2 hover:bg-(--color-brand-light) transition"
+      >
+        הגדרות מערכת ←
+      </Link>
 
       <div className="flex flex-wrap gap-3">
         {Object.entries(ROLE_LABEL).map(([role, label]) => (

@@ -22,6 +22,7 @@ import {
   KKAL_PRESENCE_MIN_SELECTIONS,
 } from "@/lib/data/kkal-presence";
 import { Required } from "@/components/form-required-mark";
+import { renderLiteMarkdown } from "@/lib/content/lite-markdown";
 
 export type RepDefaults = {
   firstName: string;
@@ -128,7 +129,15 @@ function Consent({
   );
 }
 
-export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
+export function NewEventForm({
+  repDefaults,
+  introMarkdown,
+}: {
+  repDefaults: RepDefaults;
+  // The form's "preceding text" block, editable by an admin via
+  // /admin/settings without a code change (lib/content/settings-defs.ts).
+  introMarkdown: string;
+}) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const serverErrorRef = useRef<HTMLDivElement>(null);
@@ -349,117 +358,11 @@ export function NewEventForm({ repDefaults }: { repDefaults: RepDefaults }) {
         חובה.
       </p>
 
-      {/* Verbatim intro text from the real KKL event-budget-request form */}
+      {/* Editable by an admin via /admin/settings (lib/content/settings-defs.ts
+          -> new_event_intro_he) -- originally verbatim intro text from the
+          real KKL event-budget-request form. */}
       <div className="rounded-lg border border-(--color-brand)/20 bg-(--color-brand-light) p-5 text-sm leading-relaxed space-y-3">
-        <h2 className="font-bold text-(--color-brand-dark) text-base">
-          פרוייקט קק&quot;ל בקהילה של שגרירי קק&quot;ל
-        </h2>
-        <p>
-          תוכנית שגרירי קק&quot;ל עולה קומה ומעודדת פעילות מקומיות של שגרירי
-          קק&quot;ל בתפוצות להנכחת קק&quot;ל והבאתה לידי ביטוי בקהילות
-          במסגרות מקומיות של אירועים שונים וחיבור הקהילות לישראל ולציונות.
-        </p>
-        <p>
-          חטיבת החינוך של קק&quot;ל תוכל לתמוך בשני מסלולים:
-          <br />
-          1. אירוע חד פעמי - בסכום של עד 10,000 ש&quot;ח לאירוע של שגריר
-          קק&quot;ל.
-          <br />
-          2. תוכנית מתמשכת (לפחות 20 מפגשים + אירוע מרכזי) - בסכום של עד
-          20,000 ש&quot;ח לכלל האירועים של שגריר קק&quot;ל.
-        </p>
-        <p>
-          התשלום יבוצע באמצעות זכיין של קק&quot;ל אל ספק מקומי במדינה בה
-          יתקיים האירוע. דוגמאות לאירועים אפשריים: מסיבת חנוכה, אירוע
-          ט&quot;ו בשבט, שבתון, סמינר, כנס, או כל פעילות אחרת המחזקת את
-          הזהות הציונית והקשר לישראל.
-        </p>
-        <ul className="list-disc ps-5 space-y-1">
-          <li>
-            נא לקרוא בעיון ובקפדנות את כלל ההנחיות וכלל השאלות ולענות בצורה
-            מלאה, ברורה ומפורטת.
-          </li>
-          <li>
-            ביצוע פעולות ומילוי הבקשה שלא לפי ההנחיות עלול לגרום לעיכוב
-            משמעותי בטיפול בבקשה ואף לפסילתה.
-          </li>
-          <li>נא למלא את כלל השאלות המופיעות בטופס זה.</li>
-        </ul>
-        <div>
-          <div className="font-semibold">דרישות:</div>
-          <ol className="list-decimal ps-5 space-y-1 mt-1">
-            <li>
-              הבקשה בטופס זה תוגש לא פחות מ-14 ימי עסקים בישראל (ללא שישי
-              שבת) לפני התאריך של הפעילות.
-            </li>
-            <li>
-              המפיק המקומי / הספק המקומי הוא יישות משפטית מקומית שיכול
-              לקבל כסף באמצעות העברה בנקאית מחו&quot;ל (מישראל אל מדינת
-              היעד) ולספק הוכחות ביצוע, מסמכים וקבלות מתאימות כנדרש.
-            </li>
-            <li>
-              כלל האירועים והתוכניות החד פעמיים או המתמשכים צריכים להיות
-              מתוכננים להתבצע לא יאוחר מסוף חודש ינואר – כלומר ט&quot;ו
-              בשבט הוא האירוע האחרון לביצוע.
-            </li>
-            <li>
-              האירוע חייב שיהיה עם הקשר ציוני, ישראלי, יהודי הקשור במעגל
-              השנה הישראלי או היהודי.
-            </li>
-            <li>
-              נראות קק&quot;ל באירוע: באירוע עצמו ייתלה דגל קק&quot;ל במקום
-              מרכזי ובולט; האירוע יצולם וישוגרו אלינו 2 תמונות הכי טובות
-              שמביעות את הלך הרוח של האירוע ושבהן יופיע דגל קק&quot;ל;
-              והאירוע ימותג על ידכם באופן קק&quot;לי, כולל התייחסות לצוות
-              המקומי של JNF (צורת המיתוג תיקבע בתיאום עם רפרנט המדינה —
-              לדוגמא מצגת/סרטון קצר של קק&quot;ל בפתיחת האירוע, דגלול
-              האירוע בדגלי קק&quot;ל, נאום של נציג קק&quot;ל המקומי/האזורי
-              וכו׳). בהמשך הטופס יש רשימה ארוכה של אפשרויות נוספות לנראות
-              קק&quot;ל.
-            </li>
-          </ol>
-        </div>
-        <div>
-          <div className="font-semibold">דגשים ונקודות חשובות:</div>
-          <ol className="list-decimal ps-5 space-y-1 mt-1">
-            <li>הספק המקומי אינו יכול להיות ישראלי. חייב להיות ספק מחו&quot;ל.</li>
-            <li>הספק אינו יכול להיות ספק באינטרנט כמו אמזון וכו׳.</li>
-            <li>אין אפשרות לשלם החזר הוצאות לשגריר קק&quot;ל שהוציא מכספו.</li>
-            <li>
-              אין אפשרות לשלם לארגון, עמותה, מוסד חינוכי או כל גורם שאינו
-              עוסק בתחום הקשור להפקה או אספקה של האירוע — הגוף חייב להיות:
-              חברה, עוסק מורשה, עוסק פטור או דומה.
-            </li>
-            <li>התשלום הוא אך ורק לספק / מפיק מקומי.</li>
-          </ol>
-        </div>
-        <p>
-          זוג שגרירים יקבל תמיכה אחת בלבד לשני בני הזוג. יעד בו יש יותר
-          משגריר אחד שאינם בני זוג יוכלו לקבל תמיכה עבור כל פעילות במידה
-          שהאירוע מיועד לקבוצות אוכלוסייה שונות.
-        </p>
-        <p>
-          התוכנית מיועדת לקהילות שאינן נתמכות בידי חטיבת החינוך של
-          קק&quot;ל (מי שלא בטוח מה סטטוס המדינה שלו, שיבדוק עם הרפרנט של
-          המדינה שלו אצלינו במחלקה).
-        </p>
-        <ul className="list-disc ps-5 space-y-1 font-medium">
-          <li>
-            מילוי הבקשה בטופס זה אינה מהווה התחייבות מקק&quot;ל לתמיכה
-            במיזם ו/או בפעילות המוצעת.
-          </li>
-          <li>כל בקשה תיבחן בוועדה ייעודית ותשובה תישלח אל הפונה.</li>
-          <li>
-            לפני אישור בקשה, יתקיים תיאום עם נציגי קק&quot;ל בארץ ונציגי
-            הלשכה המקומית.
-          </li>
-          <li>ישולם לפי שער המרה של יום התשלום.</li>
-          <li>איננו אחראים לעמלות שייגבו על ידי הבנק המקומי.</li>
-        </ul>
-        <p className="text-xs text-black/60">
-          הגורם המשלם מטעם קק&quot;ל: חברת עמיאל (Amiel tours Ltd), Yoni
-          Netanyahu Street, Or Yehuda 60376, P.O. Box 557, 60250, ISRAEL.
-        </p>
+        {renderLiteMarkdown(introMarkdown)}
       </div>
 
       {/* Ambassador / affiliation confirmation */}

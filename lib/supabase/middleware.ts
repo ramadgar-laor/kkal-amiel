@@ -79,6 +79,19 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    // Admin gets everything kkal and amiel staff can do, on top of its own
+    // /admin section -- it's the one role allowed to cross into another
+    // role's route prefix. (Not /rep: that flow is tied to the visitor's
+    // own `reps` row, which an admin user doesn't have.)
+    if (role === "admin") {
+      if (pathname.startsWith("/rep")) {
+        const url = request.nextUrl.clone();
+        url.pathname = home;
+        return NextResponse.redirect(url);
+      }
+      return supabaseResponse;
+    }
+
     const otherRoleRoots = Object.values(ROLE_HOME).filter((r) => r !== home);
     if (otherRoleRoots.some((root) => pathname.startsWith(root))) {
       const url = request.nextUrl.clone();

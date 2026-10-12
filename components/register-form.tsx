@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
 import { Required } from "@/components/form-required-mark";
+import { renderLiteMarkdown } from "@/lib/content/lite-markdown";
 import {
   focusFirstInvalidField,
   scrollElementIntoView,
@@ -28,9 +29,13 @@ import {
 export function RegisterForm({
   dict,
   locale,
+  introMarkdown,
 }: {
   dict: Dictionary;
   locale: Locale;
+  // The form's "preceding text" block, editable by an admin via
+  // /admin/settings without a code change (lib/content/settings-defs.ts).
+  introMarkdown: string;
 }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const serverErrorRef = useRef<HTMLDivElement>(null);
@@ -156,26 +161,11 @@ export function RegisterForm({
         <span className="text-red-600">*</span> {dict.register.requiredNote}
       </p>
 
-      {/* Verbatim intro text from the real KKL ambassador-registration
-          Google Form ("תוכנית שגרירי קק"ל"). */}
+      {/* Editable by an admin via /admin/settings (lib/content/settings-defs.ts
+          -> register_intro_he / register_intro_en) -- originally verbatim
+          intro text from the real KKL ambassador-registration Google Form. */}
       <div className="rounded-lg border border-(--color-brand)/20 bg-(--color-brand-light) p-5 text-sm leading-relaxed space-y-3">
-        <h2 className="font-bold text-(--color-brand-dark) text-base">
-          {dict.register.introTitle}
-        </h2>
-        {dict.register.introParagraphs.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-        <div>
-          <div className="font-semibold">
-            {dict.register.introEligibilityTitle}
-          </div>
-          <p className="mt-1">{dict.register.introEligibilityLead}</p>
-          <ul className="list-disc ps-5 space-y-1 mt-1">
-            {dict.register.introEligibilityList.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </div>
+        {renderLiteMarkdown(introMarkdown)}
       </div>
 
       <section className="space-y-4">

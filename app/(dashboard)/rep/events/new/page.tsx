@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSystemSetting } from "@/lib/content/settings-read";
 import { NewEventForm } from "@/components/new-event-form";
 
 export default async function NewEventPage() {
@@ -24,6 +25,8 @@ export default async function NewEventPage() {
     .eq("id", userData.user!.id)
     .single();
 
+  const introMarkdown = await getSystemSetting("new_event_intro_he");
+
   return (
     <div className="max-w-3xl">
       <Link href="/rep" className="text-sm text-(--color-brand) underline">
@@ -34,6 +37,7 @@ export default async function NewEventPage() {
       </h1>
       <div className="mt-6 rounded-xl bg-white border border-black/5 p-6 shadow-sm">
         <NewEventForm
+          introMarkdown={introMarkdown}
           repDefaults={{
             firstName: rep.first_name_he ?? "",
             lastName: rep.last_name_he ?? "",

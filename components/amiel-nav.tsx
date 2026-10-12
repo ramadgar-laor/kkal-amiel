@@ -6,13 +6,18 @@ import { usePathname } from "next/navigation";
 export function AmielNav({
   labels,
 }: {
-  labels: { amielDashboard: string; amielInvoices: string };
+  labels: {
+    amielDashboard: string;
+    amielInvoices: string;
+    amielEvents: string;
+  };
 }) {
   const pathname = usePathname();
 
   const items = [
     { href: "/amiel", label: labels.amielDashboard },
     { href: "/amiel/invoices", label: labels.amielInvoices },
+    { href: "/amiel/events", label: labels.amielEvents },
   ];
 
   return (
