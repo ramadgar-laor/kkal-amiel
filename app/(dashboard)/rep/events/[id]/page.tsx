@@ -30,7 +30,9 @@ export default async function RepEventDetailPage({
 
   const { data: invoices } = await supabase
     .from("invoices")
-    .select("id, supplier_name, amount, currency, invoice_date, kkal_status, payment_status")
+    .select(
+      "id, supplier_name, amount, currency, ils_amount, invoice_date, kkal_status, payment_status"
+    )
     .eq("event_id", event.id)
     .order("created_at", { ascending: false });
 
@@ -137,7 +139,8 @@ export default async function RepEventDetailPage({
                     className="py-2 flex items-center justify-between text-sm gap-3"
                   >
                     <div>
-                      {inv.supplier_name} · {inv.amount} {inv.currency} ·{" "}
+                      {inv.supplier_name} · {inv.amount} {inv.currency}
+                      {inv.ils_amount != null ? ` (₪${inv.ils_amount})` : ""} ·{" "}
                       {inv.invoice_date}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">

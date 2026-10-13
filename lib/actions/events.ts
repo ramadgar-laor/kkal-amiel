@@ -149,7 +149,7 @@ export async function reviewEvent(input: {
 
   const { data: before } = await supabase
     .from("events")
-    .select("status, requested_amount")
+    .select("status, requested_amount, requested_currency")
     .eq("id", input.id)
     .single();
 
@@ -160,11 +160,23 @@ export async function reviewEvent(input: {
         ? input.approvedAmount ?? null
         : null;
 
+  // kkal approves events on their ILS value (item 5) -- every event created
+  // through the current form is denominated in ILS already
+  // (createEvent() hardcodes requested_currency: "ILS"), so approved_amount
+  // already IS the ILS figure in that case. approved_amount_ils is kept as
+  // an explicit, separately-named column so it's unambiguous on dashboards
+  // and robust against any non-ILS legacy event.
+  const approvedAmountIls =
+    approvedAmount != null && (before?.requested_currency ?? "ILS") === "ILS"
+      ? approvedAmount
+      : null;
+
   const { error } = await supabase
     .from("events")
     .update({
       status: input.decision,
       approved_amount: approvedAmount,
+      approved_amount_ils: approvedAmountIls,
       kkal_notes: input.notes || null,
       reviewed_by: userData.user.id,
       reviewed_at: new Date().toISOString(),

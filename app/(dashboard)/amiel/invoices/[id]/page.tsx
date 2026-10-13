@@ -31,7 +31,7 @@ export default async function AmielInvoiceDetailPage({
   const { data: invoice } = await supabase
     .from("invoices")
     .select(
-      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, invoice_date, file_path, kkal_status, kkal_notes, payment_status, paid_amount, payment_currency, paid_at, amiel_notes, created_at"
+      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, payment_status, paid_amount, payment_currency, paid_at, amiel_notes, created_at"
     )
     .eq("id", id)
     .eq("kkal_status", "approved")
@@ -98,8 +98,16 @@ export default async function AmielInvoiceDetailPage({
         <Field label="ספק" value={invoice.supplier_name} />
         <Field label="תחום עיסוק" value={invoice.supplier_field} />
         <Field
-          label="סכום לתשלום"
+          label="סכום החשבונית (מקורי)"
           value={`${invoice.amount} ${invoice.currency}`}
+        />
+        <Field
+          label="סכום לתשלום"
+          value={`${invoice.payment_amount} ${invoice.payment_amount_currency}`}
+        />
+        <Field
+          label="סכום בשקלים (₪)"
+          value={invoice.ils_amount != null ? `₪${invoice.ils_amount}` : null}
         />
         <Field label="תאריך חשבונית" value={invoice.invoice_date} />
         <Field
@@ -131,6 +139,15 @@ export default async function AmielInvoiceDetailPage({
         <h2 className={sectionTitleClass}>פרטי חשבון הבנק</h2>
         <Field label="שם בעל החשבון" value={invoice.supplier_beneficiary_name} />
         <Field label="שם הבנק" value={invoice.supplier_bank_name} />
+        <Field label="כתובת הבנק" value={invoice.supplier_bank_address} />
+        <Field
+          label="מדינת הבנק"
+          value={
+            invoice.supplier_bank_country
+              ? getCountryName(invoice.supplier_bank_country)
+              : null
+          }
+        />
         <Field label="מספר חשבון / IBAN" value={invoice.supplier_iban} />
         <Field label="SWIFT" value={invoice.supplier_swift} />
         <Field label="טלפון איש קשר בספק" value={invoice.supplier_contact_phone} />
@@ -177,8 +194,8 @@ export default async function AmielInvoiceDetailPage({
             }
             currentPaymentCurrency={invoice.payment_currency}
             currentNotes={invoice.amiel_notes}
-            invoiceAmount={Number(invoice.amount)}
-            invoiceCurrency={invoice.currency}
+            invoiceAmount={Number(invoice.payment_amount)}
+            invoiceCurrency={invoice.payment_amount_currency}
           />
         </div>
       </section>

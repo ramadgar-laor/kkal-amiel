@@ -81,7 +81,7 @@ export default async function RootLayout({
         </header>
         <main className="flex-1 bg-(--color-brand-light)/40">{children}</main>
         <footer className="border-t border-black/10 py-4 text-center text-xs text-black/50">
-          © {new Date().getFullYear()} קרן קיימת לישראל
+          © {new Date().getFullYear()} קרן קיימת לישראל ועמיאל טורס
         </footer>
       </body>
     </html>

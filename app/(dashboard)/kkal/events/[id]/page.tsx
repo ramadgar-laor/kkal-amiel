@@ -56,7 +56,7 @@ export default async function KkalEventDetailPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, rep_id, name, purpose, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, status, kkal_notes, reviewed_at, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, transfer_amount_note, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, event_quotes(slot, quote_file_path, contact_phone, contact_email), invoices(id, amount, currency, invoice_date, kkal_status, payment_status, paid_amount, supplier_name)"
+      "id, rep_id, name, purpose, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, reviewed_at, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, transfer_amount_note, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, event_quotes(slot, quote_file_path, contact_phone, contact_email), invoices(id, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, paid_amount, supplier_name)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -134,6 +134,18 @@ export default async function KkalEventDetailPage({
   const invoicesPendingCount = invoices.filter(
     (inv) => inv.payment_status !== "paid"
   ).length;
+
+  // Item 5: kkal approves events on their ILS value, so the ILS figure
+  // actually approved for this event needs to be clearly comparable
+  // against the ILS total of the invoices submitted against it, in order
+  // to catch overages.
+  const invoicesIlsTotal = invoices.reduce(
+    (sum, inv) => sum + Number(inv.ils_amount ?? 0),
+    0
+  );
+  const approvedAmountIls = event.approved_amount_ils ?? event.approved_amount;
+  const ilsOverage =
+    approvedAmountIls != null ? invoicesIlsTotal - approvedAmountIls : null;
 
   const isActionable =
     event.status === "submitted" || event.status === "info_requested";
@@ -447,6 +459,27 @@ export default async function KkalEventDetailPage({
 
       <section className={sectionClass}>
         <h2 className={sectionTitleClass}>חשבוניות</h2>
+
+        {approvedAmountIls != null && (
+          <div className="py-2 grid grid-cols-3 gap-4 text-sm">
+            <div className="text-black/50">אושר לאירוע (₪)</div>
+            <div className="col-span-2 flex items-center gap-3 flex-wrap">
+              <span>₪{Number(approvedAmountIls).toLocaleString("he-IL")}</span>
+              <span className="text-black/40">·</span>
+              <span>
+                סה״כ חשבוניות (₪)
+                {" "}
+                {invoicesIlsTotal.toLocaleString("he-IL")}
+              </span>
+              {ilsOverage != null && ilsOverage > 0 && (
+                <span className="rounded-full bg-red-100 text-red-700 px-2.5 py-0.5 text-xs font-medium">
+                  חריגה של ₪{ilsOverage.toLocaleString("he-IL")}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {invoices.length === 0 ? (
           <p className="text-sm text-black/50 py-2">
             טרם הוזנו חשבוניות עבור אירוע זה.
@@ -470,6 +503,7 @@ export default async function KkalEventDetailPage({
               >
                 <div>
                   {inv.supplier_name} · {inv.amount} {inv.currency}
+                  {inv.ils_amount != null ? ` (₪${inv.ils_amount})` : ""}
                 </div>
                 <StatusBadge status={inv.payment_status} />
               </div>

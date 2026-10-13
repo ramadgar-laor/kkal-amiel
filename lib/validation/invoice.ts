@@ -7,14 +7,22 @@ import { z } from "zod";
 // point in the process where they're needed, since this is what actually
 // drives payment. See lib/validation/event.ts's supplierSchema comment for
 // the deferred side of this design.
+// The 2 currencies Amiel can actually pay a supplier in (item 4 of the
+// invoice-overhaul request) -- distinct from the original invoice currency
+// below, which stays free text since a supplier can invoice in anything.
+export const PAYMENT_AMOUNT_CURRENCIES = ["USD", "EUR"] as const;
+export type PaymentAmountCurrency = (typeof PAYMENT_AMOUNT_CURRENCIES)[number];
+
 export const invoiceSchema = z.object({
   eventId: z.string().trim().min(1),
 
   supplierName: z.string().trim().min(1),
   supplierField: z.string().trim().optional().or(z.literal("")),
   supplierBankName: z.string().trim().min(1),
+  supplierBankAddress: z.string().trim().min(1),
+  supplierBankCountry: z.string().trim().min(1),
   supplierIban: z.string().trim().min(1),
-  supplierSwift: z.string().trim().optional().or(z.literal("")),
+  supplierSwift: z.string().trim().min(1),
   supplierBeneficiaryName: z.string().trim().min(1),
   supplierContactPhone: z.string().trim().optional().or(z.literal("")),
   supplierContactEmail: z
@@ -26,8 +34,16 @@ export const invoiceSchema = z.object({
       message: "invalid_email",
     }),
 
+  // Original invoice amount, in whatever currency the supplier billed in.
   amount: z.coerce.number().positive(),
   currency: z.string().trim().min(1),
+  // What Amiel will actually transfer to the supplier -- restricted to the
+  // 2 currencies Amiel pays in.
+  paymentAmount: z.coerce.number().positive(),
+  paymentAmountCurrency: z.enum(PAYMENT_AMOUNT_CURRENCIES),
+  // The invoice amount in ILS, so kkal/Amiel can track it against the
+  // event's approved ILS budget (item 5).
+  ilsAmount: z.coerce.number().positive(),
   invoiceDate: z.string().trim().min(1),
 
   filePath: z.string().trim().min(1),
@@ -47,8 +63,10 @@ export const invoiceFormSchema = z
     supplierName: z.string().trim().min(1),
     supplierField: z.string().trim().optional().or(z.literal("")),
     supplierBankName: z.string().trim().min(1),
+    supplierBankAddress: z.string().trim().min(1),
+    supplierBankCountry: z.string().trim().min(1),
     supplierIban: z.string().trim().min(1),
-    supplierSwift: z.string().trim().optional().or(z.literal("")),
+    supplierSwift: z.string().trim().min(1),
     supplierBeneficiaryName: z.string().trim().min(1),
     supplierContactPhone: z.string().trim().optional().or(z.literal("")),
     supplierContactEmail: z
@@ -66,6 +84,17 @@ export const invoiceFormSchema = z
       .min(1)
       .refine((v) => Number(v) > 0, { message: "must_be_positive" }),
     currency: z.string().trim().min(1),
+    paymentAmount: z
+      .string()
+      .trim()
+      .min(1)
+      .refine((v) => Number(v) > 0, { message: "must_be_positive" }),
+    paymentAmountCurrency: z.enum(PAYMENT_AMOUNT_CURRENCIES),
+    ilsAmount: z
+      .string()
+      .trim()
+      .min(1)
+      .refine((v) => Number(v) > 0, { message: "must_be_positive" }),
     invoiceDate: z.string().trim().min(1),
 
     file: z.instanceof(File).nullable(),

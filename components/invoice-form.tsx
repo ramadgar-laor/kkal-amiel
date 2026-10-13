@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   invoiceFormSchema,
+  PAYMENT_AMOUNT_CURRENCIES,
   type InvoiceFormValues,
   type InvoiceInput,
 } from "@/lib/validation/invoice";
@@ -13,6 +14,7 @@ import { submitInvoice } from "@/lib/actions/invoices";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
 import { Required } from "@/components/form-required-mark";
+import { COUNTRIES_HE } from "@/lib/data/countries";
 import {
   focusFirstInvalidField,
   scrollElementIntoView,
@@ -75,6 +77,8 @@ export function InvoiceForm({
       supplierName: "",
       supplierField: "",
       supplierBankName: "",
+      supplierBankAddress: "",
+      supplierBankCountry: "",
       supplierIban: "",
       supplierSwift: "",
       supplierBeneficiaryName: "",
@@ -82,6 +86,9 @@ export function InvoiceForm({
       supplierContactEmail: "",
       amount: "",
       currency: defaultCurrency || "",
+      paymentAmount: "",
+      paymentAmountCurrency: "USD",
+      ilsAmount: "",
       invoiceDate: "",
       file: null,
     },
@@ -126,6 +133,8 @@ export function InvoiceForm({
         supplierName: values.supplierName,
         supplierField: values.supplierField,
         supplierBankName: values.supplierBankName,
+        supplierBankAddress: values.supplierBankAddress,
+        supplierBankCountry: values.supplierBankCountry,
         supplierIban: values.supplierIban,
         supplierSwift: values.supplierSwift,
         supplierBeneficiaryName: values.supplierBeneficiaryName,
@@ -133,6 +142,9 @@ export function InvoiceForm({
         supplierContactEmail: values.supplierContactEmail,
         amount: Number(values.amount),
         currency: values.currency,
+        paymentAmount: Number(values.paymentAmount),
+        paymentAmountCurrency: values.paymentAmountCurrency,
+        ilsAmount: Number(values.ilsAmount),
         invoiceDate: values.invoiceDate,
         filePath,
       };
@@ -260,8 +272,38 @@ export function InvoiceForm({
           <FieldError message={errors.supplierIban?.message} />
         </div>
         <div>
-          <label className={labelClass}>קוד סוויפט (SWIFT)</label>
+          <label className={labelClass}>
+            קוד סוויפט (SWIFT)
+            <Required />
+          </label>
           <input className={inputClass} {...register("supplierSwift")} />
+          <FieldError message={errors.supplierSwift?.message} />
+        </div>
+        <div>
+          <label className={labelClass}>
+            כתובת הבנק
+            <Required />
+          </label>
+          <input
+            className={inputClass}
+            {...register("supplierBankAddress")}
+          />
+          <FieldError message={errors.supplierBankAddress?.message} />
+        </div>
+        <div>
+          <label className={labelClass}>
+            מדינת הבנק
+            <Required />
+          </label>
+          <select className={inputClass} {...register("supplierBankCountry")}>
+            <option value="">בחר/י מדינה</option>
+            {COUNTRIES_HE.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <FieldError message={errors.supplierBankCountry?.message} />
         </div>
         <div>
           <label className={labelClass}>טלפון איש קשר בספק</label>
@@ -278,43 +320,95 @@ export function InvoiceForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className={labelClass}>
-            סכום החשבונית
-            <Required />
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            className={inputClass}
-            {...register("amount")}
-          />
-          <FieldError message={errors.amount?.message} />
+      <div className="rounded-lg bg-black/[0.02] p-3 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>
+              סכום החשבונית (במטבע המקורי)
+              <Required />
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              className={inputClass}
+              {...register("amount")}
+            />
+            <FieldError message={errors.amount?.message} />
+          </div>
+          <div>
+            <label className={labelClass}>
+              מטבע החשבונית
+              <Required />
+            </label>
+            <input
+              placeholder="USD / EUR / ..."
+              className={inputClass}
+              {...register("currency")}
+            />
+            <FieldError message={errors.currency?.message} />
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>
-            מטבע
-            <Required />
-          </label>
-          <input
-            placeholder="USD / EUR / ..."
-            className={inputClass}
-            {...register("currency")}
-          />
-          <FieldError message={errors.currency?.message} />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>
+              סכום לתשלום
+              <Required />
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              className={inputClass}
+              {...register("paymentAmount")}
+            />
+            <FieldError message={errors.paymentAmount?.message} />
+          </div>
+          <div>
+            <label className={labelClass}>
+              מטבע התשלום
+              <Required />
+            </label>
+            <select
+              className={inputClass}
+              {...register("paymentAmountCurrency")}
+            >
+              {PAYMENT_AMOUNT_CURRENCIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <FieldError message={errors.paymentAmountCurrency?.message} />
+            <p className={noteClass}>עמיאל מעבירים תשלום לספקים רק בדולר או ביורו.</p>
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>
-            תאריך החשבונית
-            <Required />
-          </label>
-          <input
-            type="date"
-            className={inputClass}
-            {...register("invoiceDate")}
-          />
-          <FieldError message={errors.invoiceDate?.message} />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>
+              סכום החשבונית בשקלים (₪)
+              <Required />
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              className={inputClass}
+              {...register("ilsAmount")}
+            />
+            <FieldError message={errors.ilsAmount?.message} />
+          </div>
+          <div>
+            <label className={labelClass}>
+              תאריך החשבונית
+              <Required />
+            </label>
+            <input
+              type="date"
+              className={inputClass}
+              {...register("invoiceDate")}
+            />
+            <FieldError message={errors.invoiceDate?.message} />
+          </div>
         </div>
       </div>
 
