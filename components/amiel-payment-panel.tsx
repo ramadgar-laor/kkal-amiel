@@ -184,7 +184,9 @@ export function AmielPaymentPanel({
         {!notesRequired && (
           <>
             <div>
-              <label className={labelClass}>סכום ששולם</label>
+              <label className={labelClass}>
+                {isPaid ? "סכום ששולם" : "סכום לתשלום"}
+              </label>
               <input
                 type="number"
                 step="0.01"
