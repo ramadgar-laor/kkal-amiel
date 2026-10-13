@@ -13,8 +13,11 @@ export const dictionaries = {
       amielDashboard: "לוח בקרה",
       amielInvoices: "חשבוניות ותשלומים",
       amielEvents: "אירועים מאושרים",
+      adminDashboard: "לוח בקרה",
       adminUsers: "ניהול משתמשים",
       adminSettings: "הגדרות מערכת",
+      groupKkal: 'קק"ל',
+      groupAmiel: "עמיאל",
     },
     roles: {
       rep: "שליח",
@@ -39,6 +42,24 @@ export const dictionaries = {
       repNotFound:
         'לא נמצא חשבון שליח רשום לכתובת זו. יש להירשם קודם בעמוד ההרשמה.',
       staffSubtitle: "התחברות עבור צוות קק\"ל ועמיאל בלבד, עם סיסמה.",
+      forgotPassword: "שכחת סיסמה?",
+      resetSubtitle:
+        "הזן/י את כתובת המייל של חשבון הצוות שלך, ונשלח אליך קישור לאיפוס הסיסמה.",
+      resetSubmit: "שליחת קישור לאיפוס סיסמה",
+      resetSent:
+        "נשלח אליך מייל עם קישור לאיפוס הסיסמה. פתח/י אותו מהמכשיר הזה כדי להגדיר סיסמה חדשה.",
+      resetError: "שליחת הקישור נכשלה, נסו שוב.",
+      backToLogin: "חזרה להתחברות",
+      updatePasswordTitle: "קביעת סיסמה חדשה",
+      updatePasswordSubtitle: "הזן/י סיסמה חדשה לחשבון שלך.",
+      newPassword: "סיסמה חדשה",
+      confirmPassword: "אימות סיסמה",
+      updatePasswordSubmit: "שמירת סיסמה",
+      updatePasswordMismatch: "הסיסמאות אינן תואמות",
+      updatePasswordTooShort: "הסיסמה חייבת להיות באורך 8 תווים לפחות",
+      updatePasswordError: "שמירת הסיסמה נכשלה, נסו שוב",
+      updatePasswordSuccess: "הסיסמה עודכנה בהצלחה.",
+      updatePasswordContinue: "מעבר למערכת",
     },
     register: {
       title: "הרשמת שליח חדש",
@@ -193,8 +214,11 @@ export const dictionaries = {
       amielDashboard: "Dashboard",
       amielInvoices: "Invoices & payments",
       amielEvents: "Approved events",
+      adminDashboard: "Dashboard",
       adminUsers: "User management",
       adminSettings: "System settings",
+      groupKkal: "KKL",
+      groupAmiel: "Amiel",
     },
     roles: {
       rep: "Ambassador",
@@ -220,6 +244,24 @@ export const dictionaries = {
       repNotFound:
         "No ambassador account is registered with this email. Please register first.",
       staffSubtitle: "Sign-in for KKL and Amiel staff only, with a password.",
+      forgotPassword: "Forgot password?",
+      resetSubtitle:
+        "Enter your staff account's email, and we'll send you a link to reset your password.",
+      resetSubmit: "Send password reset link",
+      resetSent:
+        "We've emailed you a password reset link. Open it on this device to set a new password.",
+      resetError: "Sending the link failed, please try again.",
+      backToLogin: "Back to sign in",
+      updatePasswordTitle: "Set a new password",
+      updatePasswordSubtitle: "Enter a new password for your account.",
+      newPassword: "New password",
+      confirmPassword: "Confirm password",
+      updatePasswordSubmit: "Save password",
+      updatePasswordMismatch: "Passwords do not match",
+      updatePasswordTooShort: "Password must be at least 8 characters",
+      updatePasswordError: "Saving the password failed, please try again",
+      updatePasswordSuccess: "Password updated successfully.",
+      updatePasswordContinue: "Go to the system",
     },
     register: {
       title: "New ambassador registration",
