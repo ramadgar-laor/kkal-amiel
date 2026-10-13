@@ -220,6 +220,7 @@ export function NewEventForm({
           beneficiaryAddress: "",
           bankName: "",
           bankAddress: "",
+          bankCountry: "",
           accountNumber: "",
           achRoutingNumber: "",
           swiftNumber: "",
@@ -809,6 +810,7 @@ export function NewEventForm({
                 beneficiaryAddress: "",
                 bankName: "",
                 bankAddress: "",
+                bankCountry: "",
                 accountNumber: "",
                 achRoutingNumber: "",
                 swiftNumber: "",
@@ -951,6 +953,27 @@ export function NewEventForm({
                       />
                       <FieldError
                         message={supplierErrors?.bankAddress?.message}
+                        dict={dict}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>
+                        {d.bankCountryLabel}
+                        <Required />
+                      </label>
+                      <select
+                        className={inputClass}
+                        {...register(`suppliers.${index}.bankCountry`)}
+                      >
+                        <option value="">{dict.register.selectCountry}</option>
+                        {countries.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      <FieldError
+                        message={supplierErrors?.bankCountry?.message}
                         dict={dict}
                       />
                     </div>

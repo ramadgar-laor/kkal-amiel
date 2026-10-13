@@ -62,6 +62,7 @@ const supplierSchema = z
     beneficiaryAddress: z.string().trim().optional().or(z.literal("")),
     bankName: z.string().trim().optional().or(z.literal("")),
     bankAddress: z.string().trim().optional().or(z.literal("")),
+    bankCountry: z.string().trim().optional().or(z.literal("")),
     accountNumber: z.string().trim().optional().or(z.literal("")),
     achRoutingNumber: z.string().trim().optional().or(z.literal("")),
     swiftNumber: z.string().trim().optional().or(z.literal("")),
@@ -74,6 +75,7 @@ const supplierSchema = z
         "beneficiaryAddress",
         "bankName",
         "bankAddress",
+        "bankCountry",
         "accountNumber",
         "swiftNumber",
       ] as const

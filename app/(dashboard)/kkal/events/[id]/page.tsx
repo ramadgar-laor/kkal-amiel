@@ -96,7 +96,7 @@ export default async function KkalEventDetailPage({
   const { data: suppliersData } = await supabase
     .from("event_suppliers")
     .select(
-      "id, name, field, bank_details_known, beneficiary_name, beneficiary_address, bank_name, bank_address, account_number, ach_routing_number, swift_number"
+      "id, name, field, bank_details_known, beneficiary_name, beneficiary_address, bank_name, bank_address, bank_country, account_number, ach_routing_number, swift_number"
     )
     .eq("event_id", event.id)
     .order("sort_order", { ascending: true });
@@ -383,6 +383,10 @@ export default async function KkalEventDetailPage({
                     />
                     <Field label="שם הבנק" value={s.bank_name} />
                     <Field label="כתובת סניף הבנק" value={s.bank_address} />
+                    <Field
+                      label="מדינת הבנק"
+                      value={s.bank_country ? getCountryName(s.bank_country) : null}
+                    />
                     <Field label="מספר חשבון" value={s.account_number} />
                     <Field label="SWIFT" value={s.swift_number} />
                     <Field

@@ -31,6 +31,7 @@ export type InvoiceSupplierOption = {
   beneficiaryName: string | null;
   bankName: string | null;
   bankAddress: string | null;
+  bankCountry: string | null;
   accountNumber: string | null;
   swiftNumber: string | null;
 };
@@ -138,9 +139,13 @@ export function InvoiceForm({
       setValue("supplierBeneficiaryName", s.beneficiaryName || "", {
         shouldValidate: true,
       });
-      // event_suppliers never collects a bank *country* (only added later,
-      // specifically for invoices) -- so supplierBankCountry can't be
-      // prefilled here and always needs the rep to pick it manually.
+      // event_suppliers only started collecting bank *country* once the
+      // event-creation form added the field (see new-event-form.tsx) -- so
+      // suppliers created before that still won't have one here, and the
+      // rep will need to pick it manually for those older events.
+      if (s.bankCountry) {
+        setValue("supplierBankCountry", s.bankCountry, { shouldValidate: true });
+      }
     }
   }
 

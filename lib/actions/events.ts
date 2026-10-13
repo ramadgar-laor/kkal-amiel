@@ -112,6 +112,7 @@ export async function createEvent(input: EventInput) {
       s.bankDetailsKnown === "yes" ? s.beneficiaryAddress || null : null,
     bank_name: s.bankDetailsKnown === "yes" ? s.bankName || null : null,
     bank_address: s.bankDetailsKnown === "yes" ? s.bankAddress || null : null,
+    bank_country: s.bankDetailsKnown === "yes" ? s.bankCountry || null : null,
     account_number: s.bankDetailsKnown === "yes" ? s.accountNumber || null : null,
     ach_routing_number:
       s.bankDetailsKnown === "yes" ? s.achRoutingNumber || null : null,

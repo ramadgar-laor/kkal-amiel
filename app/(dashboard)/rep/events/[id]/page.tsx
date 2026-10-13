@@ -38,7 +38,7 @@ export default async function RepEventDetailPage({
   const { data: suppliers } = await supabase
     .from("event_suppliers")
     .select(
-      "id, name, field, bank_details_known, beneficiary_name, bank_name, bank_address, account_number, swift_number"
+      "id, name, field, bank_details_known, beneficiary_name, bank_name, bank_address, bank_country, account_number, swift_number"
     )
     .eq("event_id", event.id)
     .order("sort_order", { ascending: true });
@@ -260,6 +260,7 @@ export default async function RepEventDetailPage({
               beneficiaryName: s.beneficiary_name,
               bankName: s.bank_name,
               bankAddress: s.bank_address,
+              bankCountry: s.bank_country,
               accountNumber: s.account_number,
               swiftNumber: s.swift_number,
             }))}

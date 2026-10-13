@@ -319,6 +319,7 @@ export const dictionaries = {
       beneficiaryAddressLabel: "כתובת בעל החשבון",
       bankNameLabel: "שם הבנק",
       bankAddressLabel: "כתובת סניף הבנק",
+      bankCountryLabel: "מדינת הבנק",
       accountNumberLabel: "מספר חשבון הבנק",
       swiftLabel: "קוד סוויפט (SWIFT)",
       achRoutingLabel:
@@ -743,6 +744,7 @@ export const dictionaries = {
       beneficiaryAddressLabel: "Account holder's address",
       bankNameLabel: "Bank name",
       bankAddressLabel: "Bank branch address",
+      bankCountryLabel: "Bank country",
       accountNumberLabel: "Bank account number",
       swiftLabel: "SWIFT code",
       achRoutingLabel:
