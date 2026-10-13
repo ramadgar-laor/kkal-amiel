@@ -17,6 +17,7 @@ import {
 } from "@/lib/data/kkal-reps-options";
 import { COUNTRIES_HE } from "@/lib/data/countries";
 import { updateRepDetails } from "@/lib/actions/reps";
+import { DateFieldDMY } from "@/components/date-field-dmy";
 import {
   focusFirstInvalidField,
   scrollElementIntoView,
@@ -107,6 +108,8 @@ export function RepEditForm({
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RepEditInput>({
     resolver: zodResolver(repEditSchema),
@@ -220,8 +223,13 @@ export function RepEditForm({
           </div>
           <div>
             <label className={labelClass}>תאריך לידה</label>
-            <input type="date"
-              lang="en-GB" className={inputClass} {...register("dateOfBirth")} />
+            <DateFieldDMY
+              className={inputClass}
+              value={watch("dateOfBirth")}
+              onChange={(iso) =>
+                setValue("dateOfBirth", iso, { shouldValidate: true })
+              }
+            />
           </div>
           <div>
             <label className={labelClass}>מצב משפחתי</label>
@@ -280,16 +288,24 @@ export function RepEditForm({
           </div>
           <div>
             <label className={labelClass}>תאריך תחילת שליחות</label>
-            <input type="date"
-              lang="en-GB" className={inputClass} {...register("missionStartDate")} />
+            <DateFieldDMY
+              className={inputClass}
+              value={watch("missionStartDate")}
+              onChange={(iso) =>
+                setValue("missionStartDate", iso, { shouldValidate: true })
+              }
+            />
           </div>
           <div>
             <label className={labelClass}>תאריך צפי לסיום שליחות</label>
-            <input
-              type="date"
-              lang="en-GB"
+            <DateFieldDMY
               className={inputClass}
-              {...register("missionEndDateExpected")}
+              value={watch("missionEndDateExpected")}
+              onChange={(iso) =>
+                setValue("missionEndDateExpected", iso, {
+                  shouldValidate: true,
+                })
+              }
             />
           </div>
           <div>

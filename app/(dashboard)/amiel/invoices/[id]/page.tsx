@@ -227,6 +227,8 @@ export default async function AmielInvoiceDetailPage({
                 : null
             }
             currentPaidAt={invoice.paid_at}
+            currentReceiptFilePath={invoice.payment_receipt_file_path}
+            currentReceiptUrl={receiptUrl}
             invoiceAmount={Number(invoice.payment_amount)}
             invoiceCurrency={invoice.payment_amount_currency}
           />

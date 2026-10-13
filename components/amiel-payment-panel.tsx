@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePaymentStatus } from "@/lib/actions/invoices";
+import { DateFieldDMY } from "@/components/date-field-dmy";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
 import {
@@ -28,6 +29,8 @@ export function AmielPaymentPanel({
   currentPaidAmountIls,
   currentPaymentExchangeRate,
   currentPaidAt,
+  currentReceiptFilePath,
+  currentReceiptUrl,
   invoiceAmount,
   invoiceCurrency,
 }: {
@@ -39,6 +42,13 @@ export function AmielPaymentPanel({
   currentPaidAmountIls: number | null;
   currentPaymentExchangeRate: number | null;
   currentPaidAt: string | null;
+  // The invoice's already-saved payment receipt, if any -- so re-saving a
+  // "paid" invoice (e.g. just to fix a note) doesn't force re-uploading the
+  // same receipt file every time. currentReceiptUrl is a signed URL for
+  // displaying/opening it; currentReceiptFilePath is the storage path kept
+  // as-is when the person doesn't pick a replacement file.
+  currentReceiptFilePath: string | null;
+  currentReceiptUrl: string | null;
   invoiceAmount: number;
   invoiceCurrency: string;
 }) {
@@ -112,27 +122,31 @@ export function AmielPaymentPanel({
         setPending(false);
         return;
       }
-      try {
-        const supabase = createClient();
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user) {
-          setError("יש להתחבר מחדש כדי לשמור");
-          setPending(false);
-          return;
-        }
-        if (receiptFile) {
+      if (receiptFile) {
+        try {
+          const supabase = createClient();
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) {
+            setError("יש להתחבר מחדש כדי לשמור");
+            setPending(false);
+            return;
+          }
           receiptFilePath = await uploadEventFile(
             supabase,
             userData.user.id,
             receiptFile
           );
-        } else {
-          setError("יש להעלות קובץ אסמכתא לתשלום");
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "העלאת הקובץ נכשלה");
           setPending(false);
           return;
         }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "העלאת הקובץ נכשלה");
+      } else if (currentReceiptFilePath) {
+        // No new file chosen -- keep the receipt already on file instead of
+        // forcing a re-upload every time this invoice is saved while paid.
+        receiptFilePath = currentReceiptFilePath;
+      } else {
+        setError("יש להעלות קובץ אסמכתא לתשלום");
         setPending(false);
         return;
       }
@@ -240,24 +254,39 @@ export function AmielPaymentPanel({
               תאריך תשלום
               <span className="text-red-600"> *</span>
             </label>
-            <input
-              type="date"
-              lang="en-GB"
+            <DateFieldDMY
               className={inputClass}
               value={paidDate}
-              onChange={(e) => setPaidDate(e.target.value)}
+              onChange={setPaidDate}
             />
           </div>
           <div>
             <label className={labelClass}>
               קובץ אסמכתא לתשלום
-              <span className="text-red-600"> *</span>
+              {!currentReceiptFilePath && <span className="text-red-600"> *</span>}
             </label>
             <input
               type="file"
               className={inputClass}
               onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
             />
+            {currentReceiptFilePath && (
+              <p className="text-xs text-black/50 mt-1">
+                {currentReceiptUrl ? (
+                  <a
+                    href={currentReceiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-(--color-brand) underline"
+                  >
+                    הצגת האסמכתא הקיימת
+                  </a>
+                ) : (
+                  "קיימת אסמכתא שמורה"
+                )}
+                {" "}— יש להעלות קובץ רק אם רוצים להחליף אותה.
+              </p>
+            )}
           </div>
         </div>
       )}

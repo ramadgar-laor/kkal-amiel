@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
 import { Required } from "@/components/form-required-mark";
+import { DateFieldDMY } from "@/components/date-field-dmy";
 import { renderLiteMarkdown } from "@/lib/content/lite-markdown";
 import {
   focusFirstInvalidField,
@@ -44,6 +45,7 @@ export function RegisterForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RepRegistrationInput>({
     resolver: zodResolver(repRegistrationSchema),
@@ -249,11 +251,12 @@ export function RegisterForm({
               {dict.register.dateOfBirth}
               <Required />
             </label>
-            <input
-              type="date"
-              lang="en-GB"
+            <DateFieldDMY
               className={inputClass}
-              {...register("dateOfBirth")}
+              value={watch("dateOfBirth")}
+              onChange={(iso) =>
+                setValue("dateOfBirth", iso, { shouldValidate: true })
+              }
             />
             {errors.dateOfBirth && (
               <p className={errorClass}>{dict.common.required}</p>
@@ -402,11 +405,12 @@ export function RegisterForm({
             <label className={labelClass}>
               {dict.register.missionStartDate}
             </label>
-            <input
-              type="date"
-              lang="en-GB"
+            <DateFieldDMY
               className={inputClass}
-              {...register("missionStartDate")}
+              value={watch("missionStartDate")}
+              onChange={(iso) =>
+                setValue("missionStartDate", iso, { shouldValidate: true })
+              }
             />
           </div>
           <div className="sm:col-span-2">
@@ -416,11 +420,14 @@ export function RegisterForm({
             <p className={noteClass}>
               {dict.register.missionEndDateExpectedNote}
             </p>
-            <input
-              type="date"
-              lang="en-GB"
+            <DateFieldDMY
               className={inputClass}
-              {...register("missionEndDateExpected")}
+              value={watch("missionEndDateExpected")}
+              onChange={(iso) =>
+                setValue("missionEndDateExpected", iso, {
+                  shouldValidate: true,
+                })
+              }
             />
           </div>
         </div>

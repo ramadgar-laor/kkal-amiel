@@ -22,6 +22,7 @@ import {
   KKAL_PRESENCE_MIN_SELECTIONS,
 } from "@/lib/data/kkal-presence";
 import { Required } from "@/components/form-required-mark";
+import { DateFieldDMY } from "@/components/date-field-dmy";
 import { renderLiteMarkdown } from "@/lib/content/lite-markdown";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
@@ -459,15 +460,13 @@ export function NewEventForm({
               <Required />
             </label>
             <p className={noteClass}>{d.startDateNote}</p>
-            <input
-              type="date"
-              lang="en-GB"
+            <DateFieldDMY
               className={inputClass}
-              {...register("startDate", {
-                onChange: (e) => {
-                  setValue("endDate", e.target.value, { shouldValidate: true });
-                },
-              })}
+              value={startDate}
+              onChange={(iso) => {
+                setValue("startDate", iso, { shouldValidate: true });
+                setValue("endDate", iso, { shouldValidate: true });
+              }}
             />
             <FieldError message={errors.startDate?.message} dict={dict} />
           </div>
@@ -476,12 +475,12 @@ export function NewEventForm({
               {d.endDateLabel}
               <Required />
             </label>
-            <input
-              type="date"
-              lang="en-GB"
-              min={startDate || undefined}
+            <DateFieldDMY
               className={inputClass}
-              {...register("endDate")}
+              value={watch("endDate")}
+              onChange={(iso) =>
+                setValue("endDate", iso, { shouldValidate: true })
+              }
             />
             <FieldError message={errors.endDate?.message} dict={dict} />
           </div>

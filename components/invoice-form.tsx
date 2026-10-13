@@ -14,6 +14,7 @@ import { submitInvoice } from "@/lib/actions/invoices";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
 import { Required } from "@/components/form-required-mark";
+import { DateFieldDMY } from "@/components/date-field-dmy";
 import { COUNTRIES_HE, COUNTRIES_EN } from "@/lib/data/countries";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
@@ -29,6 +30,7 @@ export type InvoiceSupplierOption = {
   bankDetailsKnown: boolean;
   beneficiaryName: string | null;
   bankName: string | null;
+  bankAddress: string | null;
   accountNumber: string | null;
   swiftNumber: string | null;
 };
@@ -89,6 +91,7 @@ export function InvoiceForm({
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -127,11 +130,17 @@ export function InvoiceForm({
     setValue("supplierField", s.field || "", { shouldValidate: true });
     if (s.bankDetailsKnown) {
       setValue("supplierBankName", s.bankName || "", { shouldValidate: true });
+      setValue("supplierBankAddress", s.bankAddress || "", {
+        shouldValidate: true,
+      });
       setValue("supplierIban", s.accountNumber || "", { shouldValidate: true });
       setValue("supplierSwift", s.swiftNumber || "", { shouldValidate: true });
       setValue("supplierBeneficiaryName", s.beneficiaryName || "", {
         shouldValidate: true,
       });
+      // event_suppliers never collects a bank *country* (only added later,
+      // specifically for invoices) -- so supplierBankCountry can't be
+      // prefilled here and always needs the rep to pick it manually.
     }
   }
 
@@ -430,11 +439,12 @@ export function InvoiceForm({
               {d.invoiceDateLabel}
               <Required />
             </label>
-            <input
-              type="date"
-              lang="en-GB"
+            <DateFieldDMY
               className={inputClass}
-              {...register("invoiceDate")}
+              value={watch("invoiceDate")}
+              onChange={(iso) =>
+                setValue("invoiceDate", iso, { shouldValidate: true })
+              }
             />
             <FieldError message={errors.invoiceDate?.message} dict={dict} />
           </div>
