@@ -243,6 +243,9 @@ export const dictionaries = {
       invoicesEnteredTitle: "חשבוניות שהוזנו",
       returnedToRepNotice:
         "עמיאל ציינו שחסרים פרטים בחשבונית זו - יש לעדכן את פרטי הבנק ולשלוח בחזרה.",
+      budgetStatusApprovedLabel: "אושר לאירוע (₪)",
+      budgetStatusInvoicesTotalLabel: "סה״כ חשבוניות שהוזנו (₪)",
+      budgetStatusOverageLabel: "חריגה של ₪{amount}",
     },
     newEvent: {
       pageTitle: "אירוע חדש ובקשת תקציב",
@@ -659,6 +662,9 @@ export const dictionaries = {
       invoicesEnteredTitle: "Invoices submitted",
       returnedToRepNotice:
         "Amiel noted that details are missing on this invoice - please update the bank details and send it back.",
+      budgetStatusApprovedLabel: "Approved for event (₪)",
+      budgetStatusInvoicesTotalLabel: "Total invoices entered (₪)",
+      budgetStatusOverageLabel: "Over budget by ₪{amount}",
     },
     newEvent: {
       pageTitle: "New event & budget request",

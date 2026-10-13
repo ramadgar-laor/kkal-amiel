@@ -67,13 +67,11 @@ function FieldError({
 
 export function InvoiceForm({
   eventId,
-  defaultCurrency,
   suppliers,
   dict,
   locale,
 }: {
   eventId: string;
-  defaultCurrency: string;
   suppliers: InvoiceSupplierOption[];
   dict: Dictionary;
   locale: Locale;
@@ -108,7 +106,7 @@ export function InvoiceForm({
       supplierContactPhone: "",
       supplierContactEmail: "",
       amount: "",
-      currency: defaultCurrency || "",
+      currency: "",
       paymentAmount: "",
       paymentAmountCurrency: "USD",
       ilsAmount: "",

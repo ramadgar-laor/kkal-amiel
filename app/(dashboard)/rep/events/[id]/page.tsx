@@ -28,7 +28,7 @@ export default async function RepEventDetailPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, name, purpose, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, status, kkal_notes, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, transfer_amount_note, supplier_name, supplier_field, kkal_presence_selections, notes"
+      "id, name, purpose, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, transfer_amount_note, supplier_name, supplier_field, kkal_presence_selections, notes"
     )
     .eq("id", id)
     .single();
@@ -112,6 +112,17 @@ export default async function RepEventDetailPage({
     ]);
   }
 
+  // Lets the rep see where they stand against the approved ILS budget as
+  // invoices come in -- informational only, nothing here blocks submitting
+  // an invoice that would put them over.
+  const invoicesIlsTotal = (invoices ?? []).reduce(
+    (sum, inv) => sum + Number(inv.ils_amount ?? 0),
+    0
+  );
+  const approvedAmountIls = event.approved_amount_ils ?? event.approved_amount;
+  const ilsOverage =
+    approvedAmountIls != null ? invoicesIlsTotal - approvedAmountIls : null;
+
   return (
     <div className="max-w-2xl">
       <Link href="/rep" className="text-sm text-(--color-brand) underline">
@@ -146,6 +157,43 @@ export default async function RepEventDetailPage({
 
       {(event.status === "approved" || event.status === "partially_approved") && (
         <div className="mt-6 space-y-4">
+          {approvedAmountIls != null && (
+            <div className="rounded-xl bg-white border border-black/5 p-4 shadow-sm">
+              <div className="flex items-center gap-3 flex-wrap text-sm">
+                <div>
+                  <span className="text-black/50">
+                    {d.budgetStatusApprovedLabel}
+                  </span>{" "}
+                  <span className="font-medium">
+                    ₪{Number(approvedAmountIls).toLocaleString(
+                      locale === "en" ? "en-US" : "he-IL"
+                    )}
+                  </span>
+                </div>
+                <span className="text-black/30">·</span>
+                <div>
+                  <span className="text-black/50">
+                    {d.budgetStatusInvoicesTotalLabel}
+                  </span>{" "}
+                  <span className="font-medium">
+                    ₪{invoicesIlsTotal.toLocaleString(
+                      locale === "en" ? "en-US" : "he-IL"
+                    )}
+                  </span>
+                </div>
+                {ilsOverage != null && ilsOverage > 0 && (
+                  <span className="rounded-full bg-red-100 text-red-700 px-2.5 py-0.5 text-xs font-medium">
+                    {t(d.budgetStatusOverageLabel, {
+                      amount: ilsOverage.toLocaleString(
+                        locale === "en" ? "en-US" : "he-IL"
+                      ),
+                    })}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {invoices && invoices.length > 0 && (
             <div className="rounded-xl bg-white border border-black/5 p-4 shadow-sm">
               <h2 className="font-semibold text-(--color-brand-dark) mb-2">
@@ -202,7 +250,6 @@ export default async function RepEventDetailPage({
 
           <InvoiceForm
             eventId={event.id}
-            defaultCurrency={event.requested_currency}
             dict={dict}
             locale={locale}
             suppliers={(suppliers ?? []).map((s) => ({
