@@ -9,6 +9,7 @@ export function AmielNav({
   labels: {
     amielDashboard: string;
     amielInvoices: string;
+    amielPayments: string;
     amielEvents: string;
   };
 }) {
@@ -17,6 +18,7 @@ export function AmielNav({
   const items = [
     { href: "/amiel", label: labels.amielDashboard },
     { href: "/amiel/invoices", label: labels.amielInvoices },
+    { href: "/amiel/payments", label: labels.amielPayments },
     { href: "/amiel/events", label: labels.amielEvents },
   ];
 
