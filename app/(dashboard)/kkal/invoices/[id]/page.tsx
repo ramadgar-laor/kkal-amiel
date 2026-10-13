@@ -32,7 +32,7 @@ export default async function KkalInvoiceDetailPage({
   const { data: invoice } = await supabase
     .from("invoices")
     .select(
-      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, kkal_reviewed_at, payment_status, amiel_notes, created_at"
+      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, kkal_reviewed_at, payment_status, paid_amount, payment_currency, paid_at, payment_receipt_file_path, payment_exchange_rate, paid_amount_ils, amiel_notes, created_at"
     )
     .eq("id", id)
     .maybeSingle();
@@ -62,6 +62,10 @@ export default async function KkalInvoiceDetailPage({
     : { data: null };
 
   const fileUrl = await getSignedEventFileUrl(supabase, invoice.file_path);
+  const receiptUrl = await getSignedEventFileUrl(
+    supabase,
+    invoice.payment_receipt_file_path
+  );
 
   const isActionable = invoice.kkal_status === "pending";
 
@@ -163,6 +167,53 @@ export default async function KkalInvoiceDetailPage({
         <section className={sectionClass}>
           <h2 className={sectionTitleClass}>הערות קק&quot;ל</h2>
           <p className="text-sm py-2">{invoice.kkal_notes}</p>
+        </section>
+      )}
+
+      {invoice.payment_status === "paid" && (
+        <section className={sectionClass}>
+          <h2 className={sectionTitleClass}>פרטי תשלום שבוצע</h2>
+          <Field
+            label="סכום ששולם"
+            value={
+              invoice.paid_amount != null
+                ? `${invoice.paid_amount} ${invoice.payment_currency ?? ""}`
+                : null
+            }
+          />
+          <Field
+            label="שער המרה"
+            value={invoice.payment_exchange_rate ?? null}
+          />
+          <Field
+            label="סכום ששולם בשקל (₪)"
+            value={
+              invoice.paid_amount_ils != null ? `₪${invoice.paid_amount_ils}` : null
+            }
+          />
+          <Field
+            label="תאריך תשלום"
+            value={
+              invoice.paid_at
+                ? new Date(invoice.paid_at).toLocaleDateString("he-IL")
+                : null
+            }
+          />
+          {receiptUrl && (
+            <Field
+              label="אסמכתא לתשלום"
+              value={
+                <a
+                  href={receiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-(--color-brand) underline"
+                >
+                  הצגת האסמכתא
+                </a>
+              }
+            />
+          )}
         </section>
       )}
 

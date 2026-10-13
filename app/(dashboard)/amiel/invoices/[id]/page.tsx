@@ -31,7 +31,7 @@ export default async function AmielInvoiceDetailPage({
   const { data: invoice } = await supabase
     .from("invoices")
     .select(
-      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, payment_status, paid_amount, payment_currency, paid_at, amiel_notes, created_at"
+      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, payment_status, paid_amount, payment_currency, paid_at, payment_receipt_file_path, payment_exchange_rate, paid_amount_ils, amiel_notes, created_at"
     )
     .eq("id", id)
     .eq("kkal_status", "approved")
@@ -62,6 +62,10 @@ export default async function AmielInvoiceDetailPage({
     : { data: null };
 
   const fileUrl = await getSignedEventFileUrl(supabase, invoice.file_path);
+  const receiptUrl = await getSignedEventFileUrl(
+    supabase,
+    invoice.payment_receipt_file_path
+  );
 
   const sectionClass =
     "rounded-xl bg-white border border-black/5 p-5 shadow-sm divide-y divide-black/5";
@@ -173,6 +177,16 @@ export default async function AmielInvoiceDetailPage({
             }
           />
           <Field
+            label="שער המרה"
+            value={invoice.payment_exchange_rate ?? null}
+          />
+          <Field
+            label="סכום ששולם בשקל (₪)"
+            value={
+              invoice.paid_amount_ils != null ? `₪${invoice.paid_amount_ils}` : null
+            }
+          />
+          <Field
             label="תאריך תשלום"
             value={
               invoice.paid_at
@@ -180,6 +194,21 @@ export default async function AmielInvoiceDetailPage({
                 : null
             }
           />
+          {receiptUrl && (
+            <Field
+              label="אסמכתא לתשלום"
+              value={
+                <a
+                  href={receiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-(--color-brand) underline"
+                >
+                  הצגת האסמכתא
+                </a>
+              }
+            />
+          )}
         </section>
       )}
 
@@ -194,6 +223,15 @@ export default async function AmielInvoiceDetailPage({
             }
             currentPaymentCurrency={invoice.payment_currency}
             currentNotes={invoice.amiel_notes}
+            currentPaidAmountIls={
+              invoice.paid_amount_ils != null ? Number(invoice.paid_amount_ils) : null
+            }
+            currentPaymentExchangeRate={
+              invoice.payment_exchange_rate != null
+                ? Number(invoice.payment_exchange_rate)
+                : null
+            }
+            currentPaidAt={invoice.paid_at}
             invoiceAmount={Number(invoice.payment_amount)}
             invoiceCurrency={invoice.payment_amount_currency}
           />

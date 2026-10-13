@@ -103,6 +103,14 @@ export async function updatePaymentStatus(input: {
   paidAmount?: number | null;
   paymentCurrency?: string | null;
   amielNotes?: string | null;
+  // Required together once the invoice is actually marked "paid" (items 7
+  // & 9): the receipt file, the exchange rate Amiel used for the transfer
+  // (Amiel only pays in USD/EUR but needs a running ILS total), the
+  // resulting ILS amount, and the date the transfer was made.
+  paymentReceiptFilePath?: string | null;
+  paymentExchangeRate?: number | null;
+  paidAmountIls?: number | null;
+  paidDate?: string | null;
 }) {
   if (!PAYMENT_STATUSES.includes(input.paymentStatus)) {
     return { error: "invalid_input" as const };
@@ -112,6 +120,15 @@ export async function updatePaymentStatus(input: {
     !input.amielNotes?.trim()
   ) {
     return { error: "notes_required" as const };
+  }
+  if (
+    input.paymentStatus === "paid" &&
+    (!input.paymentReceiptFilePath ||
+      !input.paymentExchangeRate ||
+      !input.paidAmountIls ||
+      !input.paidDate)
+  ) {
+    return { error: "paid_fields_required" as const };
   }
 
   const supabase = await createClient();
@@ -128,16 +145,20 @@ export async function updatePaymentStatus(input: {
 
   // Deliberately a single select-plus-fields-plus-save form rather than a
   // forward-only wizard, so Amiel can correct a mistaken status at any
-  // time, not just progress through the 3 stages in order. paid_at is
-  // stamped only while the status is actually "paid", and cleared again if
-  // corrected away from it.
+  // time, not just progress through the 3 stages in order. The paid-only
+  // fields are stamped only while the status is actually "paid", and
+  // cleared again if corrected away from it.
+  const isPaid = input.paymentStatus === "paid";
   const { error } = await supabase
     .from("invoices")
     .update({
       payment_status: input.paymentStatus,
       paid_amount: input.paidAmount ?? null,
       payment_currency: input.paymentCurrency || null,
-      paid_at: input.paymentStatus === "paid" ? new Date().toISOString() : null,
+      paid_at: isPaid ? input.paidDate : null,
+      payment_receipt_file_path: isPaid ? input.paymentReceiptFilePath : null,
+      payment_exchange_rate: isPaid ? input.paymentExchangeRate : null,
+      paid_amount_ils: isPaid ? input.paidAmountIls : null,
       amiel_notes: input.amielNotes || null,
     })
     .eq("id", input.id);

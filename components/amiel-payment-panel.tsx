@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePaymentStatus } from "@/lib/actions/invoices";
+import { createClient } from "@/lib/supabase/client";
+import { uploadEventFile } from "@/lib/storage/event-files";
 import {
   PAYMENT_STATUSES,
   PAYMENT_STATUSES_REQUIRING_NOTES,
@@ -23,6 +25,9 @@ export function AmielPaymentPanel({
   currentPaidAmount,
   currentPaymentCurrency,
   currentNotes,
+  currentPaidAmountIls,
+  currentPaymentExchangeRate,
+  currentPaidAt,
   invoiceAmount,
   invoiceCurrency,
 }: {
@@ -31,6 +36,9 @@ export function AmielPaymentPanel({
   currentPaidAmount: number | null;
   currentPaymentCurrency: string | null;
   currentNotes: string | null;
+  currentPaidAmountIls: number | null;
+  currentPaymentExchangeRate: number | null;
+  currentPaidAt: string | null;
   invoiceAmount: number;
   invoiceCurrency: string;
 }) {
@@ -47,6 +55,14 @@ export function AmielPaymentPanel({
     currentPaymentCurrency || invoiceCurrency
   );
   const [notes, setNotes] = useState(currentNotes ?? "");
+  const [exchangeRate, setExchangeRate] = useState(
+    currentPaymentExchangeRate != null ? String(currentPaymentExchangeRate) : ""
+  );
+  const [paidAmountIls, setPaidAmountIls] = useState(
+    currentPaidAmountIls != null ? String(currentPaidAmountIls) : ""
+  );
+  const [paidDate, setPaidDate] = useState(currentPaidAt ?? "");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -56,6 +72,7 @@ export function AmielPaymentPanel({
   const labelClass = "block text-sm font-medium mb-1";
 
   const notesRequired = PAYMENT_STATUSES_REQUIRING_NOTES.includes(status);
+  const isPaid = status === "paid";
 
   async function save() {
     setPending(true);
@@ -78,19 +95,68 @@ export function AmielPaymentPanel({
       setPending(false);
       return;
     }
+
+    let receiptFilePath: string | null = null;
+    const exchangeRateNum = exchangeRate.trim() ? Number(exchangeRate) : null;
+    const paidAmountIlsNum = paidAmountIls.trim() ? Number(paidAmountIls) : null;
+
+    if (isPaid) {
+      if (
+        !exchangeRateNum ||
+        exchangeRateNum <= 0 ||
+        !paidAmountIlsNum ||
+        paidAmountIlsNum <= 0 ||
+        !paidDate
+      ) {
+        setError("יש למלא שער המרה, סכום ששולם בשקל ותאריך תשלום");
+        setPending(false);
+        return;
+      }
+      try {
+        const supabase = createClient();
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) {
+          setError("יש להתחבר מחדש כדי לשמור");
+          setPending(false);
+          return;
+        }
+        if (receiptFile) {
+          receiptFilePath = await uploadEventFile(
+            supabase,
+            userData.user.id,
+            receiptFile
+          );
+        } else {
+          setError("יש להעלות קובץ אסמכתא לתשלום");
+          setPending(false);
+          return;
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "העלאת הקובץ נכשלה");
+        setPending(false);
+        return;
+      }
+    }
+
     const result = await updatePaymentStatus({
       id: invoiceId,
       paymentStatus: status,
       paidAmount: amountNum,
       paymentCurrency: paymentCurrency.trim() || null,
       amielNotes: notes.trim() || null,
+      paymentReceiptFilePath: isPaid ? receiptFilePath : null,
+      paymentExchangeRate: isPaid ? exchangeRateNum : null,
+      paidAmountIls: isPaid ? paidAmountIlsNum : null,
+      paidDate: isPaid ? paidDate : null,
     });
     setPending(false);
     if (result?.error) {
       setError(
         result.error === "notes_required"
           ? "יש לציין הערה/סיבה לפני שמירת סטטוס זה"
-          : "השמירה נכשלה, נסה/י שוב"
+          : result.error === "paid_fields_required"
+            ? "יש למלא קובץ אסמכתא, שער המרה, סכום בשקל ותאריך תשלום"
+            : "השמירה נכשלה, נסה/י שוב"
       );
       return;
     }
@@ -138,6 +204,61 @@ export function AmielPaymentPanel({
           </>
         )}
       </div>
+
+      {isPaid && (
+        <div className="rounded-lg bg-black/[0.02] p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>
+              שער המרה שנעשה בו השימוש
+              <span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="number"
+              step="0.0001"
+              className={inputClass}
+              value={exchangeRate}
+              onChange={(e) => setExchangeRate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>
+              סכום ששולם בשקל (₪)
+              <span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              className={inputClass}
+              value={paidAmountIls}
+              onChange={(e) => setPaidAmountIls(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>
+              תאריך תשלום
+              <span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="date"
+              className={inputClass}
+              value={paidDate}
+              onChange={(e) => setPaidDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>
+              קובץ אסמכתא לתשלום
+              <span className="text-red-600"> *</span>
+            </label>
+            <input
+              type="file"
+              className={inputClass}
+              onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
+            />
+          </div>
+        </div>
+      )}
+
       <div>
         <label className={labelClass}>
           {status === "returned_to_kkal"
