@@ -10,6 +10,8 @@ const STATUS_FILTER_LABEL: Record<string, string> = {
   received_for_review: "התקבל לבדיקה",
   approved_for_payment: "אושר לתשלום",
   paid: "שולם",
+  returned_to_kkal: 'הוחזר לקק"ל',
+  returned_to_rep: "הוחזר לשליח",
 };
 
 export type AmielInvoiceRow = {

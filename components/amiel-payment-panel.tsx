@@ -3,12 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePaymentStatus } from "@/lib/actions/invoices";
-import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/invoices/payment-status";
+import {
+  PAYMENT_STATUSES,
+  PAYMENT_STATUSES_REQUIRING_NOTES,
+  type PaymentStatus,
+} from "@/lib/invoices/payment-status";
 
 const STATUS_LABEL: Record<PaymentStatus, string> = {
   received_for_review: "התקבל לבדיקה",
   approved_for_payment: "נבדק ואושר לתשלום",
   paid: "שולם",
+  returned_to_kkal: "לא מאושר לתשלום - החזרה לקק\"ל",
+  returned_to_rep: "פרטים חסרים - החזרה לשליח",
 };
 
 export function AmielPaymentPanel({
@@ -49,10 +55,23 @@ export function AmielPaymentPanel({
     "w-full rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)";
   const labelClass = "block text-sm font-medium mb-1";
 
+  const notesRequired = PAYMENT_STATUSES_REQUIRING_NOTES.includes(status);
+
   async function save() {
     setPending(true);
     setError(null);
     setSaved(false);
+
+    if (notesRequired && !notes.trim()) {
+      setError(
+        status === "returned_to_kkal"
+          ? "יש לציין סיבה שבגללה החשבונית לא מאושרת לתשלום"
+          : "יש לציין אילו פרטים חסרים או שגויים"
+      );
+      setPending(false);
+      return;
+    }
+
     const amountNum = paidAmount.trim() ? Number(paidAmount) : null;
     if (paidAmount.trim() && (!Number.isFinite(amountNum) || (amountNum ?? 0) <= 0)) {
       setError("יש להזין סכום חיובי");
@@ -68,7 +87,11 @@ export function AmielPaymentPanel({
     });
     setPending(false);
     if (result?.error) {
-      setError("השמירה נכשלה, נסה/י שוב");
+      setError(
+        result.error === "notes_required"
+          ? "יש לציין הערה/סיבה לפני שמירת סטטוס זה"
+          : "השמירה נכשלה, נסה/י שוב"
+      );
       return;
     }
     setSaved(true);
@@ -92,29 +115,40 @@ export function AmielPaymentPanel({
             ))}
           </select>
         </div>
-        <div>
-          <label className={labelClass}>סכום ששולם</label>
-          <input
-            type="number"
-            step="0.01"
-            className={inputClass}
-            value={paidAmount}
-            onChange={(e) => setPaidAmount(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>מטבע</label>
-          <input
-            className={inputClass}
-            value={paymentCurrency}
-            onChange={(e) => setPaymentCurrency(e.target.value)}
-          />
-        </div>
+        {!notesRequired && (
+          <>
+            <div>
+              <label className={labelClass}>סכום ששולם</label>
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass}
+                value={paidAmount}
+                onChange={(e) => setPaidAmount(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>מטבע</label>
+              <input
+                className={inputClass}
+                value={paymentCurrency}
+                onChange={(e) => setPaymentCurrency(e.target.value)}
+              />
+            </div>
+          </>
+        )}
       </div>
       <div>
-        <label className={labelClass}>מידע רלוונטי נוסף (פנימי, עמיאל)</label>
+        <label className={labelClass}>
+          {status === "returned_to_kkal"
+            ? 'סיבת אי-אישור התשלום (יוצג לקק"ל)'
+            : status === "returned_to_rep"
+              ? "אילו פרטים חסרים/שגויים? (יוצג לשליח)"
+              : "מידע רלוונטי נוסף (פנימי, עמיאל)"}
+          {notesRequired && <span className="text-red-600"> *</span>}
+        </label>
         <textarea
-          rows={2}
+          rows={notesRequired ? 3 : 2}
           className={inputClass}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

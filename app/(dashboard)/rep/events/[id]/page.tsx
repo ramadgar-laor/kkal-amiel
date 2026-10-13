@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/status-badge";
 import { getCountryName } from "@/lib/data/countries";
 import { InvoiceForm } from "@/components/invoice-form";
+import { InvoiceBankEditPanel } from "@/components/invoice-bank-edit-panel";
 
 export default async function RepEventDetailPage({
   params,
@@ -31,7 +32,7 @@ export default async function RepEventDetailPage({
   const { data: invoices } = await supabase
     .from("invoices")
     .select(
-      "id, supplier_name, amount, currency, ils_amount, invoice_date, kkal_status, payment_status"
+      "id, supplier_name, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, amiel_notes, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name"
     )
     .eq("event_id", event.id)
     .order("created_at", { ascending: false });
@@ -134,21 +135,46 @@ export default async function RepEventDetailPage({
               </h2>
               <div className="divide-y divide-black/5">
                 {invoices.map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="py-2 flex items-center justify-between text-sm gap-3"
-                  >
-                    <div>
-                      {inv.supplier_name} · {inv.amount} {inv.currency}
-                      {inv.ils_amount != null ? ` (₪${inv.ils_amount})` : ""} ·{" "}
-                      {inv.invoice_date}
+                  <div key={inv.id} className="py-2">
+                    <div className="flex items-center justify-between text-sm gap-3">
+                      <div>
+                        {inv.supplier_name} · {inv.amount} {inv.currency}
+                        {inv.ils_amount != null ? ` (₪${inv.ils_amount})` : ""} ·{" "}
+                        {inv.invoice_date}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <StatusBadge status={inv.kkal_status} />
+                        {inv.kkal_status === "approved" && (
+                          <StatusBadge status={inv.payment_status} />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <StatusBadge status={inv.kkal_status} />
-                      {inv.kkal_status === "approved" && (
-                        <StatusBadge status={inv.payment_status} />
-                      )}
-                    </div>
+
+                    {inv.payment_status === "returned_to_rep" && (
+                      <div className="mt-3 rounded-lg bg-(--color-gold-light) p-3 space-y-2">
+                        <p className="text-sm font-medium text-(--color-gold)">
+                          עמיאל ציינו שחסרים פרטים בחשבונית זו - יש לעדכן את
+                          פרטי הבנק ולשלוח בחזרה.
+                        </p>
+                        {inv.amiel_notes && (
+                          <p className="text-sm whitespace-pre-wrap">
+                            {inv.amiel_notes}
+                          </p>
+                        )}
+                        <InvoiceBankEditPanel
+                          invoiceId={inv.id}
+                          defaultValues={{
+                            supplierBankName: inv.supplier_bank_name ?? "",
+                            supplierBankAddress: inv.supplier_bank_address ?? "",
+                            supplierBankCountry: inv.supplier_bank_country ?? "",
+                            supplierIban: inv.supplier_iban ?? "",
+                            supplierSwift: inv.supplier_swift ?? "",
+                            supplierBeneficiaryName:
+                              inv.supplier_beneficiary_name ?? "",
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

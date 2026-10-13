@@ -10,6 +10,8 @@ const STYLES: Record<string, string> = {
   received_for_review: "bg-amber-100 text-amber-800",
   approved_for_payment: "bg-(--color-accent-light) text-(--color-accent-dark)",
   paid: "bg-(--color-accent-light) text-(--color-accent-dark)",
+  returned_to_kkal: "bg-red-100 text-red-700",
+  returned_to_rep: "bg-(--color-gold-light) text-(--color-gold)",
 };
 
 const LABELS: Record<string, string> = {
@@ -24,6 +26,8 @@ const LABELS: Record<string, string> = {
   received_for_review: "התקבל לבדיקה",
   approved_for_payment: "אושר לתשלום",
   paid: "שולם",
+  returned_to_kkal: "לא אושר לתשלום - הוחזר לקק\"ל",
+  returned_to_rep: "הוחזר לשליח לעדכון פרטים",
 };
 
 export function StatusBadge({ status }: { status: string }) {

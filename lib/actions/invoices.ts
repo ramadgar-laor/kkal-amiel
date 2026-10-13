@@ -2,7 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { invoiceSchema, type InvoiceInput } from "@/lib/validation/invoice";
-import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/invoices/payment-status";
+import {
+  PAYMENT_STATUSES,
+  PAYMENT_STATUSES_REQUIRING_NOTES,
+  type PaymentStatus,
+} from "@/lib/invoices/payment-status";
 
 export async function submitInvoice(input: InvoiceInput) {
   const parsed = invoiceSchema.safeParse(input);
@@ -103,6 +107,12 @@ export async function updatePaymentStatus(input: {
   if (!PAYMENT_STATUSES.includes(input.paymentStatus)) {
     return { error: "invalid_input" as const };
   }
+  if (
+    PAYMENT_STATUSES_REQUIRING_NOTES.includes(input.paymentStatus) &&
+    !input.amielNotes?.trim()
+  ) {
+    return { error: "notes_required" as const };
+  }
 
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -144,6 +154,142 @@ export async function updatePaymentStatus(input: {
     from_value: before?.payment_status ?? null,
     to_value: input.paymentStatus,
     notes: input.amielNotes || null,
+  });
+
+  return { success: true as const };
+}
+
+// kkal-side resolution for an invoice Amiel sent back with
+// payment_status = "returned_to_kkal" (item 6). kkal_status deliberately
+// stays "approved" throughout this whole payment flow -- only
+// payment_status changes -- *except* for the "reject" action here, which
+// is the one case kkal needs to actually reverse their original approval
+// (removing the invoice from Amiel's queue for good, since
+// invoices_amiel_read_approved only shows kkal_status = 'approved' rows).
+export type ReturnedInvoiceResolution = "send_to_amiel" | "reject";
+
+export async function resolveReturnedInvoice(input: {
+  id: string;
+  resolution: ReturnedInvoiceResolution;
+  notes?: string;
+}) {
+  if (input.resolution === "reject" && !input.notes?.trim()) {
+    return { error: "notes_required" as const };
+  }
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return { error: "not_authenticated" as const };
+  }
+
+  const { data: before } = await supabase
+    .from("invoices")
+    .select("kkal_status, payment_status")
+    .eq("id", input.id)
+    .single();
+
+  if (before?.payment_status !== "returned_to_kkal") {
+    return { error: "invalid_state" as const };
+  }
+
+  const { error } =
+    input.resolution === "send_to_amiel"
+      ? await supabase
+          .from("invoices")
+          .update({ payment_status: "received_for_review" })
+          .eq("id", input.id)
+      : await supabase
+          .from("invoices")
+          .update({
+            kkal_status: "rejected",
+            kkal_notes: input.notes,
+            kkal_reviewed_by: userData.user.id,
+            kkal_reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", input.id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  await supabase.from("status_audit_log").insert({
+    entity_type: "invoice",
+    entity_id: input.id,
+    actor_id: userData.user.id,
+    action: input.resolution === "send_to_amiel" ? "payment_update" : "review",
+    from_value:
+      input.resolution === "send_to_amiel"
+        ? before?.payment_status ?? null
+        : before?.kkal_status ?? null,
+    to_value:
+      input.resolution === "send_to_amiel" ? "received_for_review" : "rejected",
+    notes: input.notes || null,
+  });
+
+  return { success: true as const };
+}
+
+// Rep-side edit for an invoice Amiel sent back with
+// payment_status = "returned_to_rep" (item 6). RLS
+// (invoices_rep_update_returned) already restricts this to the rep's own
+// event and only while payment_status is exactly "returned_to_rep" -- this
+// action additionally restricts which *columns* can be touched (bank
+// details only, never amounts or the invoice file), and always moves the
+// invoice back to Amiel's queue on save.
+export async function updateInvoiceBankDetails(input: {
+  id: string;
+  supplierBankName: string;
+  supplierBankAddress: string;
+  supplierBankCountry: string;
+  supplierIban: string;
+  supplierSwift: string;
+  supplierBeneficiaryName: string;
+}) {
+  if (
+    !input.supplierBankName.trim() ||
+    !input.supplierBankAddress.trim() ||
+    !input.supplierBankCountry.trim() ||
+    !input.supplierIban.trim() ||
+    !input.supplierSwift.trim() ||
+    !input.supplierBeneficiaryName.trim()
+  ) {
+    return { error: "invalid_input" as const };
+  }
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return { error: "not_authenticated" as const };
+  }
+
+  const { error } = await supabase
+    .from("invoices")
+    .update({
+      supplier_bank_name: input.supplierBankName,
+      supplier_bank_address: input.supplierBankAddress,
+      supplier_bank_country: input.supplierBankCountry,
+      supplier_iban: input.supplierIban,
+      supplier_swift: input.supplierSwift,
+      supplier_beneficiary_name: input.supplierBeneficiaryName,
+      payment_status: "received_for_review",
+    })
+    .eq("id", input.id);
+
+  if (error) {
+    // RLS blocks this when the invoice isn't the rep's own, or it's not
+    // currently in "returned_to_rep" state (invoices_rep_update_returned).
+    return { error: error.message };
+  }
+
+  await supabase.from("status_audit_log").insert({
+    entity_type: "invoice",
+    entity_id: input.id,
+    actor_id: userData.user.id,
+    action: "payment_update",
+    from_value: "returned_to_rep",
+    to_value: "received_for_review",
+    notes: "השליח עדכן פרטי בנק",
   });
 
   return { success: true as const };

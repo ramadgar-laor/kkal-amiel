@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/status-badge";
 import { InvoiceReviewPanel } from "@/components/invoice-review-panel";
+import { InvoiceReturnedPanel } from "@/components/invoice-returned-panel";
 import { getCountryName } from "@/lib/data/countries";
 import { getSignedEventFileUrl } from "@/lib/storage/event-files";
 
@@ -31,7 +32,7 @@ export default async function KkalInvoiceDetailPage({
   const { data: invoice } = await supabase
     .from("invoices")
     .select(
-      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, kkal_reviewed_at, payment_status, created_at"
+      "id, event_id, supplier_name, supplier_field, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, kkal_reviewed_at, payment_status, amiel_notes, created_at"
     )
     .eq("id", id)
     .maybeSingle();
@@ -162,6 +163,20 @@ export default async function KkalInvoiceDetailPage({
         <section className={sectionClass}>
           <h2 className={sectionTitleClass}>הערות קק&quot;ל</h2>
           <p className="text-sm py-2">{invoice.kkal_notes}</p>
+        </section>
+      )}
+
+      {invoice.payment_status === "returned_to_kkal" && (
+        <section className="rounded-xl bg-red-50 border border-red-200 p-5 shadow-sm space-y-3">
+          <h2 className="font-semibold text-red-700">
+            עמיאל לא אישרו את החשבונית לתשלום
+          </h2>
+          {invoice.amiel_notes && (
+            <p className="text-sm text-red-800 whitespace-pre-wrap">
+              {invoice.amiel_notes}
+            </p>
+          )}
+          <InvoiceReturnedPanel invoiceId={invoice.id} />
         </section>
       )}
 
