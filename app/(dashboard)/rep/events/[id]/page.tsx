@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { getCountryName } from "@/lib/data/countries";
 import { InvoiceForm } from "@/components/invoice-form";
 import { InvoiceBankEditPanel } from "@/components/invoice-bank-edit-panel";
+import { formatDateDMY } from "@/lib/utils/date";
 
 export default async function RepEventDetailPage({
   params,
@@ -50,7 +51,7 @@ export default async function RepEventDetailPage({
 
   const rows: [string, string | null | undefined][] = [
     ["מטרת האירוע", event.purpose],
-    ["תאריכים", `${event.start_date} – ${event.end_date}`],
+    ["תאריכים", `${formatDateDMY(event.start_date)} – ${formatDateDMY(event.end_date)}`],
     ["מיקום", [event.city, getCountryName(event.country)].filter(Boolean).join(", ")],
     [
       "ארגון / קהילה מארחת",
@@ -140,7 +141,7 @@ export default async function RepEventDetailPage({
                       <div>
                         {inv.supplier_name} · {inv.amount} {inv.currency}
                         {inv.ils_amount != null ? ` (₪${inv.ils_amount})` : ""} ·{" "}
-                        {inv.invoice_date}
+                        {formatDateDMY(inv.invoice_date)}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <StatusBadge status={inv.kkal_status} />

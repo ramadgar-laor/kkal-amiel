@@ -404,6 +404,7 @@ export function InvoiceForm({
             </label>
             <input
               type="date"
+              lang="en-GB"
               className={inputClass}
               {...register("invoiceDate")}
             />

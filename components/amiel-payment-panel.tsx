@@ -240,6 +240,7 @@ export function AmielPaymentPanel({
             </label>
             <input
               type="date"
+              lang="en-GB"
               className={inputClass}
               value={paidDate}
               onChange={(e) => setPaidDate(e.target.value)}

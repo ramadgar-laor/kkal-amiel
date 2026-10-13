@@ -6,6 +6,7 @@ import { InvoiceReviewPanel } from "@/components/invoice-review-panel";
 import { InvoiceReturnedPanel } from "@/components/invoice-returned-panel";
 import { getCountryName } from "@/lib/data/countries";
 import { getSignedEventFileUrl } from "@/lib/storage/event-files";
+import { formatDateDMY } from "@/lib/utils/date";
 
 function Field({
   label,
@@ -126,7 +127,7 @@ export default async function KkalInvoiceDetailPage({
           label="סכום בשקלים (₪)"
           value={invoice.ils_amount != null ? `₪${invoice.ils_amount}` : null}
         />
-        <Field label="תאריך חשבונית" value={invoice.invoice_date} />
+        <Field label="תאריך חשבונית" value={formatDateDMY(invoice.invoice_date)} />
         {fileUrl && (
           <Field
             label="קובץ החשבונית"
@@ -195,7 +196,7 @@ export default async function KkalInvoiceDetailPage({
             label="תאריך תשלום"
             value={
               invoice.paid_at
-                ? new Date(invoice.paid_at).toLocaleDateString("he-IL")
+                ? formatDateDMY(invoice.paid_at)
                 : null
             }
           />

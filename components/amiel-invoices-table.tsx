@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { formatDateDMY } from "@/lib/utils/date";
 
 const STATUS_FILTER_LABEL: Record<string, string> = {
   all: "כל הסטטוסים",
@@ -27,14 +28,7 @@ export type AmielInvoiceRow = {
   paymentStatus: string;
 };
 
-function formatDate(d: string | null) {
-  if (!d) return "";
-  try {
-    return new Date(d).toLocaleDateString("he-IL");
-  } catch {
-    return d;
-  }
-}
+const formatDate = formatDateDMY;
 
 export function AmielInvoicesTable({ rows }: { rows: AmielInvoiceRow[] }) {
   const router = useRouter();

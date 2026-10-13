@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatDateDMY } from "@/lib/utils/date";
 
 export type AmielPaymentRow = {
   id: string;
@@ -16,14 +17,7 @@ export type AmielPaymentRow = {
   paidAt: string | null;
 };
 
-function formatDate(d: string | null) {
-  if (!d) return "";
-  try {
-    return new Date(d).toLocaleDateString("he-IL");
-  } catch {
-    return d;
-  }
-}
+const formatDate = formatDateDMY;
 
 export function AmielPaymentsTable({ rows }: { rows: AmielPaymentRow[] }) {
   const router = useRouter();

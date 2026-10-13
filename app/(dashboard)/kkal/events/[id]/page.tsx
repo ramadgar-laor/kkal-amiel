@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { EventReviewPanel } from "@/components/event-review-panel";
 import { getCountryName } from "@/lib/data/countries";
 import { getSignedEventFileUrl } from "@/lib/storage/event-files";
+import { formatDateDMY } from "@/lib/utils/date";
 import { KKAL_PRESENCE_OPTIONS } from "@/lib/data/kkal-presence";
 
 const TRACK_LABEL: Record<string, string> = {
@@ -235,7 +236,7 @@ export default async function KkalEventDetailPage({
         <h2 className={sectionTitleClass}>פרטי האירוע</h2>
         <Field
           label="תאריכים"
-          value={`${event.start_date} – ${event.end_date}`}
+          value={`${formatDateDMY(event.start_date)} – ${formatDateDMY(event.end_date)}`}
         />
         <Field
           label="מיקום"

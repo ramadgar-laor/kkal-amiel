@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCountryName } from "@/lib/data/countries";
 import { buildExcelWorkbook, excelResponseHeaders } from "@/lib/export/excel";
+import { formatDateDMY } from "@/lib/utils/date";
 
 const HEADERS = [
   "ספק",
@@ -60,9 +61,7 @@ export async function GET() {
       inv.payment_currency,
       inv.payment_exchange_rate,
       inv.paid_amount_ils,
-      inv.paid_at
-        ? new Date(inv.paid_at).toLocaleDateString("he-IL")
-        : null,
+      inv.paid_at ? formatDateDMY(inv.paid_at) : null,
     ];
   });
 

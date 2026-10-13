@@ -442,6 +442,7 @@ export function NewEventForm({
             <p className={noteClass}>גם אם התאריך לא סופי</p>
             <input
               type="date"
+              lang="en-GB"
               className={inputClass}
               {...register("startDate", {
                 onChange: (e) => {
@@ -458,6 +459,7 @@ export function NewEventForm({
             </label>
             <input
               type="date"
+              lang="en-GB"
               min={startDate || undefined}
               className={inputClass}
               {...register("endDate")}

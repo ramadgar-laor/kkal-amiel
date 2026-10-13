@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { RepReviewButtons } from "@/components/rep-review-buttons";
 import { RepsDirectoryTable, type RepDirectoryRow } from "@/components/reps-directory-table";
 import { getCountryName } from "@/lib/data/countries";
+import { formatDateDMY } from "@/lib/utils/date";
 
 const PARTICIPATION_LABEL_HE: Record<string, string> = {
   trustee: 'נאמן קק"ל',
@@ -117,8 +118,12 @@ export default async function KkalRepsPage() {
                     {(r.mission_start_date || r.mission_end_date_expected) && (
                       <span>
                         {" "}
-                        ({r.mission_start_date ?? "?"} —{" "}
-                        {r.mission_end_date_expected ?? "?"})
+                        ({r.mission_start_date ? formatDateDMY(r.mission_start_date) : "?"}
+                        {" — "}
+                        {r.mission_end_date_expected
+                          ? formatDateDMY(r.mission_end_date_expected)
+                          : "?"}
+                        )
                       </span>
                     )}
                   </div>

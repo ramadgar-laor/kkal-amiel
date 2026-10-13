@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/status-badge";
+import { formatDateDMY } from "@/lib/utils/date";
 
 export default async function RepDashboardPage() {
   const supabase = await createClient();
@@ -64,7 +65,8 @@ export default async function RepDashboardPage() {
                 <div>
                   <div className="font-medium">{e.name}</div>
                   <div className="text-xs text-black/50">
-                    {e.start_date} · {e.requested_amount} {e.requested_currency}
+                    {formatDateDMY(e.start_date)} · {e.requested_amount}{" "}
+                    {e.requested_currency}
                   </div>
                 </div>
                 <StatusBadge status={e.status} />

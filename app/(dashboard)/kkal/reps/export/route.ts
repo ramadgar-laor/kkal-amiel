@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCountryName } from "@/lib/data/countries";
 import { buildExcelWorkbook, excelResponseHeaders } from "@/lib/export/excel";
+import { formatDateDMY } from "@/lib/utils/date";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "ממתין לאישור",
@@ -91,7 +92,7 @@ export async function GET() {
     emailById.get(r.profile_id) ?? null,
     r.whatsapp_phone,
     r.mission_phone,
-    r.date_of_birth,
+    formatDateDMY(r.date_of_birth),
     r.marital_status
       ? (MARITAL_STATUS_LABEL[r.marital_status] ?? r.marital_status)
       : null,
@@ -106,14 +107,14 @@ export async function GET() {
     r.institution_type,
     r.institution_city,
     r.main_role,
-    r.mission_start_date,
-    r.mission_end_date_expected,
+    formatDateDMY(r.mission_start_date),
+    formatDateDMY(r.mission_end_date_expected),
     r.activity_level
       ? (PARTICIPATION_LABEL[r.activity_level] ?? r.activity_level)
       : null,
     r.registration_notes,
     r.kkal_notes,
-    r.created_at ? new Date(r.created_at).toLocaleDateString("he-IL") : null,
+    r.created_at ? formatDateDMY(r.created_at) : null,
   ]);
 
   const buffer = await buildExcelWorkbook({

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { RepStatusSelect } from "@/components/rep-status-select";
 import { getCountryName } from "@/lib/data/countries";
+import { formatDateDMY } from "@/lib/utils/date";
 
 const PARTICIPATION_LABEL_HE: Record<string, string> = {
   trustee: 'נאמן קק"ל',
@@ -40,14 +41,7 @@ export type RepDirectoryRow = {
   createdAt: string | null;
 };
 
-function formatDate(d: string | null) {
-  if (!d) return "";
-  try {
-    return new Date(d).toLocaleDateString("he-IL");
-  } catch {
-    return d;
-  }
-}
+const formatDate = formatDateDMY;
 
 export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
   const router = useRouter();

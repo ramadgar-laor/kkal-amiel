@@ -7,6 +7,7 @@ import {
   excelResponseHeaders,
   yesNo,
 } from "@/lib/export/excel";
+import { formatDateDMY } from "@/lib/utils/date";
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "הוגש",
@@ -194,7 +195,7 @@ export async function GET() {
 
     return [
       STATUS_LABEL[e.status] ?? e.status,
-      e.created_at ? new Date(e.created_at).toLocaleDateString("he-IL") : null,
+      e.created_at ? formatDateDMY(e.created_at) : null,
       rep?.first_name_he ?? null,
       rep?.last_name_he ?? null,
       rep
@@ -209,8 +210,8 @@ export async function GET() {
       yesNo(e.registered_to_program),
       yesNo(e.in_whatsapp_group),
       e.name,
-      e.start_date,
-      e.end_date,
+      formatDateDMY(e.start_date),
+      formatDateDMY(e.end_date),
       e.city,
       e.country ? getCountryName(e.country) : null,
       e.host_org_name,

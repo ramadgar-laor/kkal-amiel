@@ -220,7 +220,8 @@ export function RepEditForm({
           </div>
           <div>
             <label className={labelClass}>תאריך לידה</label>
-            <input type="date" className={inputClass} {...register("dateOfBirth")} />
+            <input type="date"
+              lang="en-GB" className={inputClass} {...register("dateOfBirth")} />
           </div>
           <div>
             <label className={labelClass}>מצב משפחתי</label>
@@ -279,12 +280,14 @@ export function RepEditForm({
           </div>
           <div>
             <label className={labelClass}>תאריך תחילת שליחות</label>
-            <input type="date" className={inputClass} {...register("missionStartDate")} />
+            <input type="date"
+              lang="en-GB" className={inputClass} {...register("missionStartDate")} />
           </div>
           <div>
             <label className={labelClass}>תאריך צפי לסיום שליחות</label>
             <input
               type="date"
+              lang="en-GB"
               className={inputClass}
               {...register("missionEndDateExpected")}
             />

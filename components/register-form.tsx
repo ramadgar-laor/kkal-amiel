@@ -251,6 +251,7 @@ export function RegisterForm({
             </label>
             <input
               type="date"
+              lang="en-GB"
               className={inputClass}
               {...register("dateOfBirth")}
             />
@@ -403,6 +404,7 @@ export function RegisterForm({
             </label>
             <input
               type="date"
+              lang="en-GB"
               className={inputClass}
               {...register("missionStartDate")}
             />
@@ -416,6 +418,7 @@ export function RegisterForm({
             </p>
             <input
               type="date"
+              lang="en-GB"
               className={inputClass}
               {...register("missionEndDateExpected")}
             />

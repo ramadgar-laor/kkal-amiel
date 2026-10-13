@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { AmielPaymentPanel } from "@/components/amiel-payment-panel";
 import { getCountryName } from "@/lib/data/countries";
 import { getSignedEventFileUrl } from "@/lib/storage/event-files";
+import { formatDateDMY } from "@/lib/utils/date";
 
 function Field({
   label,
@@ -113,13 +114,11 @@ export default async function AmielInvoiceDetailPage({
           label="סכום בשקלים (₪)"
           value={invoice.ils_amount != null ? `₪${invoice.ils_amount}` : null}
         />
-        <Field label="תאריך חשבונית" value={invoice.invoice_date} />
+        <Field label="תאריך חשבונית" value={formatDateDMY(invoice.invoice_date)} />
         <Field
           label="תאריך הגשה"
           value={
-            invoice.created_at
-              ? new Date(invoice.created_at).toLocaleDateString("he-IL")
-              : null
+            invoice.created_at ? formatDateDMY(invoice.created_at) : null
           }
         />
         {fileUrl && (
@@ -188,11 +187,7 @@ export default async function AmielInvoiceDetailPage({
           />
           <Field
             label="תאריך תשלום"
-            value={
-              invoice.paid_at
-                ? new Date(invoice.paid_at).toLocaleDateString("he-IL")
-                : null
-            }
+            value={invoice.paid_at ? formatDateDMY(invoice.paid_at) : null}
           />
           {receiptUrl && (
             <Field

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import { getCountryName } from "@/lib/data/countries";
+import { formatDateDMY } from "@/lib/utils/date";
 
 type Timing = "upcoming" | "ongoing" | "past";
 
@@ -44,14 +45,7 @@ function timingOf(row: AmielEventRow, todayIso: string): Timing {
   return "ongoing";
 }
 
-function formatDate(d: string | null) {
-  if (!d) return "";
-  try {
-    return new Date(d).toLocaleDateString("he-IL");
-  } catch {
-    return d;
-  }
-}
+const formatDate = formatDateDMY;
 
 function formatAmount(amount: number | null, currency: string) {
   if (amount == null) return "—";
