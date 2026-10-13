@@ -152,7 +152,7 @@ export const eventSchema = z
     programDescription: z.string().trim().min(1),
 
     track: z.enum(EVENT_TRACKS),
-    ongoingProgramFilePath: z.string().trim().optional().or(z.literal("")),
+    ongoingProgramDescription: z.string().trim().optional().or(z.literal("")),
 
     requestedAmount: z.coerce.number().positive(),
     transferAmountNote: z.string().trim().min(1),
@@ -183,10 +183,10 @@ export const eventSchema = z
     notes: z.string().trim().optional().or(z.literal("")),
   })
   .superRefine((v, ctx) => {
-    if (v.track === "ongoing" && !v.ongoingProgramFilePath) {
+    if (v.track === "ongoing" && !v.ongoingProgramDescription) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["ongoingProgramFilePath"],
+        path: ["ongoingProgramDescription"],
         message: "required_for_ongoing_track",
       });
     }
@@ -247,7 +247,7 @@ export const eventFormSchema = z
     programDescription: z.string().trim().min(1),
 
     track: z.enum(EVENT_TRACKS),
-    ongoingProgramFile: optionalFile,
+    ongoingProgramDescription: z.string().trim().optional().or(z.literal("")),
 
     requestedAmount: z
       .string()
@@ -282,10 +282,10 @@ export const eventFormSchema = z
     notes: z.string().trim().optional().or(z.literal("")),
   })
   .superRefine((v, ctx) => {
-    if (v.track === "ongoing" && !v.ongoingProgramFile) {
+    if (v.track === "ongoing" && !v.ongoingProgramDescription) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["ongoingProgramFile"],
+        path: ["ongoingProgramDescription"],
         message: "required_for_ongoing_track",
       });
     }

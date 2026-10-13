@@ -2,9 +2,22 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/status-badge";
 import { formatDateDMY } from "@/lib/utils/date";
+import { getCurrentLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+
+function t(template: string, values: Record<string, string | number> = {}) {
+  return Object.entries(values).reduce(
+    (acc, [key, value]) => acc.replaceAll(`{${key}}`, String(value)),
+    template
+  );
+}
 
 export default async function RepDashboardPage() {
   const supabase = await createClient();
+  const locale = await getCurrentLocale();
+  const dict = getDictionary(locale);
+  const d = dict.repDashboard;
+
   const { data: userData } = await supabase.auth.getUser();
   const { data: rep } = await supabase
     .from("reps")
@@ -24,36 +37,35 @@ export default async function RepDashboardPage() {
     <div className="space-y-6">
       <div className="rounded-xl bg-white border border-black/5 p-6 shadow-sm">
         <h1 className="text-xl font-bold text-(--color-brand-dark)">
-          ברוך/ה הבא/ה{rep ? `, ${rep.first_name_he}` : ""}
+          {rep
+            ? t(d.welcome, { name: rep.first_name_he ?? "" })
+            : d.welcomeNoName}
         </h1>
         <p className="mt-2 text-sm flex items-center gap-2">
-          סטטוס הרשמה: <StatusBadge status={rep?.status ?? "pending"} />
+          {d.statusLabel} <StatusBadge status={rep?.status ?? "pending"} locale={locale} />
         </p>
         {!isApproved && (
-          <p className="mt-2 text-sm text-black/60">
-            לאחר אישור ההרשמה על ידי קק״ל תיפתח עבורך האפשרות ליצור אירועים
-            ולהגיש בקשות תקציב.
-          </p>
+          <p className="mt-2 text-sm text-black/60">{d.notApprovedNote}</p>
         )}
       </div>
 
       <div className="rounded-xl bg-white border border-black/5 p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-(--color-brand-dark)">
-            האירועים שלי
+            {d.myEventsTitle}
           </h2>
           {isApproved && (
             <Link
               href="/rep/events/new"
               className="rounded-md bg-(--color-brand) text-white text-sm font-medium px-4 py-2 hover:bg-(--color-brand-dark) transition"
             >
-              + אירוע חדש
+              {d.newEventButton}
             </Link>
           )}
         </div>
 
         {!events?.length ? (
-          <p className="mt-4 text-sm text-black/50">עדיין לא נוצרו אירועים.</p>
+          <p className="mt-4 text-sm text-black/50">{d.noEventsYet}</p>
         ) : (
           <div className="mt-4 divide-y divide-black/5">
             {events.map((e) => (
@@ -69,7 +81,7 @@ export default async function RepDashboardPage() {
                     {e.requested_currency}
                   </div>
                 </div>
-                <StatusBadge status={e.status} />
+                <StatusBadge status={e.status} locale={locale} />
               </Link>
             ))}
           </div>

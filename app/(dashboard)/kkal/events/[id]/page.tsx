@@ -57,7 +57,7 @@ export default async function KkalEventDetailPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, rep_id, name, purpose, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, reviewed_at, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, transfer_amount_note, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, event_quotes(slot, quote_file_path, contact_phone, contact_email), invoices(id, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, paid_amount, supplier_name)"
+      "id, rep_id, name, purpose, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, reviewed_at, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, ongoing_program_description, transfer_amount_note, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, event_quotes(slot, quote_file_path, contact_phone, contact_email), invoices(id, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, paid_amount, supplier_name)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -269,7 +269,17 @@ export default async function KkalEventDetailPage({
           label="מסלול"
           value={TRACK_LABEL[event.track ?? ""] ?? event.track}
         />
-        {ongoingProgramFileUrl && (
+        {event.ongoing_program_description && (
+          <Field
+            label="הסבר על התוכנית המתמשכת"
+            value={
+              <span className="whitespace-pre-wrap">
+                {event.ongoing_program_description}
+              </span>
+            }
+          />
+        )}
+        {!event.ongoing_program_description && ongoingProgramFileUrl && (
           <Field
             label="קובץ הסבר לתוכנית מתמשכת"
             value={<FileLink label="הצגת הקובץ" url={ongoingProgramFileUrl} />}

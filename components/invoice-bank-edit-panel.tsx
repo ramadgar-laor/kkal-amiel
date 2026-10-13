@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateInvoiceBankDetails } from "@/lib/actions/invoices";
-import { COUNTRIES_HE } from "@/lib/data/countries";
+import { COUNTRIES_HE, COUNTRIES_EN } from "@/lib/data/countries";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/config";
 
 // Rep-side edit for an invoice Amiel marked as "returned_to_rep" (item 6):
 // the rep may only touch bank details here -- never amounts or the invoice
@@ -11,6 +13,8 @@ import { COUNTRIES_HE } from "@/lib/data/countries";
 export function InvoiceBankEditPanel({
   invoiceId,
   defaultValues,
+  dict,
+  locale,
 }: {
   invoiceId: string;
   defaultValues: {
@@ -21,8 +25,12 @@ export function InvoiceBankEditPanel({
     supplierSwift: string;
     supplierBeneficiaryName: string;
   };
+  dict: Dictionary;
+  locale: Locale;
 }) {
   const router = useRouter();
+  const d = dict.invoiceForm;
+  const countries = locale === "en" ? COUNTRIES_EN : COUNTRIES_HE;
   const [values, setValues] = useState(defaultValues);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +54,7 @@ export function InvoiceBankEditPanel({
     });
     setPending(false);
     if (result?.error) {
-      setError("יש למלא את כל פרטי הבנק לפני השליחה");
+      setError(d.bankEditErrorMessage);
       return;
     }
     setSaved(true);
@@ -56,7 +64,7 @@ export function InvoiceBankEditPanel({
   if (saved) {
     return (
       <p className="text-sm text-(--color-accent-dark)">
-        הפרטים נשלחו בהצלחה לעמיאל להמשך טיפול.
+        {d.bankEditSuccessMessage}
       </p>
     );
   }
@@ -65,7 +73,7 @@ export function InvoiceBankEditPanel({
     <div className="space-y-2 rounded-md border border-black/10 bg-white p-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>שם בעל החשבון</label>
+          <label className={labelClass}>{d.beneficiaryNameLabel}</label>
           <input
             className={inputClass}
             value={values.supplierBeneficiaryName}
@@ -73,7 +81,7 @@ export function InvoiceBankEditPanel({
           />
         </div>
         <div>
-          <label className={labelClass}>שם הבנק</label>
+          <label className={labelClass}>{d.bankNameLabel}</label>
           <input
             className={inputClass}
             value={values.supplierBankName}
@@ -81,7 +89,7 @@ export function InvoiceBankEditPanel({
           />
         </div>
         <div>
-          <label className={labelClass}>כתובת הבנק</label>
+          <label className={labelClass}>{d.bankAddressLabel}</label>
           <input
             className={inputClass}
             value={values.supplierBankAddress}
@@ -89,14 +97,14 @@ export function InvoiceBankEditPanel({
           />
         </div>
         <div>
-          <label className={labelClass}>מדינת הבנק</label>
+          <label className={labelClass}>{d.bankCountryLabel}</label>
           <select
             className={inputClass}
             value={values.supplierBankCountry}
             onChange={(e) => set("supplierBankCountry", e.target.value)}
           >
-            <option value="">בחר/י מדינה</option>
-            {COUNTRIES_HE.map((c) => (
+            <option value="">{dict.register.selectCountry}</option>
+            {countries.map((c) => (
               <option key={c.code} value={c.code}>
                 {c.name}
               </option>
@@ -104,7 +112,7 @@ export function InvoiceBankEditPanel({
           </select>
         </div>
         <div>
-          <label className={labelClass}>מספר חשבון / IBAN</label>
+          <label className={labelClass}>{d.ibanLabel}</label>
           <input
             className={inputClass}
             value={values.supplierIban}
@@ -112,7 +120,7 @@ export function InvoiceBankEditPanel({
           />
         </div>
         <div>
-          <label className={labelClass}>קוד סוויפט (SWIFT)</label>
+          <label className={labelClass}>{d.swiftLabel}</label>
           <input
             className={inputClass}
             value={values.supplierSwift}
@@ -126,7 +134,7 @@ export function InvoiceBankEditPanel({
         disabled={pending}
         className="rounded-md bg-(--color-brand) text-white text-sm font-medium px-4 py-2 hover:bg-(--color-brand-dark) transition disabled:opacity-60"
       >
-        {pending ? "שולח..." : "שליחת פרטים מעודכנים לעמיאל"}
+        {pending ? dict.common.sending : d.bankEditSubmitButton}
       </button>
     </div>
   );

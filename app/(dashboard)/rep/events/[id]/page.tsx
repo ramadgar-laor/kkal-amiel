@@ -6,12 +6,25 @@ import { getCountryName } from "@/lib/data/countries";
 import { InvoiceForm } from "@/components/invoice-form";
 import { InvoiceBankEditPanel } from "@/components/invoice-bank-edit-panel";
 import { formatDateDMY } from "@/lib/utils/date";
+import { getCurrentLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+
+function t(template: string, values: Record<string, string | number> = {}) {
+  return Object.entries(values).reduce(
+    (acc, [key, value]) => acc.replaceAll(`{${key}}`, String(value)),
+    template
+  );
+}
 
 export default async function RepEventDetailPage({
   params,
 }: PageProps<"/rep/events/[id]">) {
   const { id } = await params;
   const supabase = await createClient();
+  const locale = await getCurrentLocale();
+  const dict = getDictionary(locale);
+  const d = dict.repEventDetail;
+
   const { data: event } = await supabase
     .from("events")
     .select(
@@ -43,54 +56,58 @@ export default async function RepEventDetailPage({
         .map(
           (s) =>
             `${[s.name, s.field].filter(Boolean).join(" · ")}${
-              s.bank_details_known ? "" : " (פרטי בנק טרם נמסרו)"
+              s.bank_details_known ? "" : d.bankDetailsNotProvided
             }`
         )
         .join("; ")
     : [event.supplier_name, event.supplier_field].filter(Boolean).join(" · ");
 
   const rows: [string, string | null | undefined][] = [
-    ["מטרת האירוע", event.purpose],
-    ["תאריכים", `${formatDateDMY(event.start_date)} – ${formatDateDMY(event.end_date)}`],
-    ["מיקום", [event.city, getCountryName(event.country)].filter(Boolean).join(", ")],
+    [d.purposeLabel, event.purpose],
     [
-      "ארגון / קהילה מארחת",
-      event.host_org_name,
+      d.datesLabel,
+      `${formatDateDMY(event.start_date)} – ${formatDateDMY(event.end_date)}`,
     ],
     [
-      "איש קשר מארגן",
+      d.locationLabel,
+      [event.city, getCountryName(event.country, locale)].filter(Boolean).join(", "),
+    ],
+    [d.hostOrgLabel, event.host_org_name],
+    [
+      d.hostManagerLabel,
       [event.host_manager_name, event.host_manager_phone, event.host_manager_email]
         .filter(Boolean)
         .join(" · "),
     ],
-    ["קהל יעד", event.target_audience],
+    [d.targetAudienceLabel, event.target_audience],
     [
-      "מספר משתתפים צפוי",
+      d.participantsCountLabel,
       event.participants_count != null ? String(event.participants_count) : null,
     ],
-    ["תיאור התכנית", event.program_description],
-    ["מסלול", event.track === "ongoing" ? "מתמשך" : "חד פעמי"],
+    [d.programDescriptionLabel, event.program_description],
+    [d.trackLabel, event.track === "ongoing" ? d.trackOngoing : d.trackOneTime],
+    [d.requestedAmountLabel, `${event.requested_amount} ${event.requested_currency}`],
+    [d.transferNoteLabel, event.transfer_amount_note],
     [
-      "סכום מבוקש",
-      `${event.requested_amount} ${event.requested_currency}`,
-    ],
-    ["סכום מדויק להעברה", event.transfer_amount_note],
-    [
-      (suppliers ?? []).length > 1 ? "ספקים מקומיים" : "ספק מקומי",
+      (suppliers ?? []).length > 1
+        ? d.suppliersLabelPlural
+        : d.suppliersLabelSingular,
       suppliersSummary || null,
     ],
     [
-      "נוכחות קק\"ל שנבחרה",
+      d.kkalPresenceSelectedTitle,
       event.kkal_presence_selections?.length
-        ? `${event.kkal_presence_selections.length} אפשרויות נבחרו`
+        ? t(d.kkalPresenceSelectedLabel, {
+            count: event.kkal_presence_selections.length,
+          })
         : null,
     ],
-    ["הערות", event.notes],
+    [dict.common.notes, event.notes],
   ];
 
   if (event.approved_amount != null) {
     rows.push([
-      "סכום מאושר",
+      d.approvedAmountLabel,
       `${event.approved_amount} ${event.requested_currency}`,
     ]);
   }
@@ -98,13 +115,13 @@ export default async function RepEventDetailPage({
   return (
     <div className="max-w-2xl">
       <Link href="/rep" className="text-sm text-(--color-brand) underline">
-        ← חזרה
+        ← {dict.common.back}
       </Link>
       <div className="mt-3 flex items-center gap-3">
         <h1 className="text-xl font-bold text-(--color-brand-dark)">
           {event.name}
         </h1>
-        <StatusBadge status={event.status} />
+        <StatusBadge status={event.status} locale={locale} />
       </div>
 
       <div className="mt-6 rounded-xl bg-white border border-black/5 p-6 shadow-sm divide-y divide-black/5">
@@ -121,7 +138,7 @@ export default async function RepEventDetailPage({
       {event.kkal_notes && (
         <div className="mt-4 rounded-xl bg-(--color-brand-light) p-4 text-sm">
           <div className="font-medium text-(--color-brand-dark)">
-            הערות קק&quot;ל
+            {d.kkalNotesTitle}
           </div>
           <div className="mt-1">{event.kkal_notes}</div>
         </div>
@@ -132,7 +149,7 @@ export default async function RepEventDetailPage({
           {invoices && invoices.length > 0 && (
             <div className="rounded-xl bg-white border border-black/5 p-4 shadow-sm">
               <h2 className="font-semibold text-(--color-brand-dark) mb-2">
-                חשבוניות שהוזנו
+                {d.invoicesEnteredTitle}
               </h2>
               <div className="divide-y divide-black/5">
                 {invoices.map((inv) => (
@@ -144,9 +161,9 @@ export default async function RepEventDetailPage({
                         {formatDateDMY(inv.invoice_date)}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <StatusBadge status={inv.kkal_status} />
+                        <StatusBadge status={inv.kkal_status} locale={locale} />
                         {inv.kkal_status === "approved" && (
-                          <StatusBadge status={inv.payment_status} />
+                          <StatusBadge status={inv.payment_status} locale={locale} />
                         )}
                       </div>
                     </div>
@@ -154,8 +171,7 @@ export default async function RepEventDetailPage({
                     {inv.payment_status === "returned_to_rep" && (
                       <div className="mt-3 rounded-lg bg-(--color-gold-light) p-3 space-y-2">
                         <p className="text-sm font-medium text-(--color-gold)">
-                          עמיאל ציינו שחסרים פרטים בחשבונית זו - יש לעדכן את
-                          פרטי הבנק ולשלוח בחזרה.
+                          {d.returnedToRepNotice}
                         </p>
                         {inv.amiel_notes && (
                           <p className="text-sm whitespace-pre-wrap">
@@ -164,6 +180,8 @@ export default async function RepEventDetailPage({
                         )}
                         <InvoiceBankEditPanel
                           invoiceId={inv.id}
+                          dict={dict}
+                          locale={locale}
                           defaultValues={{
                             supplierBankName: inv.supplier_bank_name ?? "",
                             supplierBankAddress: inv.supplier_bank_address ?? "",
@@ -185,6 +203,8 @@ export default async function RepEventDetailPage({
           <InvoiceForm
             eventId={event.id}
             defaultCurrency={event.requested_currency}
+            dict={dict}
+            locale={locale}
             suppliers={(suppliers ?? []).map((s) => ({
               id: s.id,
               name: s.name,

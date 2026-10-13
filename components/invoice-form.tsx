@@ -14,7 +14,9 @@ import { submitInvoice } from "@/lib/actions/invoices";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
 import { Required } from "@/components/form-required-mark";
-import { COUNTRIES_HE } from "@/lib/data/countries";
+import { COUNTRIES_HE, COUNTRIES_EN } from "@/lib/data/countries";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/config";
 import {
   focusFirstInvalidField,
   scrollElementIntoView,
@@ -37,27 +39,48 @@ const labelClass = "block text-sm font-medium mb-1";
 const errorClass = "text-xs text-red-600 mt-1";
 const noteClass = "text-xs text-black/50 mt-1";
 
-function FieldError({ message }: { message?: string }) {
+function t(template: string, values: Record<string, string | number> = {}) {
+  return Object.entries(values).reduce(
+    (acc, [key, value]) => acc.replaceAll(`{${key}}`, String(value)),
+    template
+  );
+}
+
+function FieldError({
+  message,
+  dict,
+}: {
+  message?: string;
+  dict: Dictionary;
+}) {
   if (!message) return null;
   const known: Record<string, string> = {
-    required: "שדה חובה",
-    must_be_positive: "יש להזין סכום חיובי",
-    invalid_email: "כתובת מייל לא תקינה",
-    invalid_type: "שדה חובה",
+    required: dict.common.fieldErrors.required,
+    must_be_positive: dict.common.fieldErrors.mustBePositive,
+    invalid_email: dict.common.fieldErrors.invalidEmail,
+    invalid_type: dict.common.fieldErrors.invalidType,
   };
-  return <p className={errorClass}>{known[message] ?? "שדה לא תקין"}</p>;
+  return (
+    <p className={errorClass}>{known[message] ?? dict.common.fieldErrors.invalid}</p>
+  );
 }
 
 export function InvoiceForm({
   eventId,
   defaultCurrency,
   suppliers,
+  dict,
+  locale,
 }: {
   eventId: string;
   defaultCurrency: string;
   suppliers: InvoiceSupplierOption[];
+  dict: Dictionary;
+  locale: Locale;
 }) {
   const router = useRouter();
+  const d = dict.invoiceForm;
+  const countries = locale === "en" ? COUNTRIES_EN : COUNTRIES_HE;
   const [serverError, setServerError] = useState<string | null>(null);
   const serverErrorRef = useRef<HTMLDivElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -121,7 +144,7 @@ export function InvoiceForm({
       const supabase = createClient();
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
-        setServerError("יש להתחבר מחדש כדי לשלוח את החשבונית");
+        setServerError(d.errorNotLoggedIn);
         return;
       }
       const uid = userData.user.id;
@@ -153,17 +176,15 @@ export function InvoiceForm({
       if (result?.error) {
         setServerError(
           result.error === "invalid_input"
-            ? "יש לבדוק את השדות שמולאו"
-            : `לא ניתן היה לשלוח את החשבונית: ${result.error}`
+            ? dict.common.invalidFieldsNotice
+            : t(d.errorSubmitFailed, { error: result.error })
         );
         return;
       }
       setSuccess(true);
       router.refresh();
     } catch (e) {
-      setServerError(
-        e instanceof Error ? e.message : "אירעה שגיאה בהעלאת הקובץ"
-      );
+      setServerError(e instanceof Error ? e.message : d.errorUploadFailed);
     } finally {
       setUploading(false);
     }
@@ -174,13 +195,13 @@ export function InvoiceForm({
   if (success) {
     return (
       <div className="rounded-xl border border-(--color-accent-dark)/30 bg-(--color-accent-light) p-4 text-sm text-(--color-accent-dark)">
-        החשבונית נשלחה בהצלחה וממתינה לבדיקת קק&quot;ל.{" "}
+        {d.successMessage}{" "}
         <button
           type="button"
           onClick={() => setSuccess(false)}
           className="underline font-medium"
         >
-          הזנת חשבונית נוספת
+          {d.successAddAnother}
         </button>
       </div>
     );
@@ -191,9 +212,7 @@ export function InvoiceForm({
       onSubmit={handleSubmit(onSubmit, focusFirstInvalidField)}
       className="space-y-5 rounded-xl border border-black/10 bg-white p-5"
     >
-      <h3 className="font-semibold text-(--color-brand-dark)">
-        הזנת חשבונית
-      </h3>
+      <h3 className="font-semibold text-(--color-brand-dark)">{d.title}</h3>
 
       {serverError && (
         <div
@@ -206,39 +225,35 @@ export function InvoiceForm({
 
       {suppliers.length > 0 && (
         <div>
-          <label className={labelClass}>מילוי אוטומטי מפרטי ספק שהוזן באירוע</label>
+          <label className={labelClass}>{d.prefillLabel}</label>
           <select
             className={inputClass}
             value={prefillId}
             onChange={(e) => applyPrefill(e.target.value)}
           >
-            <option value="">בחר/י ספק (לא חובה)</option>
+            <option value="">{d.prefillPlaceholder}</option>
             {suppliers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
-                {!s.bankDetailsKnown ? " (פרטי בנק טרם נמסרו)" : ""}
+                {!s.bankDetailsKnown ? d.prefillBankUnknownSuffix : ""}
               </option>
             ))}
           </select>
-          <p className={noteClass}>
-            ניתן למלא את פרטי הספק והבנק באופן אוטומטי לפי אחד הספקים שצוינו
-            בעת פתיחת האירוע. אם פרטי הבנק לא נמסרו אז, יש להזין אותם כאן
-            באופן מלא — הם נדרשים לפני ביצוע התשלום בפועל.
-          </p>
+          <p className={noteClass}>{d.prefillHint}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>
-            שם הספק
+            {d.supplierNameLabel}
             <Required />
           </label>
           <input className={inputClass} {...register("supplierName")} />
-          <FieldError message={errors.supplierName?.message} />
+          <FieldError message={errors.supplierName?.message} dict={dict} />
         </div>
         <div>
-          <label className={labelClass}>תחום עיסוק</label>
+          <label className={labelClass}>{d.supplierFieldLabel}</label>
           <input className={inputClass} {...register("supplierField")} />
         </div>
       </div>
@@ -246,77 +261,89 @@ export function InvoiceForm({
       <div className="rounded-lg bg-black/[0.02] p-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>
-            שם בעל החשבון
+            {d.beneficiaryNameLabel}
             <Required />
           </label>
           <input
             className={inputClass}
             {...register("supplierBeneficiaryName")}
           />
-          <FieldError message={errors.supplierBeneficiaryName?.message} />
+          <FieldError
+            message={errors.supplierBeneficiaryName?.message}
+            dict={dict}
+          />
         </div>
         <div>
           <label className={labelClass}>
-            שם הבנק
+            {d.bankNameLabel}
             <Required />
           </label>
           <input className={inputClass} {...register("supplierBankName")} />
-          <FieldError message={errors.supplierBankName?.message} />
+          <FieldError message={errors.supplierBankName?.message} dict={dict} />
         </div>
         <div>
           <label className={labelClass}>
-            מספר חשבון / IBAN
+            {d.ibanLabel}
             <Required />
           </label>
           <input className={inputClass} {...register("supplierIban")} />
-          <FieldError message={errors.supplierIban?.message} />
+          <FieldError message={errors.supplierIban?.message} dict={dict} />
         </div>
         <div>
           <label className={labelClass}>
-            קוד סוויפט (SWIFT)
+            {d.swiftLabel}
             <Required />
           </label>
           <input className={inputClass} {...register("supplierSwift")} />
-          <FieldError message={errors.supplierSwift?.message} />
+          <FieldError message={errors.supplierSwift?.message} dict={dict} />
         </div>
         <div>
           <label className={labelClass}>
-            כתובת הבנק
+            {d.bankAddressLabel}
             <Required />
           </label>
           <input
             className={inputClass}
             {...register("supplierBankAddress")}
           />
-          <FieldError message={errors.supplierBankAddress?.message} />
+          <FieldError
+            message={errors.supplierBankAddress?.message}
+            dict={dict}
+          />
         </div>
         <div>
           <label className={labelClass}>
-            מדינת הבנק
+            {d.bankCountryLabel}
             <Required />
           </label>
           <select className={inputClass} {...register("supplierBankCountry")}>
-            <option value="">בחר/י מדינה</option>
-            {COUNTRIES_HE.map((c) => (
+            <option value="">{dict.register.selectCountry}</option>
+            {countries.map((c) => (
               <option key={c.code} value={c.code}>
                 {c.name}
               </option>
             ))}
           </select>
-          <FieldError message={errors.supplierBankCountry?.message} />
+          <FieldError
+            message={errors.supplierBankCountry?.message}
+            dict={dict}
+          />
         </div>
         <div>
-          <label className={labelClass}>טלפון איש קשר בספק</label>
+          <label className={labelClass}>{d.contactPhoneLabel}</label>
           <input className={inputClass} {...register("supplierContactPhone")} />
         </div>
         <div>
-          <label className={labelClass}>מייל איש קשר בספק</label>
+          <label className={labelClass}>{d.contactEmailLabel}</label>
           <input
             type="email"
             className={inputClass}
             {...register("supplierContactEmail")}
           />
-          <FieldError message={errors.supplierContactEmail?.message} />
+          <FieldError
+            message={errors.supplierContactEmail?.message}
+            dict={dict}
+          />
         </div>
       </div>
 
@@ -324,7 +351,7 @@ export function InvoiceForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>
-              סכום החשבונית (במטבע המקורי)
+              {d.amountLabel}
               <Required />
             </label>
             <input
@@ -333,11 +360,11 @@ export function InvoiceForm({
               className={inputClass}
               {...register("amount")}
             />
-            <FieldError message={errors.amount?.message} />
+            <FieldError message={errors.amount?.message} dict={dict} />
           </div>
           <div>
             <label className={labelClass}>
-              מטבע החשבונית
+              {d.currencyLabel}
               <Required />
             </label>
             <input
@@ -345,14 +372,14 @@ export function InvoiceForm({
               className={inputClass}
               {...register("currency")}
             />
-            <FieldError message={errors.currency?.message} />
+            <FieldError message={errors.currency?.message} dict={dict} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>
-              סכום לתשלום
+              {d.paymentAmountLabel}
               <Required />
             </label>
             <input
@@ -361,11 +388,11 @@ export function InvoiceForm({
               className={inputClass}
               {...register("paymentAmount")}
             />
-            <FieldError message={errors.paymentAmount?.message} />
+            <FieldError message={errors.paymentAmount?.message} dict={dict} />
           </div>
           <div>
             <label className={labelClass}>
-              מטבע התשלום
+              {d.paymentCurrencyLabel}
               <Required />
             </label>
             <select
@@ -378,15 +405,18 @@ export function InvoiceForm({
                 </option>
               ))}
             </select>
-            <FieldError message={errors.paymentAmountCurrency?.message} />
-            <p className={noteClass}>עמיאל מעבירים תשלום לספקים רק בדולר או ביורו.</p>
+            <FieldError
+              message={errors.paymentAmountCurrency?.message}
+              dict={dict}
+            />
+            <p className={noteClass}>{d.paymentCurrencyHint}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>
-              סכום החשבונית בשקלים (₪)
+              {d.ilsAmountLabel}
               <Required />
             </label>
             <input
@@ -395,11 +425,11 @@ export function InvoiceForm({
               className={inputClass}
               {...register("ilsAmount")}
             />
-            <FieldError message={errors.ilsAmount?.message} />
+            <FieldError message={errors.ilsAmount?.message} dict={dict} />
           </div>
           <div>
             <label className={labelClass}>
-              תאריך החשבונית
+              {d.invoiceDateLabel}
               <Required />
             </label>
             <input
@@ -408,14 +438,14 @@ export function InvoiceForm({
               className={inputClass}
               {...register("invoiceDate")}
             />
-            <FieldError message={errors.invoiceDate?.message} />
+            <FieldError message={errors.invoiceDate?.message} dict={dict} />
           </div>
         </div>
       </div>
 
       <div>
         <label className={labelClass}>
-          קובץ החשבונית
+          {d.fileLabel}
           <Required />
         </label>
         <input
@@ -428,7 +458,10 @@ export function InvoiceForm({
             })
           }
         />
-        <FieldError message={errors.file?.message as string | undefined} />
+        <FieldError
+          message={errors.file?.message as string | undefined}
+          dict={dict}
+        />
       </div>
 
       <button
@@ -436,7 +469,7 @@ export function InvoiceForm({
         disabled={busy}
         className="w-full rounded-md bg-(--color-brand) text-white font-medium py-2.5 hover:bg-(--color-brand-dark) transition disabled:opacity-60"
       >
-        {busy ? "שולח..." : "שליחת חשבונית"}
+        {busy ? dict.common.sending : d.submitButton}
       </button>
     </form>
   );

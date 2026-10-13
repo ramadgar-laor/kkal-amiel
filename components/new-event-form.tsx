@@ -12,7 +12,7 @@ import {
 import { createEvent } from "@/lib/actions/events";
 import { createClient } from "@/lib/supabase/client";
 import { uploadEventFile } from "@/lib/storage/event-files";
-import { COUNTRIES_HE } from "@/lib/data/countries";
+import { COUNTRIES_HE, COUNTRIES_EN } from "@/lib/data/countries";
 import {
   focusFirstInvalidField,
   scrollElementIntoView,
@@ -23,6 +23,8 @@ import {
 } from "@/lib/data/kkal-presence";
 import { Required } from "@/components/form-required-mark";
 import { renderLiteMarkdown } from "@/lib/content/lite-markdown";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/config";
 
 export type RepDefaults = {
   firstName: string;
@@ -43,21 +45,39 @@ const noteClass = "text-xs text-black/50 mt-1";
 const sectionClass = "space-y-4 border-t border-black/5 pt-6 first:border-t-0 first:pt-0";
 const sectionTitleClass = "font-semibold text-(--color-brand-dark)";
 
-function FieldError({ message }: { message?: string }) {
+// Fills {placeholder} tokens in a dictionary string with the given values.
+function t(template: string, values: Record<string, string | number> = {}) {
+  return Object.entries(values).reduce(
+    (acc, [key, value]) => acc.replaceAll(`{${key}}`, String(value)),
+    template
+  );
+}
+
+function FieldError({
+  message,
+  dict,
+}: {
+  message?: string;
+  dict: Dictionary;
+}) {
   if (!message) return null;
   const known: Record<string, string> = {
-    required: "שדה חובה",
-    required_for_ongoing_track: "שדה חובה עבור תוכנית מתמשכת",
-    must_be_positive: "יש להזין סכום חיובי",
-    must_be_positive_integer: "יש להזין מספר שלם חיובי",
-    must_agree: 'יש לאשר הצהרה זו כדי להגיש את הבקשה',
-    min_selections: `יש לבחור לפחות ${KKAL_PRESENCE_MIN_SELECTIONS} אפשרויות מהרשימה`,
-    required_at_least_one: "יש להוסיף לפחות שורה אחת",
-    end_before_start: "תאריך הסיום לא יכול להיות מוקדם מתאריך ההתחלה",
-    invalid_email: "כתובת מייל לא תקינה",
-    invalid_type: "שדה חובה",
+    required: dict.common.fieldErrors.required,
+    required_for_ongoing_track: dict.common.fieldErrors.requiredForOngoingTrack,
+    must_be_positive: dict.common.fieldErrors.mustBePositive,
+    must_be_positive_integer: dict.common.fieldErrors.mustBePositiveInteger,
+    must_agree: dict.common.fieldErrors.mustAgree,
+    min_selections: t(dict.common.fieldErrors.minSelections, {
+      count: KKAL_PRESENCE_MIN_SELECTIONS,
+    }),
+    required_at_least_one: dict.common.fieldErrors.requiredAtLeastOne,
+    end_before_start: dict.common.fieldErrors.endBeforeStart,
+    invalid_email: dict.common.fieldErrors.invalidEmail,
+    invalid_type: dict.common.fieldErrors.invalidType,
   };
-  return <p className={errorClass}>{known[message] ?? "שדה לא תקין"}</p>;
+  return (
+    <p className={errorClass}>{known[message] ?? dict.common.fieldErrors.invalid}</p>
+  );
 }
 
 function YesNo({
@@ -66,12 +86,14 @@ function YesNo({
   note,
   register,
   error,
+  dict,
 }: {
   name: "registeredToProgram" | "inWhatsappGroup";
   label: React.ReactNode;
   note?: string;
   register: ReturnType<typeof useForm<EventFormValues>>["register"];
   error?: string;
+  dict: Dictionary;
 }) {
   return (
     <div>
@@ -82,13 +104,13 @@ function YesNo({
       {note && <p className={noteClass}>{note}</p>}
       <div className="flex gap-6 mt-1.5">
         <label className="flex items-center gap-1.5 text-sm">
-          <input type="radio" value="yes" {...register(name)} /> כן
+          <input type="radio" value="yes" {...register(name)} /> {dict.common.yes}
         </label>
         <label className="flex items-center gap-1.5 text-sm">
-          <input type="radio" value="no" {...register(name)} /> לא
+          <input type="radio" value="no" {...register(name)} /> {dict.common.no}
         </label>
       </div>
-      <FieldError message={error} />
+      <FieldError message={error} dict={dict} />
     </div>
   );
 }
@@ -98,6 +120,7 @@ function Consent({
   text,
   register,
   error,
+  dict,
 }: {
   name:
     | "consentNoCommitment"
@@ -109,6 +132,7 @@ function Consent({
   text: string;
   register: ReturnType<typeof useForm<EventFormValues>>["register"];
   error?: string;
+  dict: Dictionary;
 }) {
   return (
     <div className="rounded-lg border border-black/10 bg-black/[0.02] p-4">
@@ -118,13 +142,13 @@ function Consent({
       </label>
       <div className="flex gap-6 mt-1.5">
         <label className="flex items-center gap-1.5 text-sm">
-          <input type="radio" value="yes" {...register(name)} /> כן
+          <input type="radio" value="yes" {...register(name)} /> {dict.common.yes}
         </label>
         <label className="flex items-center gap-1.5 text-sm">
-          <input type="radio" value="no" {...register(name)} /> לא
+          <input type="radio" value="no" {...register(name)} /> {dict.common.no}
         </label>
       </div>
-      <FieldError message={error} />
+      <FieldError message={error} dict={dict} />
     </div>
   );
 }
@@ -132,16 +156,22 @@ function Consent({
 export function NewEventForm({
   repDefaults,
   introMarkdown,
+  dict,
+  locale,
 }: {
   repDefaults: RepDefaults;
   // The form's "preceding text" block, editable by an admin via
   // /admin/settings without a code change (lib/content/settings-defs.ts).
   introMarkdown: string;
+  dict: Dictionary;
+  locale: Locale;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const serverErrorRef = useRef<HTMLDivElement>(null);
   const [uploading, setUploading] = useState(false);
+  const d = dict.newEvent;
+  const countries = locale === "en" ? COUNTRIES_EN : COUNTRIES_HE;
   const {
     register,
     handleSubmit,
@@ -174,7 +204,7 @@ export function NewEventForm({
       participantsCount: "",
       programDescription: "",
       track: "one_time",
-      ongoingProgramFile: null,
+      ongoingProgramDescription: "",
       requestedAmount: "",
       transferAmountNote: "",
       budgetItems: [
@@ -246,24 +276,20 @@ export function NewEventForm({
       const supabase = createClient();
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
-        setServerError("יש להתחבר מחדש כדי לשלוח את הבקשה");
+        setServerError(d.errorNotLoggedIn);
         return;
       }
       const uid = userData.user.id;
 
-      const [quote1Path, quote2Path, quote3Path, ongoingProgramFilePath] =
-        await Promise.all([
-          uploadEventFile(supabase, uid, values.quote1.file as File),
-          values.quote2.file
-            ? uploadEventFile(supabase, uid, values.quote2.file)
-            : Promise.resolve(""),
-          values.quote3.file
-            ? uploadEventFile(supabase, uid, values.quote3.file)
-            : Promise.resolve(""),
-          values.track === "ongoing" && values.ongoingProgramFile
-            ? uploadEventFile(supabase, uid, values.ongoingProgramFile)
-            : Promise.resolve(""),
-        ]);
+      const [quote1Path, quote2Path, quote3Path] = await Promise.all([
+        uploadEventFile(supabase, uid, values.quote1.file as File),
+        values.quote2.file
+          ? uploadEventFile(supabase, uid, values.quote2.file)
+          : Promise.resolve(""),
+        values.quote3.file
+          ? uploadEventFile(supabase, uid, values.quote3.file)
+          : Promise.resolve(""),
+      ]);
 
       const payload: EventInput = {
         orgAffiliation: values.orgAffiliation,
@@ -282,7 +308,7 @@ export function NewEventForm({
         participantsCount: Number(values.participantsCount),
         programDescription: values.programDescription,
         track: values.track,
-        ongoingProgramFilePath,
+        ongoingProgramDescription: values.ongoingProgramDescription,
         requestedAmount: Number(values.requestedAmount),
         transferAmountNote: values.transferAmountNote,
         budgetItems: values.budgetItems.map((item) => ({
@@ -321,17 +347,15 @@ export function NewEventForm({
       if (result?.error) {
         setServerError(
           result.error === "invalid_input"
-            ? "יש לבדוק את השדות שמולאו"
-            : `לא ניתן היה לשלוח את הבקשה: ${result.error}`
+            ? d.errorInvalidFields
+            : t(d.errorSubmitFailed, { error: result.error })
         );
         return;
       }
       router.push("/rep");
       router.refresh();
     } catch (e) {
-      setServerError(
-        e instanceof Error ? e.message : "אירעה שגיאה בהעלאת הקבצים"
-      );
+      setServerError(e instanceof Error ? e.message : d.errorUploadFailed);
     } finally {
       setUploading(false);
     }
@@ -354,92 +378,87 @@ export function NewEventForm({
       )}
 
       <p className="text-xs text-black/60">
-        <span className="text-red-600">*</span> שדות המסומנים בכוכבית הם שדות
-        חובה.
+        <span className="text-red-600">*</span> {d.requiredNote}
       </p>
 
       {/* Editable by an admin via /admin/settings (lib/content/settings-defs.ts
-          -> new_event_intro_he) -- originally verbatim intro text from the
-          real KKL event-budget-request form. */}
+          -> new_event_intro_he / new_event_intro_en) -- originally verbatim
+          intro text from the real KKL event-budget-request form. */}
       <div className="rounded-lg border border-(--color-brand)/20 bg-(--color-brand-light) p-5 text-sm leading-relaxed space-y-3">
         {renderLiteMarkdown(introMarkdown)}
       </div>
 
       {/* Ambassador / affiliation confirmation */}
       <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>הפרטים שלך</h2>
-        <p className="text-xs text-black/50">
-          הפרטים הבאים נלקחו מהפרופיל שלך במערכת. אם משהו שגוי, אפשר לעדכן
-          דרך פרטי ההרשמה שלך.
-        </p>
+        <h2 className={sectionTitleClass}>{d.sectionYourDetails}</h2>
+        <p className="text-xs text-black/50">{d.sectionYourDetailsNote}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm bg-black/[0.02] rounded-lg p-4">
           <div>
-            <span className="text-black/50">שם: </span>
+            <span className="text-black/50">{d.nameLabel} </span>
             {repDefaults.firstName} {repDefaults.lastName}
           </div>
           <div>
-            <span className="text-black/50">מייל: </span>
+            <span className="text-black/50">{d.emailLabel} </span>
             {repDefaults.email || "—"}
           </div>
           <div>
-            <span className="text-black/50">טלפון מקומי: </span>
+            <span className="text-black/50">{d.localPhoneLabel} </span>
             {repDefaults.missionPhone || "—"}
           </div>
           <div>
-            <span className="text-black/50">וואטסאפ: </span>
+            <span className="text-black/50">{d.whatsappLabel} </span>
             {repDefaults.whatsappPhone || "—"}
           </div>
         </div>
 
         <div>
           <label className={labelClass}>
-            מטעם איזה ארגון את/ה שליח/ה או פעיל/ה חינוכי ביעד?
+            {d.orgAffiliationLabel}
             <Required />
           </label>
-          <p className={noteClass}>(חשוב לנו לדעת איך הפכת לשגריר קק&quot;ל)</p>
+          <p className={noteClass}>{d.orgAffiliationNote}</p>
           <input className={inputClass} {...register("orgAffiliation")} />
-          <FieldError message={errors.orgAffiliation?.message} />
+          <FieldError message={errors.orgAffiliation?.message} dict={dict} />
         </div>
 
         <YesNo
           name="registeredToProgram"
-          label={'האם נרשמת לתוכנית שגרירי קק"ל?'}
+          label={d.registeredToProgramLabel}
           register={register}
           error={errors.registeredToProgram?.message}
+          dict={dict}
         />
         <YesNo
           name="inWhatsappGroup"
-          label='האם את/ה נמצא/ת בקבוצת הוואטסאפ של שגרירי קק"ל?'
-          note='כמובן הקבוצה הרלוונטית לאיזור הפעילות שלך (אירופה / ארה"ב / אמל"ט)'
+          label={d.inWhatsappGroupLabel}
+          note={d.inWhatsappGroupNote}
           register={register}
           error={errors.inWhatsappGroup?.message}
+          dict={dict}
         />
       </section>
 
       {/* Event basics */}
       <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>פרטי האירוע</h2>
+        <h2 className={sectionTitleClass}>{d.sectionEventDetails}</h2>
 
         <div>
           <label className={labelClass}>
-            שם האירוע שלגביו מבוקשת התמיכה
+            {d.eventNameLabel}
             <Required />
           </label>
-          <p className={noteClass}>
-            אירוע משמעותו יכולה להיות: מיזם, תוכנית מתמשכת, פעילות, מסיבה
-            סביב חג, סמינר, שבתון וכדומה
-          </p>
+          <p className={noteClass}>{d.eventNameNote}</p>
           <input className={inputClass} {...register("name")} />
-          <FieldError message={errors.name?.message} />
+          <FieldError message={errors.name?.message} dict={dict} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>
-              תאריך האירוע (התחלה)
+              {d.startDateLabel}
               <Required />
             </label>
-            <p className={noteClass}>גם אם התאריך לא סופי</p>
+            <p className={noteClass}>{d.startDateNote}</p>
             <input
               type="date"
               lang="en-GB"
@@ -450,11 +469,11 @@ export function NewEventForm({
                 },
               })}
             />
-            <FieldError message={errors.startDate?.message} />
+            <FieldError message={errors.startDate?.message} dict={dict} />
           </div>
           <div>
             <label className={labelClass}>
-              תאריך סיום (אם מדובר בתוכנית מתמשכת)
+              {d.endDateLabel}
               <Required />
             </label>
             <input
@@ -464,60 +483,58 @@ export function NewEventForm({
               className={inputClass}
               {...register("endDate")}
             />
-            <FieldError message={errors.endDate?.message} />
+            <FieldError message={errors.endDate?.message} dict={dict} />
           </div>
           <div>
-            <label className={labelClass}>עיר האירוע</label>
+            <label className={labelClass}>{d.cityLabel}</label>
             <input className={inputClass} {...register("city")} />
           </div>
           <div>
             <label className={labelClass}>
-              מדינת האירוע
+              {d.countryLabel}
               <Required />
             </label>
             <select className={inputClass} {...register("country")}>
-              <option value="">בחר/י מדינה</option>
-              {COUNTRIES_HE.map((c) => (
+              <option value="">{dict.register.selectCountry}</option>
+              {countries.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.name}
                 </option>
               ))}
             </select>
-            <FieldError message={errors.country?.message} />
+            <FieldError message={errors.country?.message} dict={dict} />
           </div>
         </div>
 
         <div>
           <label className={labelClass}>
-            שם הארגון / המוסד / התנועה / הקהילה שבה או בעבורה תתקיים
-            הפעילות, או הארגון המוביל את הפעילות
+            {d.hostOrgNameLabel}
             <Required />
           </label>
           <input className={inputClass} {...register("hostOrgName")} />
-          <FieldError message={errors.hostOrgName?.message} />
+          <FieldError message={errors.hostOrgName?.message} dict={dict} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>
-              שם המנהל/ת של הארגון / הקהילה / המוסד המקומי המבקש את
-              התמיכה
+              {d.hostManagerNameLabel}
               <Required />
             </label>
             <input className={inputClass} {...register("hostManagerName")} />
-            <FieldError message={errors.hostManagerName?.message} />
+            <FieldError message={errors.hostManagerName?.message} dict={dict} />
           </div>
           <div>
             <label className={labelClass}>
-              מספר טלפון המנהל/ת
+              {d.hostManagerPhoneLabel}
               <Required />
             </label>
             <input className={inputClass} {...register("hostManagerPhone")} />
-            <FieldError message={errors.hostManagerPhone?.message} />
+            <FieldError message={errors.hostManagerPhone?.message} dict={dict} />
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass}>
-              כתובת מייל של המנהל/ת
+              {d.hostManagerEmailLabel}
               <Required />
             </label>
             <input
@@ -525,22 +542,22 @@ export function NewEventForm({
               className={inputClass}
               {...register("hostManagerEmail")}
             />
-            <FieldError message={errors.hostManagerEmail?.message} />
+            <FieldError message={errors.hostManagerEmail?.message} dict={dict} />
           </div>
         </div>
 
         <div>
           <label className={labelClass}>
-            קהל יעד של האירוע כולל צפי של גילאים
+            {d.targetAudienceLabel}
             <Required />
           </label>
           <input className={inputClass} {...register("targetAudience")} />
-          <FieldError message={errors.targetAudience?.message} />
+          <FieldError message={errors.targetAudience?.message} dict={dict} />
         </div>
 
         <div>
           <label className={labelClass}>
-            מספר צפי של משתתפים
+            {d.participantsCountLabel}
             <Required />
           </label>
           <input
@@ -549,12 +566,12 @@ export function NewEventForm({
             className={inputClass}
             {...register("participantsCount")}
           />
-          <FieldError message={errors.participantsCount?.message} />
+          <FieldError message={errors.participantsCount?.message} dict={dict} />
         </div>
 
         <div>
           <label className={labelClass}>
-            הסבר ופירוט של עד 50 מילים על התוכנית של האירוע
+            {d.programDescriptionLabel}
             <Required />
           </label>
           <textarea
@@ -562,12 +579,12 @@ export function NewEventForm({
             rows={3}
             {...register("programDescription")}
           />
-          <FieldError message={errors.programDescription?.message} />
+          <FieldError message={errors.programDescription?.message} dict={dict} />
         </div>
 
         <div>
           <label className={labelClass}>
-            לפי איזה מהמסלולים אתם מגישים את הבקשה?
+            {d.trackQuestionLabel}
             <Required />
           </label>
           <div className="space-y-2 mt-1.5">
@@ -578,10 +595,7 @@ export function NewEventForm({
                 className="mt-0.5"
                 {...register("track")}
               />
-              <span>
-                1. אירוע חד פעמי - בסכום של עד 10,000 ש&quot;ח לאירוע של
-                שגריר קק&quot;ל.
-              </span>
+              <span>{d.trackOneTimeLabel}</span>
             </label>
             <label className="flex items-start gap-2 text-sm rounded-lg border border-black/10 p-3">
               <input
@@ -590,10 +604,7 @@ export function NewEventForm({
                 className="mt-0.5"
                 {...register("track")}
               />
-              <span>
-                2. תוכנית מתמשכת (לפחות 20 מפגשים + אירוע מרכזי) - בסכום
-                של עד 20,000 ש&quot;ח לתוכנית של שגריר קק&quot;ל.
-              </span>
+              <span>{d.trackOngoingLabel}</span>
             </label>
           </div>
         </div>
@@ -601,31 +612,29 @@ export function NewEventForm({
         {track === "ongoing" && (
           <div>
             <label className={labelClass}>
-              תוכנית מתמשכת: הסבר של עד 500 מילים (קובץ וורד)
+              {d.ongoingDescriptionLabel}
               <Required />
             </label>
-            <input
-              type="file"
-              name="ongoingProgramFile"
+            <textarea
               className={inputClass}
-              onChange={(e) =>
-                setValue("ongoingProgramFile", e.target.files?.[0] ?? null, {
-                  shouldValidate: true,
-                })
-              }
+              rows={6}
+              {...register("ongoingProgramDescription")}
             />
-            <FieldError message={errors.ongoingProgramFile?.message} />
+            <FieldError
+              message={errors.ongoingProgramDescription?.message}
+              dict={dict}
+            />
           </div>
         )}
       </section>
 
       {/* Budget */}
       <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>תקציב</h2>
+        <h2 className={sectionTitleClass}>{d.sectionBudget}</h2>
 
         <div>
           <label className={labelClass}>
-            סכום התמיכה המבוקש (נא לציין סכום בשקלים)
+            {d.requestedAmountLabel}
             <Required />
           </label>
           <input
@@ -634,27 +643,23 @@ export function NewEventForm({
             className={inputClass}
             {...register("requestedAmount")}
           />
-          <FieldError message={errors.requestedAmount?.message} />
+          <FieldError message={errors.requestedAmount?.message} dict={dict} />
         </div>
 
         <div>
           <label className={labelClass}>
-            סכום מדויק להעברה ביורו או בדולר בלבד
+            {d.transferAmountNoteLabel}
             <Required />
           </label>
-          <p className={noteClass}>
-            נא לרשום את הסכום המדויק המבוקש, בציון שם המטבע (דולר/יורו).
-            שימו לב שהסכום לא עולה על גובה המסלול שבחרתם (עד 10,000 ש&quot;ח
-            או עד 20,000 ש&quot;ח).
-          </p>
+          <p className={noteClass}>{d.transferAmountNoteHint}</p>
           <input className={inputClass} {...register("transferAmountNote")} />
-          <FieldError message={errors.transferAmountNote?.message} />
+          <FieldError message={errors.transferAmountNote?.message} dict={dict} />
         </div>
 
         <div data-field-name="budgetItems">
           <div className="flex items-center justify-between">
             <label className={labelClass}>
-              אומדן תקציבי מפורט
+              {d.budgetItemsLabel}
               <Required />
             </label>
             <button
@@ -669,15 +674,11 @@ export function NewEventForm({
               }
               className="text-xs text-(--color-brand) underline shrink-0"
             >
-              + הוספת שורת הוצאה
+              {d.addBudgetItemButton}
             </button>
           </div>
-          <p className={noteClass}>
-            נא לפרט כל סעיף הוצאה בנפרד — מהות ההוצאה, הסכום במטבע המקומי
-            (עם ציון שם המטבע), ושער ההמרה לשקלים. הסכום בשקלים לכל שורה
-            וסך הכל מחושבים אוטומטית.
-          </p>
-          <FieldError message={budgetItemsRootError} />
+          <p className={noteClass}>{d.budgetItemsHint}</p>
+          <FieldError message={budgetItemsRootError} dict={dict} />
 
           <div className="space-y-3 mt-2">
             {budgetItemsArray.fields.map((field, index) => {
@@ -686,9 +687,10 @@ export function NewEventForm({
               const rate = Number(watchedBudgetItems[index]?.exchangeRate);
               const amountIls =
                 Number.isFinite(local) && Number.isFinite(rate)
-                  ? (local * rate).toLocaleString("he-IL", {
-                      maximumFractionDigits: 2,
-                    })
+                  ? (local * rate).toLocaleString(
+                      locale === "en" ? "en-US" : "he-IL",
+                      { maximumFractionDigits: 2 }
+                    )
                   : "—";
               return (
                 <div
@@ -697,7 +699,7 @@ export function NewEventForm({
                 >
                   <div className="flex items-center justify-between">
                     <div className="font-medium text-sm">
-                      שורת הוצאה {index + 1}
+                      {t(d.budgetItemTitle, { n: index + 1 })}
                     </div>
                     {budgetItemsArray.fields.length > 1 && (
                       <button
@@ -705,25 +707,28 @@ export function NewEventForm({
                         onClick={() => budgetItemsArray.remove(index)}
                         className="text-xs text-red-600 underline"
                       >
-                        הסרה
+                        {dict.common.remove}
                       </button>
                     )}
                   </div>
                   <div>
                     <label className={labelClass}>
-                      מהות ההוצאה
+                      {d.budgetDescriptionLabel}
                       <Required />
                     </label>
                     <input
                       className={inputClass}
                       {...register(`budgetItems.${index}.description`)}
                     />
-                    <FieldError message={itemErrors?.description?.message} />
+                    <FieldError
+                      message={itemErrors?.description?.message}
+                      dict={dict}
+                    />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className={labelClass}>
-                        סכום במטבע מקומי
+                        {d.budgetLocalAmountLabel}
                         <Required />
                       </label>
                       <input
@@ -732,11 +737,14 @@ export function NewEventForm({
                         className={inputClass}
                         {...register(`budgetItems.${index}.localAmount`)}
                       />
-                      <FieldError message={itemErrors?.localAmount?.message} />
+                      <FieldError
+                        message={itemErrors?.localAmount?.message}
+                        dict={dict}
+                      />
                     </div>
                     <div>
                       <label className={labelClass}>
-                        מטבע
+                        {d.budgetCurrencyLabel}
                         <Required />
                       </label>
                       <input
@@ -744,11 +752,14 @@ export function NewEventForm({
                         className={inputClass}
                         {...register(`budgetItems.${index}.currency`)}
                       />
-                      <FieldError message={itemErrors?.currency?.message} />
+                      <FieldError
+                        message={itemErrors?.currency?.message}
+                        dict={dict}
+                      />
                     </div>
                     <div>
                       <label className={labelClass}>
-                        שער המרה לשקל
+                        {d.budgetExchangeRateLabel}
                         <Required />
                       </label>
                       <input
@@ -757,11 +768,15 @@ export function NewEventForm({
                         className={inputClass}
                         {...register(`budgetItems.${index}.exchangeRate`)}
                       />
-                      <FieldError message={itemErrors?.exchangeRate?.message} />
+                      <FieldError
+                        message={itemErrors?.exchangeRate?.message}
+                        dict={dict}
+                      />
                     </div>
                   </div>
                   <div className="text-xs text-black/50">
-                    סכום בשקלים: <span className="font-medium">{amountIls}</span>
+                    {d.budgetIlsAmountLabel}{" "}
+                    <span className="font-medium">{amountIls}</span>
                   </div>
                 </div>
               );
@@ -769,11 +784,12 @@ export function NewEventForm({
           </div>
 
           <div className="flex items-center justify-between rounded-lg bg-black/[0.03] px-4 py-2.5 text-sm font-medium">
-            <span>סה&quot;כ בשקלים</span>
+            <span>{d.budgetTotalLabel}</span>
             <span>
-              {budgetItemsTotalIls.toLocaleString("he-IL", {
-                maximumFractionDigits: 2,
-              })}
+              {budgetItemsTotalIls.toLocaleString(
+                locale === "en" ? "en-US" : "he-IL",
+                { maximumFractionDigits: 2 }
+              )}
             </span>
           </div>
         </div>
@@ -782,7 +798,7 @@ export function NewEventForm({
       {/* Suppliers */}
       <section className={sectionClass} data-field-name="suppliers">
         <div className="flex items-center justify-between">
-          <h2 className={sectionTitleClass}>הספק המקומי</h2>
+          <h2 className={sectionTitleClass}>{d.sectionSuppliers}</h2>
           <button
             type="button"
             onClick={() =>
@@ -801,17 +817,11 @@ export function NewEventForm({
             }
             className="text-xs text-(--color-brand) underline shrink-0"
           >
-            + הוספת ספק נוסף
+            {d.addSupplierButton}
           </button>
         </div>
-        <p className="text-xs text-black/50">
-          הספק חייב להיות חברה העוסקת בתחום הרחב של הפקת אירועים (קייטרינג,
-          אולם, מפיק אירועים, מפעיל מוזיקלי וכו׳) — לא עמותה, לא בית כנסת,
-          לא בית ספר, לא תנועת נוער ולא פדרציה, ולא אדם פרטי וחשבון בנק
-          פרטי. הספק אינו יכול להיות ישראלי וגם לא ספק אינטרנטי (כמו
-          אמזון). אם יש יותר מספק אחד לאירוע, אפשר להוסיף ספק נוסף.
-        </p>
-        <FieldError message={suppliersRootError} />
+        <p className="text-xs text-black/50">{d.suppliersHint}</p>
+        <FieldError message={suppliersRootError} dict={dict} />
 
         <div className="space-y-4">
           {suppliersArray.fields.map((field, index) => {
@@ -823,53 +833,50 @@ export function NewEventForm({
                 className="rounded-lg border border-black/10 p-4 space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <div className="font-medium text-sm">ספק {index + 1}</div>
+                  <div className="font-medium text-sm">
+                    {t(d.supplierTitle, { n: index + 1 })}
+                  </div>
                   {suppliersArray.fields.length > 1 && (
                     <button
                       type="button"
                       onClick={() => suppliersArray.remove(index)}
                       className="text-xs text-red-600 underline"
                     >
-                      הסרה
+                      {dict.common.remove}
                     </button>
                   )}
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    שם מלא של הספק בשפה המקומית
+                    {d.supplierNameLabel}
                     <Required />
                   </label>
                   <input
                     className={inputClass}
                     {...register(`suppliers.${index}.name`)}
                   />
-                  <FieldError message={supplierErrors?.name?.message} />
+                  <FieldError message={supplierErrors?.name?.message} dict={dict} />
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    מהו תחום העיסוק של הספק?
+                    {d.supplierFieldLabel}
                     <Required />
                   </label>
                   <input
                     className={inputClass}
                     {...register(`suppliers.${index}.field`)}
                   />
-                  <FieldError message={supplierErrors?.field?.message} />
+                  <FieldError message={supplierErrors?.field?.message} dict={dict} />
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    האם ידועים לך פרטי חשבון הבנק המלאים של הספק?
+                    {d.bankKnownQuestionLabel}
                     <Required />
                   </label>
-                  <p className={noteClass}>
-                    אם עדיין לא ידועים לך הפרטים המדויקים, אפשר להמשיך בלי
-                    למלא אותם כעת — הם יידרשו בהמשך, בעת הזנת החשבונית, לפני
-                    ביצוע התשלום בפועל. עדיף לסמן &quot;לא&quot; מאשר למלא
-                    פרטים לא נכונים.
-                  </p>
+                  <p className={noteClass}>{d.bankKnownHint}</p>
                   <div className="flex gap-6 mt-1.5">
                     <label className="flex items-center gap-1.5 text-sm">
                       <input
@@ -877,7 +884,7 @@ export function NewEventForm({
                         value="yes"
                         {...register(`suppliers.${index}.bankDetailsKnown`)}
                       />{" "}
-                      כן, יש לי את הפרטים
+                      {d.bankKnownYesLabel}
                     </label>
                     <label className="flex items-center gap-1.5 text-sm">
                       <input
@@ -885,7 +892,7 @@ export function NewEventForm({
                         value="no"
                         {...register(`suppliers.${index}.bankDetailsKnown`)}
                       />{" "}
-                      עדיין לא
+                      {d.bankKnownNoLabel}
                     </label>
                   </div>
                 </div>
@@ -894,7 +901,7 @@ export function NewEventForm({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg bg-black/[0.02] p-3">
                     <div>
                       <label className={labelClass}>
-                        שם בעל החשבון
+                        {d.beneficiaryNameLabel}
                         <Required />
                       </label>
                       <input
@@ -903,11 +910,12 @@ export function NewEventForm({
                       />
                       <FieldError
                         message={supplierErrors?.beneficiaryName?.message}
+                        dict={dict}
                       />
                     </div>
                     <div>
                       <label className={labelClass}>
-                        כתובת בעל החשבון
+                        {d.beneficiaryAddressLabel}
                         <Required />
                       </label>
                       <input
@@ -916,22 +924,26 @@ export function NewEventForm({
                       />
                       <FieldError
                         message={supplierErrors?.beneficiaryAddress?.message}
+                        dict={dict}
                       />
                     </div>
                     <div>
                       <label className={labelClass}>
-                        שם הבנק
+                        {d.bankNameLabel}
                         <Required />
                       </label>
                       <input
                         className={inputClass}
                         {...register(`suppliers.${index}.bankName`)}
                       />
-                      <FieldError message={supplierErrors?.bankName?.message} />
+                      <FieldError
+                        message={supplierErrors?.bankName?.message}
+                        dict={dict}
+                      />
                     </div>
                     <div>
                       <label className={labelClass}>
-                        כתובת סניף הבנק
+                        {d.bankAddressLabel}
                         <Required />
                       </label>
                       <input
@@ -940,11 +952,12 @@ export function NewEventForm({
                       />
                       <FieldError
                         message={supplierErrors?.bankAddress?.message}
+                        dict={dict}
                       />
                     </div>
                     <div>
                       <label className={labelClass}>
-                        מספר חשבון הבנק
+                        {d.accountNumberLabel}
                         <Required />
                       </label>
                       <input
@@ -953,11 +966,12 @@ export function NewEventForm({
                       />
                       <FieldError
                         message={supplierErrors?.accountNumber?.message}
+                        dict={dict}
                       />
                     </div>
                     <div>
                       <label className={labelClass}>
-                        קוד סוויפט (SWIFT)
+                        {d.swiftLabel}
                         <Required />
                       </label>
                       <input
@@ -966,13 +980,11 @@ export function NewEventForm({
                       />
                       <FieldError
                         message={supplierErrors?.swiftNumber?.message}
+                        dict={dict}
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className={labelClass}>
-                        מספר זיהוי בנקאי להעברות מקומיות בארה&quot;ב (ACH
-                        Routing) — רק להעברה בתוך ארה&quot;ב
-                      </label>
+                      <label className={labelClass}>{d.achRoutingLabel}</label>
                       <input
                         className={inputClass}
                         {...register(`suppliers.${index}.achRoutingNumber`)}
@@ -988,23 +1000,19 @@ export function NewEventForm({
 
       {/* Quotes */}
       <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>הצעות מחיר</h2>
-        <p className="text-xs text-black/50">
-          נא להעלות מסמך רשמי על דף לוגו של הספק עם ההצעה לטובת הפעילות,
-          תוך ציון הסכום המבוקש. אפשר להוסיף עד 2 הצעות מחיר נוספות אם יש
-          יותר מספק אחד.
-        </p>
+        <h2 className={sectionTitleClass}>{d.sectionQuotes}</h2>
+        <p className="text-xs text-black/50">{d.quotesHint}</p>
 
         {(["quote1", "quote2", "quote3"] as const).map((key, i) => {
           const required = key === "quote1";
           return (
             <div key={key} className="rounded-lg border border-black/10 p-4 space-y-3">
               <div className="font-medium text-sm">
-                הצעת מחיר {i + 1}
+                {t(d.quoteTitle, { n: i + 1 })}
                 {required && <Required />}
               </div>
               <div>
-                <label className={labelClass}>קובץ ההצעה</label>
+                <label className={labelClass}>{d.quoteFileLabel}</label>
                 <input
                   type="file"
                   name={`${key}.file`}
@@ -1017,12 +1025,15 @@ export function NewEventForm({
                     )
                   }
                 />
-                <FieldError message={errors[key]?.file?.message as string | undefined} />
+                <FieldError
+                  message={errors[key]?.file?.message as string | undefined}
+                  dict={dict}
+                />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>
-                    טלפון איש הקשר של הספק
+                    {d.quoteContactPhoneLabel}
                     {required && <Required />}
                   </label>
                   <input
@@ -1031,11 +1042,12 @@ export function NewEventForm({
                   />
                   <FieldError
                     message={errors[key]?.contactPhone?.message as string | undefined}
+                    dict={dict}
                   />
                 </div>
                 <div>
                   <label className={labelClass}>
-                    מייל איש הקשר של הספק
+                    {d.quoteContactEmailLabel}
                     {required && <Required />}
                   </label>
                   <input
@@ -1045,6 +1057,7 @@ export function NewEventForm({
                   />
                   <FieldError
                     message={errors[key]?.contactEmail?.message as string | undefined}
+                    dict={dict}
                   />
                 </div>
               </div>
@@ -1055,25 +1068,23 @@ export function NewEventForm({
 
       {/* KKL presence checklist */}
       <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>נראות ונוכחות קק&quot;ל באירוע</h2>
+        <h2 className={sectionTitleClass}>{d.sectionKkalPresence}</h2>
         <p className="text-xs text-black/70">
-          אנחנו מציעים בנק של אפשרויות ורעיונות לנוכחות קק&quot;ל באירוע
-          שלכם. אתם נדרשים לציין לפחות {KKAL_PRESENCE_MIN_SELECTIONS}{" "}
-          אפשרויות מתוך הרשימה להלן, ואת הנבחרים אתם מתחייבים ליישם באירוע.
-          בנוסף לאמור, כל אירוע יכלול גם לפחות 2 דגלים של קק&quot;ל שיוצבו
-          במקום מרכזי — זו דרישה קבועה בנפרד מהרשימה שלהלן.{" "}
+          {t(d.kkalPresenceHintBefore, { count: KKAL_PRESENCE_MIN_SELECTIONS })}{" "}
           <a
             href="https://drive.google.com/drive/folders/126xcSqgRTlnpc9oJujss1rRq5WeCOD2H?usp=sharing"
             target="_blank"
             rel="noreferrer"
             className="text-(--color-brand) underline"
           >
-            קישור להורדת לוגו קק&quot;ל
+            {d.kkalPresenceLinkLabel}
           </a>
         </p>
         <p className="text-xs">
-          נבחרו {selections.length} מתוך {KKAL_PRESENCE_MIN_SELECTIONS} הנדרשים
-          לפחות.
+          {t(d.kkalPresenceCounter, {
+            selected: selections.length,
+            min: KKAL_PRESENCE_MIN_SELECTIONS,
+          })}
         </p>
         <div className="space-y-2" data-field-name="kkalPresenceSelections">
           {KKAL_PRESENCE_OPTIONS.map((opt) => (
@@ -1087,57 +1098,63 @@ export function NewEventForm({
                 checked={selections.includes(opt.key)}
                 onChange={() => toggleSelection(opt.key)}
               />
-              <span>{opt.label}</span>
+              <span>{locale === "en" ? opt.labelEn : opt.label}</span>
             </label>
           ))}
         </div>
-        <FieldError message={errors.kkalPresenceSelections?.message} />
+        <FieldError message={errors.kkalPresenceSelections?.message} dict={dict} />
       </section>
 
       {/* Consents */}
       <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>הצהרות</h2>
+        <h2 className={sectionTitleClass}>{d.sectionConsents}</h2>
         <Consent
           name="consentNoCommitment"
-          text='אני מבין כי מילוי הבקשה בטופס זה אינה מהווה התחייבות מקק"ל לתמיכה במיזם ו/או בפעילות המוצעת.'
+          text={d.consentNoCommitment}
           register={register}
           error={errors.consentNoCommitment?.message}
+          dict={dict}
         />
         <Consent
           name="consentCommitteeReview"
-          text='אני מבין כי כל פנייה תיבחן לגופה בוועדה, עם זאת הפניות ייבדקו על פי סדר הגעתם והתמיכה תינתן עד גמר התקציב הייעודי למיזם זה של הפקת אירועים של שגרירי קק"ל או עד תום התאריך הקובע לסיום המיזם.'
+          text={d.consentCommitteeReview}
           register={register}
           error={errors.consentCommitteeReview?.message}
+          dict={dict}
         />
         <Consent
           name="consentFollowBranding"
-          text='אני מתחייב כי אם אקבל את התמיכה אבצע את הנחיות הנראות וההנכחה של קק"ל.'
+          text={d.consentFollowBranding}
           register={register}
           error={errors.consentFollowBranding?.message}
+          dict={dict}
         />
         <Consent
           name="consentExchangeRate"
-          text='אני מבין כי התשלום יבוצע לפי שער ההמרה של יום התשלום ואין באחריותה של קק"ל לקחת אחריות על פערים שייווצרו בגלל המרות.'
+          text={d.consentExchangeRate}
           register={register}
           error={errors.consentExchangeRate?.message}
+          dict={dict}
         />
         <Consent
           name="consentBankFees"
-          text='אני מבין כי קק"ל אינה תישא בכל תשלום של עמלות או סכומי כסף אחרים שייגבו ע"י הבנקים המקומיים בגין ביצוע פעולת העברת התשלום.'
+          text={d.consentBankFees}
           register={register}
           error={errors.consentBankFees?.message}
+          dict={dict}
         />
         <Consent
           name="consentFollowupPhotos"
-          text='אני מתחייב כי אם אקבל תמיכה אשלח 2 תמונות מייצגות של האירוע הכוללות את אווירת האירוע לצד הנכחת קק"ל באירוע + סיכום מילולי של האירוע - עד 100 מילים.'
+          text={d.consentFollowupPhotos}
           register={register}
           error={errors.consentFollowupPhotos?.message}
+          dict={dict}
         />
       </section>
 
       <section className={sectionClass}>
         <div>
-          <label className={labelClass}>הערות</label>
+          <label className={labelClass}>{d.notesLabel}</label>
           <textarea className={inputClass} rows={3} {...register("notes")} />
         </div>
       </section>
@@ -1147,7 +1164,7 @@ export function NewEventForm({
         disabled={busy}
         className="w-full rounded-md bg-(--color-brand) text-white font-medium py-2.5 hover:bg-(--color-brand-dark) transition disabled:opacity-60"
       >
-        {busy ? "שולח..." : "שליחת בקשת תקציב"}
+        {busy ? dict.common.sending : d.submitButton}
       </button>
     </form>
   );

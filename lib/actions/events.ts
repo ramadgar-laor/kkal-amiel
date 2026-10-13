@@ -39,7 +39,7 @@ export async function createEvent(input: EventInput) {
       host_manager_phone: v.hostManagerPhone,
       host_manager_email: v.hostManagerEmail,
       participants_count: v.participantsCount,
-      ongoing_program_file_path: v.ongoingProgramFilePath || null,
+      ongoing_program_description: v.ongoingProgramDescription || null,
       transfer_amount_note: v.transferAmountNote,
       kkal_presence_selections: v.kkalPresenceSelections,
       consent_no_commitment: v.consentNoCommitment === "yes",

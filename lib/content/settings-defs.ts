@@ -21,7 +21,12 @@ export const SETTINGS_DEFS: SettingDef[] = [
   },
   {
     key: "new_event_intro_he",
-    label: 'טקסט מקדים — טופס בקשת תקציב לאירוע',
-    hint: "מוצג בראש טופס האירוע החדש (/rep/events/new). הטופס הזה בעברית בלבד.",
+    label: 'טקסט מקדים — טופס בקשת תקציב לאירוע (עברית)',
+    hint: "מוצג בראש טופס האירוע החדש (/rep/events/new) כשהשפה מוגדרת לעברית.",
+  },
+  {
+    key: "new_event_intro_en",
+    label: "Intro text — new event / budget request form (English)",
+    hint: "Shown at the top of the new event form (/rep/events/new) when the language is set to English.",
   },
 ];

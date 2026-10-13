@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSystemSetting } from "@/lib/content/settings-read";
+import { getCurrentLocale } from "@/lib/i18n/server";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { NewEventForm } from "@/components/new-event-form";
 
 export default async function NewEventPage() {
@@ -25,18 +27,24 @@ export default async function NewEventPage() {
     .eq("id", userData.user!.id)
     .single();
 
-  const introMarkdown = await getSystemSetting("new_event_intro_he");
+  const locale = await getCurrentLocale();
+  const dict = getDictionary(locale);
+  const introMarkdown = await getSystemSetting(
+    locale === "en" ? "new_event_intro_en" : "new_event_intro_he"
+  );
 
   return (
     <div className="max-w-3xl">
       <Link href="/rep" className="text-sm text-(--color-brand) underline">
-        ← חזרה
+        ← {dict.common.back}
       </Link>
       <h1 className="mt-3 text-xl font-bold text-(--color-brand-dark)">
-        אירוע חדש ובקשת תקציב
+        {dict.newEvent.pageTitle}
       </h1>
       <div className="mt-6 rounded-xl bg-white border border-black/5 p-6 shadow-sm">
         <NewEventForm
+          dict={dict}
+          locale={locale}
           introMarkdown={introMarkdown}
           repDefaults={{
             firstName: rep.first_name_he ?? "",
