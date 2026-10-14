@@ -64,11 +64,23 @@ function formatAmount(amount: number | null, currency: string) {
   return `${amount.toLocaleString("he-IL")} ${currency}`;
 }
 
-export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
+export function EventsDirectoryTable({
+  rows,
+  initialStatus,
+}: {
+  rows: EventDirectoryRow[];
+  // Pre-selects the status filter, e.g. when arriving from the "pending
+  // budget requests" card on the KKL dashboard (?status=actionable).
+  initialStatus?: string;
+}) {
   const { navigate, isPending, pendingId } = useRowNavigation();
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState(
+    initialStatus && initialStatus in STATUS_FILTER_LABEL
+      ? initialStatus
+      : "all"
+  );
   const [timing, setTiming] = useState<"all" | Timing>("all");
   const [country, setCountry] = useState("all");
 

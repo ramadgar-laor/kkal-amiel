@@ -97,7 +97,7 @@ export default async function KkalDashboardPage() {
     {
       label: "בקשות תקציב לאישור",
       value: pendingEvents ?? 0,
-      href: "/kkal/events",
+      href: "/kkal/events?status=actionable",
     },
     {
       label: "חשבוניות לאישור",
@@ -145,20 +145,38 @@ export default async function KkalDashboardPage() {
         })}
       </div>
 
-      <Link
-        href="/kkal/reps#directory"
-        className="flex items-center justify-between rounded-xl bg-white border border-black/5 p-5 shadow-sm hover:border-(--color-brand)/30 transition"
-      >
-        <div>
-          <div className="font-semibold text-(--color-brand-dark)">
-            כל השליחים במערכת
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Link
+          href="/kkal/reps#directory"
+          className="flex items-center justify-between rounded-xl bg-white border border-black/5 p-5 shadow-sm hover:border-(--color-brand)/30 transition"
+        >
+          <div>
+            <div className="font-semibold text-(--color-brand-dark)">
+              כל השליחים במערכת
+            </div>
+            <div className="text-sm text-black/50 mt-0.5">
+              רשימה מלאה, חיפוש וסינון לפי סטטוס — לא רק הממתינים לאישור
+            </div>
           </div>
-          <div className="text-sm text-black/50 mt-0.5">
-            רשימה מלאה, חיפוש וסינון לפי סטטוס — לא רק הממתינים לאישור
+          <span className="text-(--color-brand) text-xl">←</span>
+        </Link>
+
+        <Link
+          href="/kkal/events"
+          className="flex items-center justify-between rounded-xl bg-white border border-black/5 p-5 shadow-sm hover:border-(--color-brand)/30 transition"
+        >
+          <div>
+            <div className="font-semibold text-(--color-brand-dark)">
+              כל האירועים במערכת
+            </div>
+            <div className="text-sm text-black/50 mt-0.5">
+              רשימה מלאה, חיפוש וסינון לפי סטטוס ומדינה, כולל תמונת מצב
+              כלל-מערכתית — לא רק הממתינים לאישור
+            </div>
           </div>
-        </div>
-        <span className="text-(--color-brand) text-xl">←</span>
-      </Link>
+          <span className="text-(--color-brand) text-xl">←</span>
+        </Link>
+      </div>
 
       <div className="rounded-xl bg-white border border-black/5 p-5 shadow-sm">
         <div className="font-semibold text-(--color-brand-dark)">
