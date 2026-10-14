@@ -11,6 +11,7 @@ export function AmielNav({
     amielInvoices: string;
     amielPayments: string;
     amielEvents: string;
+    amielBudget: string;
   };
 }) {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export function AmielNav({
     { href: "/amiel/invoices", label: labels.amielInvoices },
     { href: "/amiel/payments", label: labels.amielPayments },
     { href: "/amiel/events", label: labels.amielEvents },
+    { href: "/amiel/budget", label: labels.amielBudget },
   ];
 
   return (

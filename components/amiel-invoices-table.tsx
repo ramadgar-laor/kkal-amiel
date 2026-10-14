@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
 import { RowSpinner } from "@/components/row-spinner";
 import { useRowNavigation } from "@/lib/hooks/use-row-navigation";
@@ -82,6 +83,12 @@ export function AmielInvoicesTable({
             </option>
           ))}
         </select>
+        <Link
+          href="/amiel/invoices/export"
+          className="rounded-md bg-(--color-brand) text-white text-sm font-medium px-4 py-2 hover:bg-(--color-brand-dark) transition whitespace-nowrap"
+        >
+          ייצוא לאקסל
+        </Link>
         <span className="text-xs text-black/40">
           {filtered.length} מתוך {rows.length} חשבוניות
         </span>
