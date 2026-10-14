@@ -12,6 +12,20 @@ const STATUS_FILTER_LABEL: Record<string, string> = {
   rejected: "נדחו",
 };
 
+// Mirrors the payment_status values from lib/invoices/payment-status.ts, plus
+// "not_sent" (the implicit starting value before KKAL approves an invoice) --
+// lets KKL staff filter to a specific stage of Amiel's payment pipeline, e.g.
+// after clicking in from the breakdown on the KKL dashboard (/kkal).
+const PAYMENT_STATUS_FILTER_LABEL: Record<string, string> = {
+  all: "כל סטטוסי התשלום",
+  not_sent: "טרם הועבר לעמיאל",
+  received_for_review: "התקבל לבדיקה",
+  approved_for_payment: "אושר לתשלום",
+  paid: "שולם",
+  returned_to_kkal: 'הוחזר לקק"ל',
+  returned_to_rep: "הוחזר לשליח",
+};
+
 export type InvoiceDirectoryRow = {
   id: string;
   supplierName: string;
@@ -30,17 +44,28 @@ const formatDate = formatDateDMY;
 
 export function InvoicesDirectoryTable({
   rows,
+  initialPaymentStatus,
 }: {
   rows: InvoiceDirectoryRow[];
+  // Pre-selects the payment-status filter, e.g. when arriving from a link on
+  // the KKL dashboard's payment-status breakdown (?paymentStatus=paid).
+  initialPaymentStatus?: string;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [paymentStatus, setPaymentStatus] = useState(
+    initialPaymentStatus && initialPaymentStatus in PAYMENT_STATUS_FILTER_LABEL
+      ? initialPaymentStatus
+      : "all"
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (status !== "all" && r.kkalStatus !== status) return false;
+      if (paymentStatus !== "all" && r.paymentStatus !== paymentStatus)
+        return false;
       if (!q) return true;
       const haystack = [r.supplierName, r.eventName, r.repName]
         .filter(Boolean)
@@ -48,7 +73,7 @@ export function InvoicesDirectoryTable({
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [rows, search, status]);
+  }, [rows, search, status, paymentStatus]);
 
   return (
     <div className="space-y-3">
@@ -66,6 +91,17 @@ export function InvoicesDirectoryTable({
           className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)"
         >
           {Object.entries(STATUS_FILTER_LABEL).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={paymentStatus}
+          onChange={(e) => setPaymentStatus(e.target.value)}
+          className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)"
+        >
+          {Object.entries(PAYMENT_STATUS_FILTER_LABEL).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>

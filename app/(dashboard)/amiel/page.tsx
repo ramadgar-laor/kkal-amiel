@@ -2,7 +2,13 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 const STAGES: {
-  key: "not_sent" | "received_for_review" | "approved_for_payment" | "paid";
+  key:
+    | "not_sent"
+    | "received_for_review"
+    | "approved_for_payment"
+    | "paid"
+    | "returned_to_kkal"
+    | "returned_to_rep";
   label: string;
   hint: string;
 }[] = [
@@ -25,6 +31,16 @@ const STAGES: {
     key: "paid",
     label: "שולם",
     hint: "התשלום בוצע",
+  },
+  {
+    key: "returned_to_kkal",
+    label: 'הוחזר לקק"ל',
+    hint: 'לא אושר לתשלום — ממתין לטיפול קק"ל',
+  },
+  {
+    key: "returned_to_rep",
+    label: "הוחזר לשליח",
+    hint: "חסרים פרטי בנק — ממתין לעדכון מהשליח",
   },
 ];
 
@@ -55,18 +71,19 @@ export default async function AmielDashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {STAGES.map((stage, i) => (
-          <div
+          <Link
             key={stage.key}
-            className="rounded-xl bg-white border border-black/5 p-5 shadow-sm"
+            href={`/amiel/invoices?paymentStatus=${stage.key}`}
+            className="rounded-xl bg-white border border-black/5 p-5 shadow-sm hover:border-(--color-brand)/30 transition"
           >
             <div className="text-3xl font-bold text-(--color-brand)">
               {counts[i]}
             </div>
             <div className="mt-1 text-sm font-medium">{stage.label}</div>
             <div className="mt-0.5 text-xs text-black/50">{stage.hint}</div>
-          </div>
+          </Link>
         ))}
       </div>
 

@@ -30,10 +30,22 @@ export type AmielInvoiceRow = {
 
 const formatDate = formatDateDMY;
 
-export function AmielInvoicesTable({ rows }: { rows: AmielInvoiceRow[] }) {
+export function AmielInvoicesTable({
+  rows,
+  initialStatus,
+}: {
+  rows: AmielInvoiceRow[];
+  // Pre-selects the status filter, e.g. when arriving from a link on the
+  // Amiel dashboard's status breakdown (?paymentStatus=paid).
+  initialStatus?: string;
+}) {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState(
+    initialStatus && initialStatus in STATUS_FILTER_LABEL
+      ? initialStatus
+      : "all"
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

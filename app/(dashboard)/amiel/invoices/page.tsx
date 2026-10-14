@@ -5,7 +5,15 @@ import {
   type AmielInvoiceRow,
 } from "@/components/amiel-invoices-table";
 
-export default async function AmielInvoicesPage() {
+export default async function AmielInvoicesPage({
+  searchParams,
+}: PageProps<"/amiel/invoices">) {
+  const sp = await searchParams;
+  const paymentStatusParam = sp.paymentStatus;
+  const initialStatus = Array.isArray(paymentStatusParam)
+    ? paymentStatusParam[0]
+    : paymentStatusParam;
+
   const supabase = await createClient();
 
   // RLS (invoices_amiel_read_approved) already limits this to
@@ -65,7 +73,7 @@ export default async function AmielInvoicesPage() {
           אין עדיין חשבוניות מאושרות הממתינות לטיפול.
         </p>
       ) : (
-        <AmielInvoicesTable rows={rows} />
+        <AmielInvoicesTable rows={rows} initialStatus={initialStatus} />
       )}
     </div>
   );

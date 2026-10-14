@@ -4,7 +4,15 @@ import {
   type InvoiceDirectoryRow,
 } from "@/components/invoices-directory-table";
 
-export default async function KkalInvoicesPage() {
+export default async function KkalInvoicesPage({
+  searchParams,
+}: PageProps<"/kkal/invoices">) {
+  const sp = await searchParams;
+  const paymentStatusParam = sp.paymentStatus;
+  const initialPaymentStatus = Array.isArray(paymentStatusParam)
+    ? paymentStatusParam[0]
+    : paymentStatusParam;
+
   const supabase = await createClient();
   const { data: invoices } = await supabase
     .from("invoices")
@@ -58,7 +66,10 @@ export default async function KkalInvoicesPage() {
       {rows.length === 0 ? (
         <p className="text-sm text-black/50">אין עדיין חשבוניות במערכת.</p>
       ) : (
-        <InvoicesDirectoryTable rows={rows} />
+        <InvoicesDirectoryTable
+          rows={rows}
+          initialPaymentStatus={initialPaymentStatus}
+        />
       )}
     </div>
   );
