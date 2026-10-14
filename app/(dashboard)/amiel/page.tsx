@@ -29,11 +29,6 @@ const STAGES: {
     hint: "ממתינות לביצוע התשלום בפועל",
   },
   {
-    key: "paid",
-    label: "שולם",
-    hint: "התשלום בוצע",
-  },
-  {
     key: "returned_to_kkal",
     label: 'הוחזר לקק"ל',
     hint: 'לא אושר לתשלום — ממתין לטיפול קק"ל',
@@ -42,6 +37,13 @@ const STAGES: {
     key: "returned_to_rep",
     label: "הוחזר לשליח",
     hint: "חסרים פרטי בנק — ממתין לעדכון מהשליח",
+  },
+  {
+    // Last on purpose -- the pipeline's terminal/success state, after the
+    // two "returned" exception branches.
+    key: "paid",
+    label: "שולם",
+    hint: "התשלום בוצע",
   },
 ];
 

@@ -30,12 +30,6 @@ const PAYMENT_STAGES: {
     classes: "bg-(--color-accent-light) text-(--color-accent-dark)",
   },
   {
-    key: "paid",
-    label: "שולם",
-    hint: "התשלום בוצע",
-    classes: "bg-(--color-accent) text-white",
-  },
-  {
     key: "returned_to_kkal",
     label: 'הוחזר לקק"ל',
     hint: 'עמיאל לא אישרו לתשלום — דורש בדיקה של קק"ל',
@@ -47,6 +41,14 @@ const PAYMENT_STAGES: {
     label: "הוחזר לשליח",
     hint: "חסרים פרטי בנק — ממתין לעדכון מהשליח",
     classes: "bg-(--color-gold-light) text-(--color-gold)",
+  },
+  {
+    // Last on purpose -- the pipeline's terminal/success state, after the
+    // two "returned" exception branches.
+    key: "paid",
+    label: "שולם",
+    hint: "התשלום בוצע",
+    classes: "bg-(--color-accent) text-white",
   },
 ];
 

@@ -19,12 +19,17 @@
 // in lib/actions/invoices.ts); "returned_to_rep" sends it back to the rep to
 // fix bank details only (see updateInvoiceBankDetails), after which it
 // returns here as "received_for_review" automatically.
+// Order here drives the order shown in every status dropdown/breakdown in
+// the UI (amiel-payment-panel.tsx's select, the KKL/Amiel dashboard
+// breakdowns, the invoice-list filters) -- "paid" is listed last since it's
+// the pipeline's terminal/success state, with the two "returned" exception
+// branches ahead of it.
 export const PAYMENT_STATUSES = [
   "received_for_review",
   "approved_for_payment",
-  "paid",
   "returned_to_kkal",
   "returned_to_rep",
+  "paid",
 ] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 

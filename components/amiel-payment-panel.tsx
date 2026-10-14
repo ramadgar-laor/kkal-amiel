@@ -75,7 +75,6 @@ export function AmielPaymentPanel({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   const inputClass =
     "w-full rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)";
@@ -87,7 +86,6 @@ export function AmielPaymentPanel({
   async function save() {
     setPending(true);
     setError(null);
-    setSaved(false);
 
     if (notesRequired && !notes.trim()) {
       setError(
@@ -174,7 +172,10 @@ export function AmielPaymentPanel({
       );
       return;
     }
-    setSaved(true);
+    // Nothing left for Amiel to do on this invoice's page once the update is
+    // saved -- send them back to the full invoice/payment list instead of
+    // leaving them stranded here.
+    router.push("/amiel/invoices");
     router.refresh();
   }
 
@@ -308,9 +309,6 @@ export function AmielPaymentPanel({
         />
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
-      {saved && (
-        <p className="text-xs text-(--color-accent-dark)">העדכון נשמר בהצלחה.</p>
-      )}
       <button
         onClick={save}
         disabled={pending}

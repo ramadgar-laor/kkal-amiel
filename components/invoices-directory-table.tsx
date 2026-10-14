@@ -21,9 +21,9 @@ const PAYMENT_STATUS_FILTER_LABEL: Record<string, string> = {
   not_sent: "טרם הועבר לעמיאל",
   received_for_review: "התקבל לבדיקה",
   approved_for_payment: "אושר לתשלום",
-  paid: "שולם",
   returned_to_kkal: 'הוחזר לקק"ל',
   returned_to_rep: "הוחזר לשליח",
+  paid: "שולם",
 };
 
 export type InvoiceDirectoryRow = {
