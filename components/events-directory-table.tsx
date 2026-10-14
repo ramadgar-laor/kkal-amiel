@@ -67,11 +67,15 @@ function formatAmount(amount: number | null, currency: string) {
 export function EventsDirectoryTable({
   rows,
   initialStatus,
+  exportHref,
 }: {
   rows: EventDirectoryRow[];
   // Pre-selects the status filter, e.g. when arriving from the "pending
   // budget requests" card on the KKL dashboard (?status=actionable).
   initialStatus?: string;
+  // Shows an "export to Excel" link at the far end of the filter row, next
+  // to the search/filter controls rather than up by the page title.
+  exportHref?: string;
 }) {
   const { navigate, isPending, pendingId } = useRowNavigation();
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -170,6 +174,17 @@ export function EventsDirectoryTable({
         <span className="text-xs text-black/40">
           {filtered.length} מתוך {rows.length} אירועים
         </span>
+        {exportHref && (
+          // Plain <a>, not next/link: this points at a route handler that
+          // streams an .xlsx download, not a page, so it must do a real
+          // browser navigation rather than a client-side route transition.
+          <a
+            href={exportHref}
+            className="inline-flex items-center gap-1.5 text-sm rounded-md border border-(--color-brand)/30 text-(--color-brand) px-3 py-1.5 hover:bg-(--color-brand-light) transition shrink-0 sm:ms-auto"
+          >
+            ייצוא לאקסל
+          </a>
+        )}
       </div>
 
       {filtered.length === 0 ? (

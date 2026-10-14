@@ -77,21 +77,9 @@ export default async function KkalEventsPage({
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h1 className="text-xl font-bold text-(--color-brand-dark)">
-            אירועים ובקשות תקציב
-          </h1>
-          {/* Plain <a>, not next/link: this points at a route handler that
-              streams an .xlsx download, not a page, so it must do a real
-              browser navigation rather than a client-side route transition. */}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
-            href="/kkal/events/export"
-            className="inline-flex items-center gap-1.5 text-sm rounded-md border border-(--color-brand)/30 text-(--color-brand) px-3 py-1.5 hover:bg-(--color-brand-light) transition shrink-0"
-          >
-            ייצוא לאקסל
-          </a>
-        </div>
+        <h1 className="text-xl font-bold text-(--color-brand-dark)">
+          אירועים ובקשות תקציב
+        </h1>
         <p className="text-sm text-black/50 mt-1">
           {actionableCount > 0
             ? `${actionableCount} בקשות ממתינות לאישור. `
@@ -147,7 +135,11 @@ export default async function KkalEventsPage({
       {rows.length === 0 ? (
         <p className="text-sm text-black/50">אין עדיין אירועים במערכת.</p>
       ) : (
-        <EventsDirectoryTable rows={rows} initialStatus={initialStatus} />
+        <EventsDirectoryTable
+          rows={rows}
+          initialStatus={initialStatus}
+          exportHref="/kkal/events/export"
+        />
       )}
     </div>
   );
