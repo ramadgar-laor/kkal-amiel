@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { RowSpinner } from "@/components/row-spinner";
+import { useRowNavigation } from "@/lib/hooks/use-row-navigation";
 import { getCountryName } from "@/lib/data/countries";
 import { formatDateDMY } from "@/lib/utils/date";
 
@@ -64,7 +65,7 @@ function formatAmount(amount: number | null, currency: string) {
 }
 
 export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
-  const router = useRouter();
+  const { navigate, isPending, pendingId } = useRowNavigation();
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -185,22 +186,25 @@ export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
                 const rowTiming = timingOf(r, todayIso);
                 const badge = TIMING_BADGE[rowTiming];
                 const href = `/kkal/events/${r.id}`;
+                const rowPending = isPending && pendingId === r.id;
                 return (
                   <tr
                     key={r.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => router.push(href)}
+                    onClick={() => navigate(r.id, href)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        router.push(href);
+                        navigate(r.id, href);
                       }
                     }}
                     className={
-                      rowTiming === "past"
-                        ? "cursor-pointer hover:bg-(--color-brand-light)/50 opacity-60"
-                        : "cursor-pointer hover:bg-(--color-brand-light)/50"
+                      rowPending
+                        ? "cursor-wait opacity-60"
+                        : rowTiming === "past"
+                          ? "cursor-pointer hover:bg-(--color-brand-light)/50 opacity-60"
+                          : "cursor-pointer hover:bg-(--color-brand-light)/50"
                     }
                   >
                     <td className="px-3 py-2 font-medium whitespace-nowrap max-w-[220px] truncate">
@@ -253,7 +257,7 @@ export function EventsDirectoryTable({ rows }: { rows: EventDirectoryRow[] }) {
                       )}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-(--color-brand) text-center">
-                      ←
+                      {rowPending ? <RowSpinner /> : "←"}
                     </td>
                   </tr>
                 );

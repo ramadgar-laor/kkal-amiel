@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { RowSpinner } from "@/components/row-spinner";
+import { useRowNavigation } from "@/lib/hooks/use-row-navigation";
 import { formatDateDMY } from "@/lib/utils/date";
 
 const STATUS_FILTER_LABEL: Record<string, string> = {
@@ -51,7 +52,7 @@ export function InvoicesDirectoryTable({
   // the KKL dashboard's payment-status breakdown (?paymentStatus=paid).
   initialPaymentStatus?: string;
 }) {
-  const router = useRouter();
+  const { navigate, isPending, pendingId } = useRowNavigation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [paymentStatus, setPaymentStatus] = useState(
@@ -136,19 +137,24 @@ export function InvoicesDirectoryTable({
               <tbody className="divide-y divide-black/5">
                 {filtered.map((r) => {
                   const href = `/kkal/invoices/${r.id}`;
+                  const rowPending = isPending && pendingId === r.id;
                   return (
                     <tr
                       key={r.id}
                       role="button"
                       tabIndex={0}
-                      onClick={() => router.push(href)}
+                      onClick={() => navigate(r.id, href)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          router.push(href);
+                          navigate(r.id, href);
                         }
                       }}
-                      className="cursor-pointer hover:bg-(--color-brand-light)/50"
+                      className={
+                        rowPending
+                          ? "cursor-wait opacity-60"
+                          : "cursor-pointer hover:bg-(--color-brand-light)/50"
+                      }
                     >
                       <td className="px-3 py-2 font-medium whitespace-nowrap">
                         {r.supplierName}
@@ -172,7 +178,7 @@ export function InvoicesDirectoryTable({
                         <StatusBadge status={r.paymentStatus} />
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-(--color-brand) text-center">
-                        ←
+                        {rowPending ? <RowSpinner /> : "←"}
                       </td>
                     </tr>
                   );

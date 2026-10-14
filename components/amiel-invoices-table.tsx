@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
+import { RowSpinner } from "@/components/row-spinner";
+import { useRowNavigation } from "@/lib/hooks/use-row-navigation";
 import { formatDateDMY } from "@/lib/utils/date";
 
 const STATUS_FILTER_LABEL: Record<string, string> = {
@@ -39,7 +40,7 @@ export function AmielInvoicesTable({
   // Amiel dashboard's status breakdown (?paymentStatus=paid).
   initialStatus?: string;
 }) {
-  const router = useRouter();
+  const { navigate, isPending, pendingId } = useRowNavigation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(
     initialStatus && initialStatus in STATUS_FILTER_LABEL
@@ -110,19 +111,24 @@ export function AmielInvoicesTable({
               <tbody className="divide-y divide-black/5">
                 {filtered.map((r) => {
                   const href = `/amiel/invoices/${r.id}`;
+                  const rowPending = isPending && pendingId === r.id;
                   return (
                     <tr
                       key={r.id}
                       role="button"
                       tabIndex={0}
-                      onClick={() => router.push(href)}
+                      onClick={() => navigate(r.id, href)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          router.push(href);
+                          navigate(r.id, href);
                         }
                       }}
-                      className="cursor-pointer hover:bg-(--color-brand-light)/50"
+                      className={
+                        rowPending
+                          ? "cursor-wait opacity-60"
+                          : "cursor-pointer hover:bg-(--color-brand-light)/50"
+                      }
                     >
                       <td className="px-3 py-2 font-medium whitespace-nowrap">
                         {r.supplierName}
@@ -146,7 +152,7 @@ export function AmielInvoicesTable({
                         <StatusBadge status={r.paymentStatus} />
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-(--color-brand) text-center">
-                        ←
+                        {rowPending ? <RowSpinner /> : "←"}
                       </td>
                     </tr>
                   );

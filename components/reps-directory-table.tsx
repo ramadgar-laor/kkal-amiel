@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/status-badge";
 import { RepStatusSelect } from "@/components/rep-status-select";
+import { RowSpinner } from "@/components/row-spinner";
+import { useRowNavigation } from "@/lib/hooks/use-row-navigation";
 import { getCountryName } from "@/lib/data/countries";
 import { formatDateDMY } from "@/lib/utils/date";
 
@@ -44,7 +45,7 @@ export type RepDirectoryRow = {
 const formatDate = formatDateDMY;
 
 export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
-  const router = useRouter();
+  const { navigate, isPending, pendingId } = useRowNavigation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
 
@@ -125,19 +126,24 @@ export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
             <tbody className="divide-y divide-black/5">
               {filtered.map((r) => {
                 const href = `/kkal/reps/${r.profileId}`;
+                const rowPending = isPending && pendingId === r.profileId;
                 return (
                 <tr
                   key={r.profileId}
                   role="button"
                   tabIndex={0}
-                  onClick={() => router.push(href)}
+                  onClick={() => navigate(r.profileId, href)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      router.push(href);
+                      navigate(r.profileId, href);
                     }
                   }}
-                  className="cursor-pointer hover:bg-(--color-brand-light)/50"
+                  className={
+                    rowPending
+                      ? "cursor-wait opacity-60"
+                      : "cursor-pointer hover:bg-(--color-brand-light)/50"
+                  }
                 >
                   <td className="px-3 py-2 font-medium whitespace-nowrap">
                     {r.displayName}
@@ -191,7 +197,7 @@ export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
                     <div className="flex items-center gap-2">
                       <RepStatusSelect profileId={r.profileId} status={r.status} />
                       <span className="text-(--color-brand)" aria-hidden="true">
-                        ←
+                        {rowPending ? <RowSpinner /> : "←"}
                       </span>
                     </div>
                   </td>
