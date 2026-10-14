@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
+// "not_sent" isn't shown here anymore (and shouldn't occur for new invoices
+// going forward -- see decideInvoice in lib/actions/invoices.ts, which now
+// sets payment_status straight to "received_for_review" the moment KKAL
+// approves): as soon as an invoice crosses over from KKAL to Amiel it's
+// already "received for review" on Amiel's side, so there's no separate
+// waiting stage to show. This also keeps the 5 stages here in sync with the
+// 5 shown in the breakdown on the KKL dashboard (/kkal).
 const STAGES: {
   key:
-    | "not_sent"
     | "received_for_review"
     | "approved_for_payment"
     | "paid"
@@ -12,11 +18,6 @@ const STAGES: {
   label: string;
   hint: string;
 }[] = [
-  {
-    key: "not_sent",
-    label: "טרם הועבר לבדיקה",
-    hint: "אושרו על ידי קק\"ל ומחכות לתחילת טיפול",
-  },
   {
     key: "received_for_review",
     label: "התקבל לבדיקה",

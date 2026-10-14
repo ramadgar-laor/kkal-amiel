@@ -77,6 +77,14 @@ export async function decideInvoice(input: {
       kkal_notes: input.notes || null,
       kkal_reviewed_by: userData.user.id,
       kkal_reviewed_at: new Date().toISOString(),
+      // The moment KKAL approves, the invoice has effectively crossed over
+      // to Amiel -- so payment_status moves straight from its default
+      // "not_sent" to "received_for_review" instead of sitting unsent.
+      // (Mirrors how resolveReturnedInvoice below sets the same value when
+      // sending a returned invoice back to Amiel.)
+      ...(input.decision === "approved"
+        ? { payment_status: "received_for_review" as const }
+        : {}),
     })
     .eq("id", input.id);
 
