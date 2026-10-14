@@ -105,34 +105,98 @@ export default async function RepDashboardPage() {
 
   const isApproved = rep?.status === "approved";
 
+  // Quick-glance summary for the header -- gives the rep an at-a-glance
+  // read on how many events they're actively managing and whether anything
+  // needs their action, instead of making them scan every card below to
+  // find out. Only meaningful once there's at least one event.
+  let activeEventsCount = 0;
+  let needsAttentionCount = 0;
+  let totalApprovedBudget = 0;
+  for (const e of events ?? []) {
+    const isBudgetApproved =
+      e.status === "approved" || e.status === "partially_approved";
+    if (!isBudgetApproved) continue;
+    activeEventsCount += 1;
+    totalApprovedBudget += Number(e.approved_amount_ils ?? e.approved_amount ?? 0);
+    const stats = statsByEvent.get(e.id) ?? emptyStats();
+    needsAttentionCount += stats.needsCorrection + stats.returnedToRep;
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl bg-white border border-black/5 p-6 shadow-sm">
-        <h1 className="text-xl font-bold text-(--color-brand-dark)">
-          {rep
-            ? t(d.welcome, { name: rep.first_name_he ?? "" })
-            : d.welcomeNoName}
-        </h1>
-        <p className="mt-2 text-sm flex items-center gap-2">
-          {d.statusLabel} <StatusBadge status={rep?.status ?? "pending"} locale={locale} />
-        </p>
-        {!isApproved ? (
-          <p className="mt-2 text-sm text-black/60">{d.notApprovedNote}</p>
-        ) : (
-          <p className="mt-3 text-sm text-black/60 border-t border-black/5 pt-3">
-            {d.introText}
-          </p>
-        )}
+        <div className="flex items-start justify-between gap-6 flex-wrap">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-(--color-brand-dark)">
+              {rep
+                ? t(d.welcome, { name: rep.first_name_he ?? "" })
+                : d.welcomeNoName}
+            </h1>
+            <p className="mt-2 text-sm flex items-center gap-2">
+              {d.statusLabel} <StatusBadge status={rep?.status ?? "pending"} locale={locale} />
+            </p>
+            {!isApproved ? (
+              <p className="mt-2 text-sm text-black/60">{d.notApprovedNote}</p>
+            ) : (
+              <p className="mt-3 text-sm text-black/60 max-w-prose">{d.introText}</p>
+            )}
+          </div>
+
+          {isApproved && !!events?.length && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="rounded-lg bg-(--color-brand-light) px-4 py-3 text-center min-w-28">
+                <div className="text-2xl font-bold text-(--color-brand-dark)">
+                  {activeEventsCount}
+                </div>
+                <div className="text-xs text-(--color-brand-dark)/70 mt-0.5">
+                  {d.activeEventsStat}
+                </div>
+              </div>
+              <div
+                className={`rounded-lg px-4 py-3 text-center min-w-28 ${
+                  needsAttentionCount > 0
+                    ? "bg-(--color-gold-light)"
+                    : "bg-black/5"
+                }`}
+              >
+                <div
+                  className={`text-2xl font-bold ${
+                    needsAttentionCount > 0 ? "text-(--color-gold)" : "text-black/40"
+                  }`}
+                >
+                  {needsAttentionCount}
+                </div>
+                <div
+                  className={`text-xs mt-0.5 ${
+                    needsAttentionCount > 0
+                      ? "text-(--color-gold)/80"
+                      : "text-black/40"
+                  }`}
+                >
+                  {d.needsAttentionStat}
+                </div>
+              </div>
+              <div className="rounded-lg bg-(--color-accent-light) px-4 py-3 text-center min-w-28">
+                <div className="text-2xl font-bold text-(--color-accent-dark)">
+                  ₪{totalApprovedBudget.toLocaleString(numberLocale)}
+                </div>
+                <div className="text-xs text-(--color-accent-dark)/70 mt-0.5">
+                  {d.totalBudgetStat}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="rounded-xl bg-white border border-black/5 p-6 shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
-            <h2 className="font-semibold text-(--color-brand-dark)">
+            <h2 className="text-lg font-semibold text-(--color-brand-dark)">
               {d.myEventsTitle}
             </h2>
             {!!events?.length && (
-              <p className="text-xs text-black/50 mt-0.5">{d.eventsIntro}</p>
+              <p className="text-sm text-black/50 mt-0.5">{d.eventsIntro}</p>
             )}
           </div>
           {isApproved && (
@@ -148,7 +212,7 @@ export default async function RepDashboardPage() {
         {!events?.length ? (
           <p className="mt-4 text-sm text-black/50">{d.noEventsYet}</p>
         ) : (
-          <div className="mt-4 grid grid-cols-1 gap-3">
+          <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
             {events.map((e) => {
               const stats = statsByEvent.get(e.id) ?? emptyStats();
               const isBudgetApproved =
@@ -210,34 +274,47 @@ export default async function RepDashboardPage() {
                 <Link
                   key={e.id}
                   href={`/rep/events/${e.id}`}
-                  className="block rounded-lg border border-black/5 p-4 hover:border-(--color-brand)/30 hover:bg-black/[0.01] transition"
+                  className="block rounded-xl border border-black/5 p-5 hover:border-(--color-brand)/30 hover:shadow-md transition"
                 >
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div>
-                      <div className="font-medium">{e.name}</div>
-                      <div className="text-xs text-black/50 mt-0.5">
+                      <div className="text-lg font-semibold">{e.name}</div>
+                      <div className="text-sm text-black/50 mt-0.5">
                         {formatDateDMY(e.start_date)} – {formatDateDMY(e.end_date)}
                       </div>
                     </div>
                     <StatusBadge status={e.status} locale={locale} />
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-4">
                     {isBudgetApproved ? (
                       <>
-                        <div className="flex items-center justify-between gap-3 text-xs text-black/60 flex-wrap">
-                          <span>
-                            {d.approvedBudgetLabel}: ₪
-                            {Number(approvedIls ?? 0).toLocaleString(numberLocale)}
-                          </span>
-                          <span>
-                            {d.invoicesTotalLabel}: ₪
-                            {stats.ilsTotal.toLocaleString(numberLocale)}
-                            {percentUsed != null && ` (${percentUsed}%)`}
-                          </span>
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                          <div>
+                            <div className="text-xs text-black/50">
+                              {d.approvedBudgetLabel}
+                            </div>
+                            <div className="text-xl font-bold text-(--color-brand)">
+                              ₪{Number(approvedIls ?? 0).toLocaleString(numberLocale)}
+                            </div>
+                          </div>
+                          <div className="text-end">
+                            <div className="text-xs text-black/50">
+                              {d.invoicesTotalLabel}
+                            </div>
+                            <div className="text-xl font-bold">
+                              ₪{stats.ilsTotal.toLocaleString(numberLocale)}
+                              {percentUsed != null && (
+                                <span className="text-sm font-medium text-black/40">
+                                  {" "}
+                                  ({percentUsed}%)
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                         {approvedIls ? (
-                          <div className="mt-1.5 h-1.5 w-full rounded-full bg-black/10 overflow-hidden">
+                          <div className="mt-2.5 h-2.5 w-full rounded-full bg-black/10 overflow-hidden">
                             <div
                               className={`h-full rounded-full ${barColor}`}
                               style={{ width: `${Math.min(percentUsed ?? 0, 100)}%` }}
@@ -245,7 +322,7 @@ export default async function RepDashboardPage() {
                           </div>
                         ) : null}
                         {percentUsed != null && percentUsed > 100 && (
-                          <div className="mt-1 text-xs text-red-600 font-medium">
+                          <div className="mt-1.5 text-xs text-red-600 font-medium">
                             {t(d.overBudgetLabel, {
                               amount: (stats.ilsTotal - (approvedIls ?? 0)).toLocaleString(
                                 numberLocale
@@ -255,7 +332,7 @@ export default async function RepDashboardPage() {
                         )}
                       </>
                     ) : (
-                      <div className="text-xs text-black/50">
+                      <div className="text-sm text-black/50">
                         {d.requestedBudgetLabel}: {e.requested_amount} {e.requested_currency}
                         {" · "}
                         {d.awaitingApprovalNote}
@@ -264,12 +341,12 @@ export default async function RepDashboardPage() {
                   </div>
 
                   {isBudgetApproved && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
+                    <div className="mt-3 flex flex-wrap gap-1.5">
                       {chips.length ? (
                         chips.map((c, i) => (
                           <span
                             key={i}
-                            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${c.cls}`}
+                            className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${c.cls}`}
                           >
                             {c.label}
                           </span>
