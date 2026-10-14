@@ -37,3 +37,30 @@ export async function addBudgetAllocation(input: AmielBudgetAllocationInput) {
 
   return { success: true as const };
 }
+
+// Removes a budget top-up entry Amiel added by mistake (wrong amount, typo
+// in the note, duplicate entry). RLS restricts deletes on this table to
+// amiel/admin, same as the insert/select above, so the privacy guarantee
+// ("not even KKL sees this table") is unaffected by adding delete.
+export async function deleteBudgetAllocation(id: string) {
+  if (!id) {
+    return { error: "invalid_input" as const };
+  }
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return { error: "not_authenticated" as const };
+  }
+
+  const { error } = await supabase
+    .from("amiel_budget_allocations")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true as const };
+}

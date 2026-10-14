@@ -8,12 +8,15 @@ type AdminNavLabels = {
   adminDashboard: string;
   adminUsers: string;
   adminSettings: string;
+  kkalDashboard: string;
   kkalReps: string;
   kkalEvents: string;
   kkalInvoices: string;
   amielDashboard: string;
   amielInvoices: string;
   amielEvents: string;
+  amielPayments: string;
+  amielBudget: string;
   groupKkal: string;
   groupAmiel: string;
 };
@@ -85,6 +88,7 @@ export function AdminNav({ labels }: { labels: AdminNavLabels }) {
     exact ? pathname === href : !!pathname?.startsWith(href);
 
   const kkalItems: NavItem[] = [
+    { href: "/kkal", label: labels.kkalDashboard, active: pathname === "/kkal" },
     { href: "/kkal/reps", label: labels.kkalReps, active: isActive("/kkal/reps") },
     { href: "/kkal/events", label: labels.kkalEvents, active: isActive("/kkal/events") },
     { href: "/kkal/invoices", label: labels.kkalInvoices, active: isActive("/kkal/invoices") },
@@ -94,6 +98,8 @@ export function AdminNav({ labels }: { labels: AdminNavLabels }) {
     { href: "/amiel", label: labels.amielDashboard, active: pathname === "/amiel" },
     { href: "/amiel/invoices", label: labels.amielInvoices, active: isActive("/amiel/invoices") },
     { href: "/amiel/events", label: labels.amielEvents, active: isActive("/amiel/events") },
+    { href: "/amiel/payments", label: labels.amielPayments, active: isActive("/amiel/payments") },
+    { href: "/amiel/budget", label: labels.amielBudget, active: isActive("/amiel/budget") },
   ];
 
   const flatItems = [

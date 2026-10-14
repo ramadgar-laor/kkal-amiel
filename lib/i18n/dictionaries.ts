@@ -7,6 +7,7 @@ export const dictionaries = {
       login: "כניסה למערכת",
       register: "הרשמת שליח חדש",
       logout: "התנתקות",
+      kkalDashboard: "לוח בקרה",
       kkalReps: "שליחים לאישור",
       kkalEvents: "בקשות תקציב לאישור",
       kkalInvoices: "חשבוניות לאישור",
@@ -202,6 +203,7 @@ export const dictionaries = {
       approved: "אושר",
       partially_approved: "אושר חלקית",
       rejected: "נדחה",
+      needs_correction: 'דורש תיקון מהשליח',
       inactive: "לא פעיל",
       not_sent: "טרם הועבר",
       received_for_review: "התקבל לבדיקה",
@@ -230,6 +232,7 @@ export const dictionaries = {
       overBudgetLabel: "חריגה של ₪{amount}",
       kkalPendingChip: 'ממתינות לאישור קק"ל: {count}',
       kkalRejectedChip: "נדחו: {count}",
+      needsCorrectionChip: "דורשות תיקון ממך: {count}",
       returnedToRepChip: "דורשות עדכון ממך: {count}",
       returnedToKkalChip: 'בבדיקה מול קק"ל: {count}',
       inAmielReviewChip: "בטיפול עמיאל: {count}",
@@ -259,6 +262,8 @@ export const dictionaries = {
       invoicesEnteredTitle: "חשבוניות שהוזנו",
       returnedToRepNotice:
         "עמיאל ציינו שחסרים פרטים בחשבונית זו - יש לעדכן את פרטי הבנק ולשלוח בחזרה.",
+      needsCorrectionNotice:
+        'קק"ל ציינו שיש לתקן פרטים בחשבונית זו לפני שתיבדק לאישור - ניתן לתקן כל פרט, כולל סכומים וקובץ החשבונית, ולשלוח מחדש.',
       budgetStatusApprovedLabel: "אושר לאירוע (₪)",
       budgetStatusInvoicesTotalLabel: "סה״כ חשבוניות שהוזנו (₪)",
       budgetStatusOverageLabel: "חריגה של ₪{amount}",
@@ -406,6 +411,11 @@ export const dictionaries = {
       bankEditSubmitButton: "שליחת פרטים מעודכנים לעמיאל",
       bankEditSuccessMessage: "הפרטים נשלחו בהצלחה לעמיאל להמשך טיפול.",
       bankEditErrorMessage: "יש למלא את כל פרטי הבנק לפני השליחה",
+      correctionFileLabel: "קובץ החשבונית (אופציונלי)",
+      correctionFileHint: "ניתן להשאיר ריק כדי להשתמש בקובץ הקיים.",
+      correctionSubmitButton: 'שליחת התיקון לקק"ל',
+      correctionSuccessMessage: 'התיקון נשלח בהצלחה וממתין לבדיקה חוזרת של קק"ל.',
+      correctionErrorMessage: "יש למלא את כל השדות המסומנים בכוכבית לפני השליחה",
     },
     common: {
       required: "שדה חובה",
@@ -441,6 +451,7 @@ export const dictionaries = {
       login: "Sign in",
       register: "Register as a new ambassador",
       logout: "Sign out",
+      kkalDashboard: "Dashboard",
       kkalReps: "Ambassadors to approve",
       kkalEvents: "Budget requests to approve",
       kkalInvoices: "Invoices to approve",
@@ -638,6 +649,7 @@ export const dictionaries = {
       approved: "Approved",
       partially_approved: "Partially approved",
       rejected: "Rejected",
+      needs_correction: "Needs correction from ambassador",
       inactive: "Inactive",
       not_sent: "Not yet sent",
       received_for_review: "Received for review",
@@ -666,6 +678,7 @@ export const dictionaries = {
       overBudgetLabel: "Over budget by ₪{amount}",
       kkalPendingChip: "Awaiting KKL approval: {count}",
       kkalRejectedChip: "Rejected: {count}",
+      needsCorrectionChip: "Need your correction: {count}",
       returnedToRepChip: "Need your update: {count}",
       returnedToKkalChip: "Under review with KKL: {count}",
       inAmielReviewChip: "In review with Amiel: {count}",
@@ -695,6 +708,8 @@ export const dictionaries = {
       invoicesEnteredTitle: "Invoices submitted",
       returnedToRepNotice:
         "Amiel noted that details are missing on this invoice - please update the bank details and send it back.",
+      needsCorrectionNotice:
+        "KKL noted that details on this invoice need correcting before it can be reviewed - you can fix any field, including amounts and the invoice file, and resend it.",
       budgetStatusApprovedLabel: "Approved for event (₪)",
       budgetStatusInvoicesTotalLabel: "Total invoices entered (₪)",
       budgetStatusOverageLabel: "Over budget by ₪{amount}",
@@ -849,6 +864,13 @@ export const dictionaries = {
       bankEditSuccessMessage:
         "The details were sent to Amiel successfully for further handling.",
       bankEditErrorMessage: "Please fill in all bank details before submitting",
+      correctionFileLabel: "Invoice file (optional)",
+      correctionFileHint: "You can leave this empty to keep the existing file.",
+      correctionSubmitButton: "Send correction to KKL",
+      correctionSuccessMessage:
+        "The correction was sent successfully and is awaiting KKL's review again.",
+      correctionErrorMessage:
+        "Please fill in all the fields marked with an asterisk before submitting",
     },
     common: {
       required: "Required field",

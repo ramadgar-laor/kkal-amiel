@@ -59,6 +59,7 @@ export default async function KkalDashboardPage() {
     { count: pendingReps },
     { count: pendingEvents },
     { count: pendingInvoices },
+    { count: needsCorrectionInvoices },
     paymentStageCounts,
   ] = await Promise.all([
     supabase
@@ -73,6 +74,10 @@ export default async function KkalDashboardPage() {
       .from("invoices")
       .select("*", { count: "exact", head: true })
       .eq("kkal_status", "pending"),
+    supabase
+      .from("invoices")
+      .select("*", { count: "exact", head: true })
+      .eq("kkal_status", "needs_correction"),
     Promise.all(
       PAYMENT_STAGES.map(async (stage) => {
         const { count } = await supabase
@@ -99,6 +104,11 @@ export default async function KkalDashboardPage() {
       value: pendingInvoices ?? 0,
       href: "/kkal/invoices",
     },
+    {
+      label: "חשבוניות בתיקון אצל השליח",
+      value: needsCorrectionInvoices ?? 0,
+      href: "/kkal/invoices?status=needs_correction",
+    },
   ];
 
   return (
@@ -106,7 +116,7 @@ export default async function KkalDashboardPage() {
       <h1 className="text-xl font-bold text-(--color-brand-dark)">
         לוח בקרה — קק&quot;ל
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => {
           const content = (
             <>

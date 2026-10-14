@@ -12,6 +12,8 @@ export default async function KkalInvoicesPage({
   const initialPaymentStatus = Array.isArray(paymentStatusParam)
     ? paymentStatusParam[0]
     : paymentStatusParam;
+  const statusParam = sp.status;
+  const initialStatus = Array.isArray(statusParam) ? statusParam[0] : statusParam;
 
   const supabase = await createClient();
   const { data: invoices } = await supabase
@@ -68,6 +70,7 @@ export default async function KkalInvoicesPage({
       ) : (
         <InvoicesDirectoryTable
           rows={rows}
+          initialStatus={initialStatus}
           initialPaymentStatus={initialPaymentStatus}
         />
       )}

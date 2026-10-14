@@ -5,7 +5,10 @@ import {
   type AmielPaymentRow,
 } from "@/components/amiel-payments-table";
 import { AmielBudgetForm } from "@/components/amiel-budget-form";
-import { formatDateDMY } from "@/lib/utils/date";
+import {
+  AmielBudgetAllocationsList,
+  type AmielBudgetAllocationRow,
+} from "@/components/amiel-budget-allocations-list";
 
 // Amiel's own internal tracking of the lump-sum budget KKL transfers them
 // at the start of the year to cover every project's expenses across the
@@ -60,6 +63,18 @@ export default async function AmielBudgetPage() {
       paidAmountIls: inv.paid_amount_ils != null ? Number(inv.paid_amount_ils) : null,
       paidAt: inv.paid_at,
     } satisfies AmielPaymentRow;
+  });
+
+  const allocationRows = (allocations ?? []).map((a) => {
+    const addedByRaw = a.profiles;
+    const addedBy = Array.isArray(addedByRaw) ? addedByRaw[0] : addedByRaw;
+    return {
+      id: a.id,
+      amountIls: Number(a.amount_ils),
+      note: a.note,
+      createdAt: a.created_at,
+      addedByName: addedBy ? addedBy.display_name || addedBy.email : null,
+    } satisfies AmielBudgetAllocationRow;
   });
 
   const totalReceived = (allocations ?? []).reduce(
@@ -155,40 +170,12 @@ export default async function AmielBudgetPage() {
         </div>
         <AmielBudgetForm />
 
-        {!!allocations?.length && (
+        {!!allocationRows.length && (
           <div className="pt-3 border-t border-black/5">
             <h3 className="text-sm font-medium text-black/60 mb-2">
               היסטוריית תקבולים
             </h3>
-            <div className="divide-y divide-black/5">
-              {allocations.map((a) => {
-                const addedByRaw = a.profiles;
-                const addedBy = Array.isArray(addedByRaw)
-                  ? addedByRaw[0]
-                  : addedByRaw;
-                return (
-                  <div
-                    key={a.id}
-                    className="py-2 flex items-center justify-between gap-3 text-sm"
-                  >
-                    <div>
-                      <div className="font-medium">
-                        ₪{Number(a.amount_ils).toLocaleString("he-IL")}
-                      </div>
-                      {a.note && (
-                        <div className="text-xs text-black/50">{a.note}</div>
-                      )}
-                    </div>
-                    <div className="text-xs text-black/40 text-end">
-                      <div>{formatDateDMY(a.created_at)}</div>
-                      {addedBy && (
-                        <div>{addedBy.display_name || addedBy.email}</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <AmielBudgetAllocationsList allocations={allocationRows} />
           </div>
         )}
       </div>

@@ -21,17 +21,24 @@ export function InvoiceReviewPanel({ invoiceId }: { invoiceId: string }) {
     });
     setPending(false);
     if (result?.error) {
-      setError("הפעולה נכשלה, נסה/י שוב");
+      setError(
+        result.error === "notes_required"
+          ? "יש לציין מה דורש תיקון"
+          : "הפעולה נכשלה, נסה/י שוב"
+      );
       return;
     }
     setMode(null);
     router.refresh();
   }
 
-  if (mode === "rejected") {
+  if (mode === "rejected" || mode === "needs_correction") {
+    const isCorrection = mode === "needs_correction";
     return (
       <div className="space-y-2 rounded-md border border-black/10 p-3">
-        <label className="block text-xs font-medium mb-1">הערות</label>
+        <label className="block text-xs font-medium mb-1">
+          {isCorrection ? "מה דורש תיקון" : "הערות"}
+        </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -41,11 +48,19 @@ export function InvoiceReviewPanel({ invoiceId }: { invoiceId: string }) {
         {error && <p className="text-xs text-red-600">{error}</p>}
         <div className="flex gap-2">
           <button
-            onClick={() => submit("rejected")}
-            disabled={pending}
-            className="rounded-md text-sm font-medium px-3 py-1.5 disabled:opacity-60 bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => submit(mode)}
+            disabled={pending || (isCorrection && !notes.trim())}
+            className={`rounded-md text-sm font-medium px-3 py-1.5 disabled:opacity-60 text-white ${
+              isCorrection
+                ? "bg-(--color-gold) hover:opacity-90"
+                : "bg-red-600 hover:bg-red-700"
+            }`}
           >
-            {pending ? "שולח..." : "אישור דחייה"}
+            {pending
+              ? "שולח..."
+              : isCorrection
+                ? "שליחה לתיקון השליח"
+                : "אישור דחייה"}
           </button>
           <button
             onClick={() => setMode(null)}
@@ -66,6 +81,12 @@ export function InvoiceReviewPanel({ invoiceId }: { invoiceId: string }) {
         className="rounded-md bg-(--color-accent-dark) text-white text-sm font-medium px-3 py-1.5 hover:opacity-90 disabled:opacity-60"
       >
         {pending ? "שולח..." : "אישור חשבונית"}
+      </button>
+      <button
+        onClick={() => setMode("needs_correction")}
+        className="rounded-md border border-(--color-gold) text-(--color-gold) text-sm font-medium px-3 py-1.5 hover:bg-(--color-gold-light)"
+      >
+        דורש תיקון מהשליח
       </button>
       <button
         onClick={() => setMode("rejected")}

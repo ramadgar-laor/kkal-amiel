@@ -51,6 +51,17 @@ export const invoiceSchema = z.object({
 
 export type InvoiceInput = z.infer<typeof invoiceSchema>;
 
+// Rep-side correction of an invoice KKL sent back with
+// kkal_status = "needs_correction" -- identical shape to a fresh
+// submission, except the file is optional: the rep only needs to upload a
+// replacement if they're actually swapping it out, otherwise the existing
+// file stays (see resubmitCorrectedInvoice in lib/actions/invoices.ts).
+export const invoiceCorrectionSchema = invoiceSchema.extend({
+  filePath: z.string().trim().optional().or(z.literal("")),
+});
+
+export type InvoiceCorrectionInput = z.infer<typeof invoiceCorrectionSchema>;
+
 // Client-facing form schema: identical shape, except amount is a string
 // (as typed into a controlled input) and filePath is a real File (or null)
 // since nothing has been uploaded yet at the point the form validates. The

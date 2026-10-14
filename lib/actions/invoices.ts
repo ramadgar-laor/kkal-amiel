@@ -1,7 +1,12 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { invoiceSchema, type InvoiceInput } from "@/lib/validation/invoice";
+import {
+  invoiceSchema,
+  invoiceCorrectionSchema,
+  type InvoiceInput,
+  type InvoiceCorrectionInput,
+} from "@/lib/validation/invoice";
 import {
   PAYMENT_STATUSES,
   PAYMENT_STATUSES_REQUIRING_NOTES,
@@ -51,13 +56,25 @@ export async function submitInvoice(input: InvoiceInput) {
   return { success: true as const };
 }
 
-export type InvoiceDecision = "approved" | "rejected";
+// "needs_correction" is a softer alternative to "rejected": the expense
+// itself may well be legitimate, but something about how it was submitted
+// (wrong amount, wrong file, missing detail) needs fixing before KKL can
+// decide. The rep gets a full edit form (see resubmitCorrectedInvoice) and
+// the invoice comes back to "pending" once they resubmit. A true "rejected"
+// stays final and untouched -- it's the historical record of what KKL
+// decided not to approve, and a genuinely different expense is a new
+// invoice, not an edit of this one.
+export type InvoiceDecision = "approved" | "rejected" | "needs_correction";
 
 export async function decideInvoice(input: {
   id: string;
   decision: InvoiceDecision;
   notes?: string;
 }) {
+  if (input.decision === "needs_correction" && !input.notes?.trim()) {
+    return { error: "notes_required" as const };
+  }
+
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
@@ -319,6 +336,96 @@ export async function updateInvoiceBankDetails(input: {
     from_value: "returned_to_rep",
     to_value: "received_for_review",
     notes: "השליח עדכן פרטי בנק",
+  });
+
+  return { success: true as const };
+}
+
+// Rep-side correction of an invoice KKL sent back with
+// kkal_status = "needs_correction" (see decideInvoice above for why this is
+// a separate, softer path from an outright rejection). Unlike
+// updateInvoiceBankDetails, this allows a full edit -- amounts, currency,
+// and the invoice file itself, not just bank details -- since the whole
+// point of this status is "the submission needs fixing", which can mean
+// any field. The file is the one optional part: if the rep doesn't upload
+// a replacement, the existing one is kept. RLS (invoices_rep_update_correction)
+// restricts this to the rep's own invoice and only while it's exactly
+// "needs_correction". A readable snapshot of what changed is kept in the
+// audit log so nothing is lost even though this edits the same row rather
+// than creating a new one.
+export async function resubmitCorrectedInvoice(
+  input: { id: string } & Omit<InvoiceCorrectionInput, "eventId">
+) {
+  const parsed = invoiceCorrectionSchema
+    .omit({ eventId: true })
+    .safeParse(input);
+  if (!parsed.success) {
+    return { error: "invalid_input" as const };
+  }
+  const v = parsed.data;
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return { error: "not_authenticated" as const };
+  }
+
+  const { data: before } = await supabase
+    .from("invoices")
+    .select(
+      "amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path"
+    )
+    .eq("id", input.id)
+    .single();
+
+  const filePath = v.filePath || before?.file_path;
+  if (!filePath) {
+    return { error: "invalid_input" as const };
+  }
+
+  const { error } = await supabase
+    .from("invoices")
+    .update({
+      supplier_name: v.supplierName,
+      supplier_field: v.supplierField || null,
+      supplier_bank_name: v.supplierBankName,
+      supplier_bank_address: v.supplierBankAddress,
+      supplier_bank_country: v.supplierBankCountry,
+      supplier_iban: v.supplierIban,
+      supplier_swift: v.supplierSwift,
+      supplier_beneficiary_name: v.supplierBeneficiaryName,
+      supplier_contact_phone: v.supplierContactPhone || null,
+      supplier_contact_email: v.supplierContactEmail || null,
+      amount: v.amount,
+      currency: v.currency,
+      payment_amount: v.paymentAmount,
+      payment_amount_currency: v.paymentAmountCurrency,
+      ils_amount: v.ilsAmount,
+      invoice_date: v.invoiceDate,
+      file_path: filePath,
+      kkal_status: "pending",
+    })
+    .eq("id", input.id);
+
+  if (error) {
+    // RLS blocks this when the invoice isn't the rep's own, or it's not
+    // currently in "needs_correction" state (invoices_rep_update_correction).
+    return { error: error.message };
+  }
+
+  const changedFile = before?.file_path && filePath !== before.file_path;
+  const snapshot = before
+    ? `השליח תיקן ושלח מחדש. קודם: סכום ${before.amount} ${before.currency}, לתשלום ${before.payment_amount} ${before.payment_amount_currency}, ש"ח ${before.ils_amount}${changedFile ? ", הקובץ הוחלף" : ""} ← חדש: סכום ${v.amount} ${v.currency}, לתשלום ${v.paymentAmount} ${v.paymentAmountCurrency}, ש"ח ${v.ilsAmount}`
+    : "השליח תיקן ושלח מחדש את החשבונית";
+
+  await supabase.from("status_audit_log").insert({
+    entity_type: "invoice",
+    entity_id: input.id,
+    actor_id: userData.user.id,
+    action: "correction",
+    from_value: "needs_correction",
+    to_value: "pending",
+    notes: snapshot,
   });
 
   return { success: true as const };

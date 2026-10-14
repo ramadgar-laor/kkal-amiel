@@ -6,11 +6,17 @@ import { usePathname } from "next/navigation";
 export function KkalNav({
   labels,
 }: {
-  labels: { kkalReps: string; kkalEvents: string; kkalInvoices: string };
+  labels: {
+    kkalDashboard: string;
+    kkalReps: string;
+    kkalEvents: string;
+    kkalInvoices: string;
+  };
 }) {
   const pathname = usePathname();
 
   const items = [
+    { href: "/kkal", label: labels.kkalDashboard, exact: true },
     { href: "/kkal/reps", label: labels.kkalReps },
     { href: "/kkal/events", label: labels.kkalEvents },
     { href: "/kkal/invoices", label: labels.kkalInvoices },
@@ -18,11 +24,13 @@ export function KkalNav({
 
   return (
     <nav
-      aria-label={labels.kkalReps}
+      aria-label={labels.kkalDashboard}
       className="flex items-center gap-1 overflow-x-auto"
     >
       {items.map((item) => {
-        const active = pathname?.startsWith(item.href);
+        const active = item.exact
+          ? pathname === item.href
+          : pathname?.startsWith(item.href);
         return (
           <Link
             key={item.href}

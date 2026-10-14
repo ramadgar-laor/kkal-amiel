@@ -10,6 +10,7 @@ const STATUS_FILTER_LABEL: Record<string, string> = {
   all: "כל הסטטוסים",
   pending: "ממתינות לאישור",
   approved: "אושרו",
+  needs_correction: "בתיקון אצל השליח",
   rejected: "נדחו",
 };
 
@@ -45,16 +46,24 @@ const formatDate = formatDateDMY;
 
 export function InvoicesDirectoryTable({
   rows,
+  initialStatus,
   initialPaymentStatus,
 }: {
   rows: InvoiceDirectoryRow[];
+  // Pre-selects the kkal-status filter, e.g. when arriving from the "needs
+  // correction" card on the KKL dashboard (?status=needs_correction).
+  initialStatus?: string;
   // Pre-selects the payment-status filter, e.g. when arriving from a link on
   // the KKL dashboard's payment-status breakdown (?paymentStatus=paid).
   initialPaymentStatus?: string;
 }) {
   const { navigate, isPending, pendingId } = useRowNavigation();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState(
+    initialStatus && initialStatus in STATUS_FILTER_LABEL
+      ? initialStatus
+      : "all"
+  );
   const [paymentStatus, setPaymentStatus] = useState(
     initialPaymentStatus && initialPaymentStatus in PAYMENT_STATUS_FILTER_LABEL
       ? initialPaymentStatus

@@ -25,6 +25,7 @@ type EventInvoiceStats = {
   ilsTotal: number;
   kkalPending: number;
   kkalRejected: number;
+  needsCorrection: number;
   returnedToRep: number;
   returnedToKkal: number;
   inAmielReview: number;
@@ -37,6 +38,7 @@ function emptyStats(): EventInvoiceStats {
     ilsTotal: 0,
     kkalPending: 0,
     kkalRejected: 0,
+    needsCorrection: 0,
     returnedToRep: 0,
     returnedToKkal: 0,
     inAmielReview: 0,
@@ -85,6 +87,8 @@ export default async function RepDashboardPage() {
       stats.kkalPending += 1;
     } else if (inv.kkal_status === "rejected") {
       stats.kkalRejected += 1;
+    } else if (inv.kkal_status === "needs_correction") {
+      stats.needsCorrection += 1;
     } else if (inv.kkal_status === "approved") {
       if (inv.payment_status === "paid") stats.paid += 1;
       else if (inv.payment_status === "returned_to_rep") stats.returnedToRep += 1;
@@ -168,6 +172,13 @@ export default async function RepDashboardPage() {
                 chips.push({
                   label: t(d.kkalRejectedChip, { count: stats.kkalRejected }),
                   cls: "bg-red-100 text-red-700",
+                });
+              if (stats.needsCorrection > 0)
+                chips.push({
+                  label: t(d.needsCorrectionChip, {
+                    count: stats.needsCorrection,
+                  }),
+                  cls: "bg-(--color-gold-light) text-(--color-gold)",
                 });
               if (stats.returnedToRep > 0)
                 chips.push({

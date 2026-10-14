@@ -218,6 +218,21 @@ export default async function KkalInvoiceDetailPage({
         </section>
       )}
 
+      {invoice.kkal_status === "needs_correction" && (
+        <section className="rounded-xl bg-(--color-gold-light) border border-(--color-gold)/30 p-5 shadow-sm space-y-2">
+          <h2 className="font-semibold text-(--color-gold)">
+            ממתין לתיקון מהשליח
+          </h2>
+          {invoice.kkal_notes && (
+            <p className="text-sm whitespace-pre-wrap">{invoice.kkal_notes}</p>
+          )}
+          <p className="text-xs text-black/50">
+            החשבונית תחזור לרשימת החשבוניות הממתינות לבדיקה לאחר שהשליח ישלח
+            אותה מתוקנת.
+          </p>
+        </section>
+      )}
+
       {invoice.payment_status === "returned_to_kkal" && (
         <section className="rounded-xl bg-red-50 border border-red-200 p-5 shadow-sm space-y-3">
           <h2 className="font-semibold text-red-700">

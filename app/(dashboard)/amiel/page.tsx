@@ -50,18 +50,41 @@ const STAGES: {
 export default async function AmielDashboardPage() {
   const supabase = await createClient();
 
-  const counts = await Promise.all(
-    STAGES.map(async (stage) => {
-      const { count } = await supabase
-        .from("invoices")
+  const [counts, { count: approvedEventsCount }, { data: allocations }, { data: paidInvoices }] =
+    await Promise.all([
+      Promise.all(
+        STAGES.map(async (stage) => {
+          const { count } = await supabase
+            .from("invoices")
+            .select("*", { count: "exact", head: true })
+            .eq("kkal_status", "approved")
+            .eq("payment_status", stage.key);
+          return count ?? 0;
+        })
+      ),
+      supabase
+        .from("events")
         .select("*", { count: "exact", head: true })
+        .in("status", ["approved", "partially_approved"]),
+      supabase.from("amiel_budget_allocations").select("amount_ils"),
+      supabase
+        .from("invoices")
+        .select("paid_amount_ils")
         .eq("kkal_status", "approved")
-        .eq("payment_status", stage.key);
-      return count ?? 0;
-    })
-  );
+        .eq("payment_status", "paid"),
+    ]);
 
   const total = counts.reduce((a, b) => a + b, 0);
+
+  const budgetReceived = (allocations ?? []).reduce(
+    (sum, a) => sum + Number(a.amount_ils),
+    0
+  );
+  const budgetSpent = (paidInvoices ?? []).reduce(
+    (sum, inv) => sum + Number(inv.paid_amount_ils ?? 0),
+    0
+  );
+  const budgetRemaining = budgetReceived - budgetSpent;
 
   return (
     <div className="space-y-6">
@@ -72,6 +95,31 @@ export default async function AmielDashboardPage() {
         <p className="text-sm text-black/50 mt-1">
           {total} חשבוניות מאושרות על ידי קק&quot;ל נמצאות בתהליך התשלום.
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Link
+          href="/amiel/events"
+          className="rounded-xl bg-gradient-to-br from-(--color-brand) to-(--color-brand-dark) text-white p-5 shadow-sm hover:opacity-90 transition"
+        >
+          <div className="text-3xl font-bold">{approvedEventsCount ?? 0}</div>
+          <div className="mt-1 text-sm font-medium">אירועים מאושרים</div>
+          <div className="mt-0.5 text-xs text-white/80">
+            אירועים שאושרו על ידי קק&quot;ל ונמצאים בטיפול עמיאל
+          </div>
+        </Link>
+        <Link
+          href="/amiel/budget"
+          className="rounded-xl bg-gradient-to-br from-(--color-gold) to-amber-600 text-white p-5 shadow-sm hover:opacity-90 transition"
+        >
+          <div className="text-3xl font-bold">
+            ₪{budgetRemaining.toLocaleString("he-IL")}
+          </div>
+          <div className="mt-1 text-sm font-medium">תקציב עמיאל — נותר</div>
+          <div className="mt-0.5 text-xs text-white/80">
+            מתוך ₪{budgetReceived.toLocaleString("he-IL")} שהתקבלו מקק&quot;ל
+          </div>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

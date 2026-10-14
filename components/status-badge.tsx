@@ -8,6 +8,7 @@ const STYLES: Record<string, string> = {
   approved: "bg-(--color-accent-light) text-(--color-accent-dark)",
   partially_approved: "bg-(--color-gold-light) text-(--color-gold)",
   rejected: "bg-red-100 text-red-700",
+  needs_correction: "bg-(--color-gold-light) text-(--color-gold)",
   inactive: "bg-black/5 text-black/50",
   not_sent: "bg-black/5 text-black/60",
   received_for_review: "bg-amber-100 text-amber-800",
