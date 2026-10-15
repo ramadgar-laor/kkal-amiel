@@ -270,6 +270,7 @@ export const dictionaries = {
       budgetStatusApprovedLabel: "אושר לאירוע (₪)",
       budgetStatusInvoicesTotalLabel: "סה״כ חשבוניות שהוזנו (₪)",
       budgetStatusOverageLabel: "חריגה של ₪{amount}",
+      invoiceDetailsToggle: "צפייה בפרטי החשבונית המלאים",
     },
     newEvent: {
       pageTitle: "אירוע חדש ובקשת תקציב",
@@ -419,6 +420,11 @@ export const dictionaries = {
       correctionSubmitButton: 'שליחת התיקון לקק"ל',
       correctionSuccessMessage: 'התיקון נשלח בהצלחה וממתין לבדיקה חוזרת של קק"ל.',
       correctionErrorMessage: "יש למלא את כל השדות המסומנים בכוכבית לפני השליחה",
+      pendingEditFileLabel: "קובץ החשבונית (אופציונלי)",
+      pendingEditFileHint: "ניתן להשאיר ריק כדי להשתמש בקובץ הקיים.",
+      pendingEditSubmitButton: "שמירת השינויים",
+      pendingEditSuccessMessage: "השינויים נשמרו בהצלחה.",
+      pendingEditErrorMessage: "יש למלא את כל השדות המסומנים בכוכבית לפני השמירה",
     },
     common: {
       required: "שדה חובה",
@@ -433,6 +439,7 @@ export const dictionaries = {
       sending: "שולח...",
       notes: "הערות",
       invalidFieldsNotice: "יש לבדוק את השדות שמולאו",
+      viewFile: "הצגת הקובץ",
       fieldErrors: {
         required: "שדה חובה",
         requiredForOngoingTrack: "שדה חובה עבור תוכנית מתמשכת",
@@ -719,6 +726,7 @@ export const dictionaries = {
       budgetStatusApprovedLabel: "Approved for event (₪)",
       budgetStatusInvoicesTotalLabel: "Total invoices entered (₪)",
       budgetStatusOverageLabel: "Over budget by ₪{amount}",
+      invoiceDetailsToggle: "View full invoice details",
     },
     newEvent: {
       pageTitle: "New event & budget request",
@@ -875,6 +883,12 @@ export const dictionaries = {
       correctionSubmitButton: "Send correction to KKL",
       correctionSuccessMessage:
         "The correction was sent successfully and is awaiting KKL's review again.",
+      pendingEditFileLabel: "Invoice file (optional)",
+      pendingEditFileHint: "You can leave this empty to keep the existing file.",
+      pendingEditSubmitButton: "Save changes",
+      pendingEditSuccessMessage: "Changes saved successfully.",
+      pendingEditErrorMessage:
+        "Please fill in all fields marked with an asterisk before saving",
       correctionErrorMessage:
         "Please fill in all the fields marked with an asterisk before submitting",
     },
@@ -891,6 +905,7 @@ export const dictionaries = {
       sending: "Sending...",
       notes: "Notes",
       invalidFieldsNotice: "Please check the fields you filled in",
+      viewFile: "View file",
       fieldErrors: {
         required: "Required field",
         requiredForOngoingTrack: "Required field for an ongoing program",

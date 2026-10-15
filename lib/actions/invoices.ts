@@ -341,6 +341,94 @@ export async function updateInvoiceBankDetails(input: {
   return { success: true as const };
 }
 
+// Rep-side edit of their own invoice while it's still "pending" KKL review
+// -- lets the rep fix a typo, adjust an amount, or swap the file before KKL
+// has looked at it at all, without needing KKL to flag anything first.
+// Shares the same full-edit shape as resubmitCorrectedInvoice below (same
+// schema, file optional -- keeps the existing one if not replaced), but
+// kkal_status is left untouched (it's already "pending", nothing to reset).
+// RLS (invoices_rep_update_pending) restricts this to the rep's own invoice
+// and only while kkal_status is exactly "pending" -- e.g. if KKL reviews it
+// in the moment between page load and save, the update is rejected and the
+// rep falls back to the needs_correction / returned_to_rep paths, or
+// view-only.
+export async function updatePendingInvoice(
+  input: { id: string } & Omit<InvoiceCorrectionInput, "eventId">
+) {
+  const parsed = invoiceCorrectionSchema
+    .omit({ eventId: true })
+    .safeParse(input);
+  if (!parsed.success) {
+    return { error: "invalid_input" as const };
+  }
+  const v = parsed.data;
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return { error: "not_authenticated" as const };
+  }
+
+  const { data: before } = await supabase
+    .from("invoices")
+    .select(
+      "amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path"
+    )
+    .eq("id", input.id)
+    .single();
+
+  const filePath = v.filePath || before?.file_path;
+  if (!filePath) {
+    return { error: "invalid_input" as const };
+  }
+
+  const { error } = await supabase
+    .from("invoices")
+    .update({
+      supplier_name: v.supplierName,
+      supplier_field: v.supplierField || null,
+      supplier_bank_name: v.supplierBankName,
+      supplier_bank_address: v.supplierBankAddress,
+      supplier_bank_country: v.supplierBankCountry,
+      supplier_iban: v.supplierIban,
+      supplier_swift: v.supplierSwift,
+      supplier_beneficiary_name: v.supplierBeneficiaryName,
+      supplier_contact_phone: v.supplierContactPhone || null,
+      supplier_contact_email: v.supplierContactEmail || null,
+      amount: v.amount,
+      currency: v.currency,
+      payment_amount: v.paymentAmount,
+      payment_amount_currency: v.paymentAmountCurrency,
+      ils_amount: v.ilsAmount,
+      invoice_date: v.invoiceDate,
+      file_path: filePath,
+    })
+    .eq("id", input.id);
+
+  if (error) {
+    // RLS blocks this when the invoice isn't the rep's own, or it's no
+    // longer "pending" (invoices_rep_update_pending).
+    return { error: error.message };
+  }
+
+  const changedFile = before?.file_path && filePath !== before.file_path;
+  const snapshot = before
+    ? `השליח ערך את החשבונית לפני בדיקת קק"ל. קודם: סכום ${before.amount} ${before.currency}, לתשלום ${before.payment_amount} ${before.payment_amount_currency}, ש"ח ${before.ils_amount}${changedFile ? ", הקובץ הוחלף" : ""} ← חדש: סכום ${v.amount} ${v.currency}, לתשלום ${v.paymentAmount} ${v.paymentAmountCurrency}, ש"ח ${v.ilsAmount}`
+    : "השליח ערך את החשבונית לפני בדיקת קק\"ל";
+
+  await supabase.from("status_audit_log").insert({
+    entity_type: "invoice",
+    entity_id: input.id,
+    actor_id: userData.user.id,
+    action: "edit",
+    from_value: "pending",
+    to_value: "pending",
+    notes: snapshot,
+  });
+
+  return { success: true as const };
+}
+
 // Rep-side correction of an invoice KKL sent back with
 // kkal_status = "needs_correction" (see decideInvoice above for why this is
 // a separate, softer path from an outright rejection). Unlike

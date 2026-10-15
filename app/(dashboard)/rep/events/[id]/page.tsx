@@ -6,6 +6,8 @@ import { getCountryName } from "@/lib/data/countries";
 import { InvoiceForm } from "@/components/invoice-form";
 import { InvoiceBankEditPanel } from "@/components/invoice-bank-edit-panel";
 import { InvoiceCorrectionPanel } from "@/components/invoice-correction-panel";
+import { InvoicePendingEditPanel } from "@/components/invoice-pending-edit-panel";
+import { getSignedEventFileUrl } from "@/lib/storage/event-files";
 import { formatDateDMY } from "@/lib/utils/date";
 import { getCurrentLocale } from "@/lib/i18n/server";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -47,10 +49,22 @@ export default async function RepEventDetailPage({
   const { data: invoices } = await supabase
     .from("invoices")
     .select(
-      "id, supplier_name, supplier_field, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, kkal_status, kkal_notes, payment_status, amiel_notes, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name"
+      "id, supplier_name, supplier_field, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, payment_status, amiel_notes, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name"
     )
     .eq("event_id", event.id)
     .order("created_at", { ascending: false });
+
+  // The rep is the owner of their own invoice file in Storage
+  // (event_files_rep_read_own), so this resolves for every invoice they
+  // submitted themselves -- lets them always see the file they uploaded,
+  // regardless of the invoice's current review status.
+  const invoiceFileUrlEntries = await Promise.all(
+    (invoices ?? []).map(
+      async (inv) =>
+        [inv.id, await getSignedEventFileUrl(supabase, inv.file_path)] as const
+    )
+  );
+  const invoiceFileUrlById = new Map(invoiceFileUrlEntries);
 
   const suppliersSummary = (suppliers ?? []).length
     ? (suppliers ?? [])
@@ -282,6 +296,121 @@ export default async function RepEventDetailPage({
                         />
                       </div>
                     )}
+
+                    {/* Full entered details + the uploaded file, always
+                        visible to the rep regardless of status. Editing
+                        inside here is only offered while kkal_status is
+                        still "pending" -- once KKL has reviewed it
+                        (approved/rejected), it's view-only unless it came
+                        back via one of the two notices above. */}
+                    <details className="mt-3 rounded-lg border border-black/10 bg-black/[0.015] p-3">
+                      <summary className="cursor-pointer text-sm font-medium text-(--color-brand) select-none">
+                        {d.invoiceDetailsToggle}
+                      </summary>
+                      <div className="mt-3 divide-y divide-black/5">
+                        {(
+                          [
+                            [dict.invoiceForm.supplierFieldLabel, inv.supplier_field],
+                            [
+                              dict.invoiceForm.beneficiaryNameLabel,
+                              inv.supplier_beneficiary_name,
+                            ],
+                            [dict.invoiceForm.bankNameLabel, inv.supplier_bank_name],
+                            [
+                              dict.invoiceForm.bankAddressLabel,
+                              inv.supplier_bank_address,
+                            ],
+                            [
+                              dict.invoiceForm.bankCountryLabel,
+                              inv.supplier_bank_country
+                                ? getCountryName(inv.supplier_bank_country, locale)
+                                : null,
+                            ],
+                            [dict.invoiceForm.ibanLabel, inv.supplier_iban],
+                            [dict.invoiceForm.swiftLabel, inv.supplier_swift],
+                            [
+                              dict.invoiceForm.contactPhoneLabel,
+                              inv.supplier_contact_phone,
+                            ],
+                            [
+                              dict.invoiceForm.contactEmailLabel,
+                              inv.supplier_contact_email,
+                            ],
+                            [
+                              dict.invoiceForm.amountLabel,
+                              `${inv.amount} ${inv.currency}`,
+                            ],
+                            [
+                              dict.invoiceForm.paymentAmountLabel,
+                              `${inv.payment_amount} ${inv.payment_amount_currency}`,
+                            ],
+                          ] as [string, string | null | undefined][]
+                        ).map(([label, value]) =>
+                          value ? (
+                            <div
+                              key={label}
+                              className="py-1.5 grid grid-cols-3 gap-3 text-sm"
+                            >
+                              <div className="text-black/50">{label}</div>
+                              <div className="col-span-2">{value}</div>
+                            </div>
+                          ) : null
+                        )}
+                        {invoiceFileUrlById.get(inv.id) && (
+                          <div className="py-1.5 grid grid-cols-3 gap-3 text-sm">
+                            <div className="text-black/50">
+                              {dict.invoiceForm.fileLabel}
+                            </div>
+                            <div className="col-span-2">
+                              <a
+                                href={invoiceFileUrlById.get(inv.id)!}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-(--color-brand) underline"
+                              >
+                                {dict.common.viewFile}
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {inv.kkal_status === "pending" && (
+                        <div className="mt-3">
+                          <InvoicePendingEditPanel
+                            invoiceId={inv.id}
+                            dict={dict}
+                            locale={locale}
+                            defaultValues={{
+                              supplierName: inv.supplier_name ?? "",
+                              supplierField: inv.supplier_field ?? "",
+                              supplierBeneficiaryName:
+                                inv.supplier_beneficiary_name ?? "",
+                              supplierBankName: inv.supplier_bank_name ?? "",
+                              supplierBankAddress:
+                                inv.supplier_bank_address ?? "",
+                              supplierBankCountry:
+                                inv.supplier_bank_country ?? "",
+                              supplierIban: inv.supplier_iban ?? "",
+                              supplierSwift: inv.supplier_swift ?? "",
+                              supplierContactPhone:
+                                inv.supplier_contact_phone ?? "",
+                              supplierContactEmail:
+                                inv.supplier_contact_email ?? "",
+                              amount: String(inv.amount ?? ""),
+                              currency: inv.currency ?? "",
+                              paymentAmount: String(inv.payment_amount ?? ""),
+                              paymentAmountCurrency:
+                                (inv.payment_amount_currency as
+                                  | "USD"
+                                  | "EUR") ?? "USD",
+                              ilsAmount: String(inv.ils_amount ?? ""),
+                              invoiceDate: inv.invoice_date ?? "",
+                            }}
+                          />
+                        </div>
+                      )}
+                    </details>
                   </div>
                 ))}
               </div>
