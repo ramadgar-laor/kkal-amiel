@@ -44,7 +44,13 @@ export type RepDirectoryRow = {
 
 const formatDate = formatDateDMY;
 
-export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
+export function RepsDirectoryTable({
+  rows,
+  exportHref,
+}: {
+  rows: RepDirectoryRow[];
+  exportHref?: string;
+}) {
   const { navigate, isPending, pendingId } = useRowNavigation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -98,6 +104,19 @@ export function RepsDirectoryTable({ rows }: { rows: RepDirectoryRow[] }) {
         <span className="text-xs text-black/40">
           {filtered.length} מתוך {rows.length} שליחים
         </span>
+        {exportHref && (
+          // Plain <a>, not next/link: this points at a route handler that
+          // streams an .xlsx download, not a page, so it must do a real
+          // browser navigation rather than a client-side route transition.
+          // (no-html-link-for-pages doesn't flag this file, since it isn't
+          // under app/ — unlike the page.tsx this link moved from.)
+          <a
+            href={exportHref}
+            className="sm:ms-auto inline-flex items-center gap-1.5 text-sm rounded-md border border-(--color-brand)/30 text-(--color-brand) px-3 py-1.5 hover:bg-(--color-brand-light) transition shrink-0"
+          >
+            ייצוא לאקסל
+          </a>
+        )}
       </div>
 
       {filtered.length === 0 ? (

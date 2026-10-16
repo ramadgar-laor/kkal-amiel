@@ -152,21 +152,9 @@ export default async function KkalRepsPage() {
       )}
 
       <div id="directory">
-        <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
-          <h2 className="font-semibold text-(--color-brand-dark)">
-            כל השליחים במערכת
-          </h2>
-          {/* Plain <a>, not next/link: this points at a route handler that
-              streams an .xlsx download, not a page, so it must do a real
-              browser navigation rather than a client-side route transition. */}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
-            href="/kkal/reps/export"
-            className="inline-flex items-center gap-1.5 text-sm rounded-md border border-(--color-brand)/30 text-(--color-brand) px-3 py-1.5 hover:bg-(--color-brand-light) transition shrink-0"
-          >
-            ייצוא לאקסל
-          </a>
-        </div>
+        <h2 className="font-semibold text-(--color-brand-dark) mb-1">
+          כל השליחים במערכת
+        </h2>
         <p className="text-xs text-black/50 mb-3">
           רשימה מלאה של כל השליחים בכל הסטטוסים, עם סינון וחיפוש חכם. אפשר
           לעדכן סטטוס ישירות (למשל לסמן כ&quot;לא פעיל&quot; שליח שסיים את
@@ -176,6 +164,7 @@ export default async function KkalRepsPage() {
           <p className="text-sm text-black/50">אין עדיין שליחים במערכת.</p>
         ) : (
           <RepsDirectoryTable
+            exportHref="/kkal/reps/export"
             rows={all.map((r) => {
               const profile = profileById.get(r.profile_id);
               return {
