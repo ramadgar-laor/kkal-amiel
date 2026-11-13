@@ -306,7 +306,6 @@ export const dictionaries = {
       trackOngoing: "מתמשך",
       trackOneTime: "חד פעמי",
       requestedAmountLabel: "סכום מבוקש",
-      transferNoteLabel: "סכום מדויק להעברה",
       suppliersLabelSingular: "ספק מקומי",
       suppliersLabelPlural: "ספקים מקומיים",
       bankDetailsNotProvided: " (פרטי בנק טרם נמסרו)",
@@ -336,7 +335,6 @@ export const dictionaries = {
       whatsappLabel: "וואטסאפ:",
       orgAffiliationLabel: 'מטעם איזה ארגון את/ה שליח/ה או פעיל/ה חינוכי ביעד?',
       orgAffiliationNote: '(חשוב לנו לדעת איך הפכת לשגריר קק"ל)',
-      registeredToProgramLabel: 'האם נרשמת לתוכנית שגרירי קק"ל?',
       inWhatsappGroupLabel: 'האם את/ה נמצא/ת בקבוצת הוואטסאפ של שגרירי קק"ל?',
       inWhatsappGroupNote:
         'כמובן הקבוצה הרלוונטית לאיזור הפעילות שלך (אירופה / ארה"ב / אמל"ט)',
@@ -366,9 +364,6 @@ export const dictionaries = {
       ongoingDescriptionLabel: "תוכנית מתמשכת: הסבר של עד 500 מילים",
       sectionBudget: "תקציב",
       requestedAmountLabel: "סכום התמיכה המבוקש (נא לציין סכום בשקלים)",
-      transferAmountNoteLabel: "סכום מדויק להעברה ביורו או בדולר בלבד",
-      transferAmountNoteHint:
-        'נא לרשום את הסכום המדויק המבוקש, בציון שם המטבע (דולר/יורו). שימו לב שהסכום לא עולה על גובה המסלול שבחרתם (עד 10,000 ש"ח או עד 20,000 ש"ח).',
       budgetItemsLabel: "אומדן תקציבי מפורט",
       addBudgetItemButton: "+ הוספת שורת הוצאה",
       budgetItemsHint:
@@ -401,13 +396,6 @@ export const dictionaries = {
       swiftLabel: "קוד סוויפט (SWIFT)",
       achRoutingLabel:
         'מספר זיהוי בנקאי להעברות מקומיות בארה"ב (ACH Routing) — רק להעברה בתוך ארה"ב',
-      sectionQuotes: "הצעות מחיר",
-      quotesHint:
-        "נא להעלות מסמך רשמי על דף לוגו של הספק עם ההצעה לטובת הפעילות, תוך ציון הסכום המבוקש. אפשר להוסיף עד 2 הצעות מחיר נוספות אם יש יותר מספק אחד.",
-      quoteTitle: "הצעת מחיר {n}",
-      quoteFileLabel: "קובץ ההצעה",
-      quoteContactPhoneLabel: "טלפון איש הקשר של הספק",
-      quoteContactEmailLabel: "מייל איש הקשר של הספק",
       sectionKkalPresence: 'נראות ונוכחות קק"ל באירוע',
       kkalPresenceHintBefore:
         'אנחנו מציעים בנק של אפשרויות ורעיונות לנוכחות קק"ל באירוע שלכם. אתם נדרשים לציין לפחות {count} אפשרויות מתוך הרשימה להלן, ואת הנבחרים אתם מתחייבים ליישם באירוע. בנוסף לאמור, כל אירוע יכלול גם לפחות 2 דגלים של קק"ל שיוצבו במקום מרכזי — זו דרישה קבועה בנפרד מהרשימה שלהלן.',
@@ -814,7 +802,6 @@ export const dictionaries = {
       trackOngoing: "Ongoing",
       trackOneTime: "One-time",
       requestedAmountLabel: "Requested amount",
-      transferNoteLabel: "Exact transfer amount",
       suppliersLabelSingular: "Local supplier",
       suppliersLabelPlural: "Local suppliers",
       bankDetailsNotProvided: " (bank details not yet provided)",
@@ -846,8 +833,6 @@ export const dictionaries = {
         "Which organization are you an emissary or education activist for at your destination?",
       orgAffiliationNote:
         "(It's important for us to know how you became a KKL ambassador)",
-      registeredToProgramLabel:
-        "Have you registered for the KKL Ambassadors program?",
       inWhatsappGroupLabel: "Are you in the KKL ambassadors' WhatsApp group?",
       inWhatsappGroupNote:
         "The group relevant to your region of activity (Europe / US / Latin America), of course",
@@ -878,9 +863,6 @@ export const dictionaries = {
       sectionBudget: "Budget",
       requestedAmountLabel:
         "Requested support amount (please state the amount in NIS)",
-      transferAmountNoteLabel: "Exact amount to transfer, in euro or dollars only",
-      transferAmountNoteHint:
-        "Please write the exact amount requested, stating the currency (USD/EUR). Note that the amount may not exceed the track you chose (up to NIS 10,000 or up to NIS 20,000).",
       budgetItemsLabel: "Detailed budget breakdown",
       addBudgetItemButton: "+ Add expense line",
       budgetItemsHint:
@@ -914,13 +896,6 @@ export const dictionaries = {
       swiftLabel: "SWIFT code",
       achRoutingLabel:
         "Bank routing number for local US transfers (ACH Routing) — for transfers within the US only",
-      sectionQuotes: "Price quotes",
-      quotesHint:
-        "Please upload an official document on the supplier's letterhead with the quote for the activity, stating the requested amount. You can add up to 2 additional quotes if there is more than one supplier.",
-      quoteTitle: "Quote {n}",
-      quoteFileLabel: "Quote file",
-      quoteContactPhoneLabel: "Supplier contact's phone",
-      quoteContactEmailLabel: "Supplier contact's email",
       sectionKkalPresence: "KKL visibility and presence at the event",
       kkalPresenceHintBefore:
         "We offer a bank of options and ideas for KKL's presence at your event. You're required to select at least {count} options from the list below, and you commit to implementing the ones you select at the event. In addition, every event must also display at least 2 KKL flags in a central spot — this is a fixed requirement, separate from the list below.",

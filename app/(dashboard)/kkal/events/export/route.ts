@@ -36,7 +36,6 @@ const HEADERS = [
   "ארגון השליחות",
   "מדינת השליחות",
   "מטעם איזה ארגון את/ה שליח/ה או פעיל/ה חינוכי ביעד",
-  'נרשם/ה לתוכנית שגרירי קק"ל',
   "בקבוצת הוואטסאפ של השגרירים",
   "שם האירוע שלגביו מבוקשת התמיכה",
   "תאריך התחלה",
@@ -53,7 +52,6 @@ const HEADERS = [
   "מסלול",
   "סכום מבוקש",
   "מטבע",
-  "סכום מדויק להעברה",
   "סכום מאושר",
   "אומדן תקציבי מפורט",
   'סה"כ בשקלים',
@@ -61,7 +59,6 @@ const HEADERS = [
   "תחום עיסוק הספק/ים",
   "פרטי בנק ידועים",
   "פרטי בנק מלאים",
-  "הצעות מחיר (אנשי קשר)",
   'נראות ונוכחות קק"ל באירוע',
   "כל ההצהרות אושרו",
   "הערות השגריר",
@@ -92,7 +89,7 @@ export async function GET(request: Request) {
   const { data: events } = await supabase
     .from("events")
     .select(
-      "id, rep_id, name, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, status, kkal_notes, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, transfer_amount_note, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, invoices(amount, paid_amount, payment_status)"
+      "id, rep_id, name, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, status, kkal_notes, org_affiliation, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, invoices(amount, paid_amount, payment_status)"
     )
     .order("created_at", { ascending: false });
 
@@ -114,7 +111,7 @@ export async function GET(request: Request) {
   const emailById = new Map((profiles ?? []).map((p) => [p.id, p.email]));
 
   const eventIds = (events ?? []).map((e) => e.id);
-  const [{ data: allBudgetItems }, { data: allSuppliers }, { data: allQuotes }] =
+  const [{ data: allBudgetItems }, { data: allSuppliers }] =
     await Promise.all([
       eventIds.length > 0
         ? supabase
@@ -130,13 +127,6 @@ export async function GET(request: Request) {
             .in("event_id", eventIds)
             .order("sort_order", { ascending: true })
         : Promise.resolve({ data: [] as never[] }),
-      eventIds.length > 0
-        ? supabase
-            .from("event_quotes")
-            .select("event_id, slot, contact_phone, contact_email")
-            .in("event_id", eventIds)
-            .order("slot", { ascending: true })
-        : Promise.resolve({ data: [] as never[] }),
     ]);
 
   const budgetItemsByEvent = new Map<string, typeof allBudgetItems>();
@@ -151,12 +141,6 @@ export async function GET(request: Request) {
     list.push(s);
     suppliersByEvent.set(s.event_id, list);
   }
-  const quotesByEvent = new Map<string, typeof allQuotes>();
-  for (const q of allQuotes ?? []) {
-    const list = quotesByEvent.get(q.event_id) ?? [];
-    list.push(q);
-    quotesByEvent.set(q.event_id, list);
-  }
 
   const scopedEvents = (events ?? []).filter((e) =>
     inScope(scope, e.country, e.state ?? repById.get(e.rep_id)?.state)
@@ -165,7 +149,6 @@ export async function GET(request: Request) {
     const rep = repById.get(e.rep_id);
     const budgetItems = budgetItemsByEvent.get(e.id) ?? [];
     const suppliers = suppliersByEvent.get(e.id) ?? [];
-    const quotes = quotesByEvent.get(e.id) ?? [];
     const invoices = e.invoices ?? [];
 
     const budgetItemsTotalIls = budgetItems.reduce(
@@ -216,7 +199,6 @@ export async function GET(request: Request) {
       rep?.organization ?? null,
       rep?.country ? getCountryName(rep.country) : null,
       e.org_affiliation,
-      yesNo(e.registered_to_program),
       yesNo(e.in_whatsapp_group),
       e.name,
       formatDateDMY(e.start_date),
@@ -233,7 +215,6 @@ export async function GET(request: Request) {
       TRACK_LABEL[e.track ?? ""] ?? e.track,
       e.requested_amount,
       e.requested_currency,
-      e.transfer_amount_note,
       e.approved_amount,
       budgetSummary || null,
       budgetItemsTotalIls || null,
@@ -248,9 +229,6 @@ export async function GET(request: Request) {
           (s) =>
             `${s.name}: ${s.beneficiary_name ?? ""} · ${s.bank_name ?? ""} · ${s.account_number ?? ""} · ${s.swift_number ?? ""}`
         )
-        .join("\n") || null,
-      quotes
-        .map((q) => `${q.slot}: ${[q.contact_phone, q.contact_email].filter(Boolean).join(" / ")}`)
         .join("\n") || null,
       presenceLabels || null,
       yesNo(allConsentsConfirmed),
