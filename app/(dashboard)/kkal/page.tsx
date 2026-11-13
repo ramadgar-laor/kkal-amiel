@@ -66,10 +66,10 @@ export default async function KkalDashboardPage({
   const [{ data: reps }, { data: events }, { data: invoices }] =
     await Promise.all([
       supabase.from("reps").select("status, country, state"),
-      supabase.from("events").select("status, country, reps(state)"),
+      supabase.from("events").select("status, country, state, reps(state)"),
       supabase
         .from("invoices")
-        .select("kkal_status, payment_status, events(country, reps(state))"),
+        .select("kkal_status, payment_status, events(country, state, reps(state))"),
     ]);
 
   const first = <T,>(v: T | T[] | null | undefined): T | null =>
@@ -77,11 +77,11 @@ export default async function KkalDashboardPage({
 
   const myReps = (reps ?? []).filter((r) => inScope(scope, r.country, r.state));
   const myEvents = (events ?? []).filter((e) =>
-    inScope(scope, e.country, first(e.reps)?.state)
+    inScope(scope, e.country, e.state ?? first(e.reps)?.state)
   );
   const myInvoices = (invoices ?? []).filter((inv) => {
     const ev = first(inv.events);
-    return inScope(scope, ev?.country, first(ev?.reps)?.state);
+    return inScope(scope, ev?.country, ev?.state ?? first(ev?.reps)?.state);
   });
 
   const pendingReps = myReps.filter((r) => r.status === "pending").length;

@@ -1,3 +1,4 @@
+import { formatCountryWithState } from "@/lib/data/us-states";
 import { getKkalScope, inScope } from "@/lib/kkal/scope";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -91,7 +92,7 @@ export async function GET(request: Request) {
   const { data: events } = await supabase
     .from("events")
     .select(
-      "id, rep_id, name, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, status, kkal_notes, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, transfer_amount_note, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, invoices(amount, paid_amount, payment_status)"
+      "id, rep_id, name, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, status, kkal_notes, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, transfer_amount_note, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, invoices(amount, paid_amount, payment_status)"
     )
     .order("created_at", { ascending: false });
 
@@ -158,7 +159,7 @@ export async function GET(request: Request) {
   }
 
   const scopedEvents = (events ?? []).filter((e) =>
-    inScope(scope, e.country, repById.get(e.rep_id)?.state)
+    inScope(scope, e.country, e.state ?? repById.get(e.rep_id)?.state)
   );
   const rows = scopedEvents.map((e) => {
     const rep = repById.get(e.rep_id);
@@ -221,7 +222,7 @@ export async function GET(request: Request) {
       formatDateDMY(e.start_date),
       formatDateDMY(e.end_date),
       e.city,
-      e.country ? getCountryName(e.country) : null,
+      e.country ? formatCountryWithState(e.country, e.state) : null,
       e.host_org_name,
       e.host_manager_name,
       e.host_manager_phone,

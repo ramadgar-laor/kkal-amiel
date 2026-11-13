@@ -11,7 +11,7 @@ import {
 } from "@/lib/validation/event";
 import { createEvent } from "@/lib/actions/events";
 import { createClient } from "@/lib/supabase/client";
-import { uploadEventFile } from "@/lib/storage/event-files";
+import { US_COUNTRY_CODE, usStatesFor } from "@/lib/data/us-states";
 import { COUNTRIES_HE, COUNTRIES_EN } from "@/lib/data/countries";
 import {
   focusFirstInvalidField,
@@ -36,6 +36,7 @@ export type RepDefaults = {
   organization: string;
   city: string;
   country: string;
+  state: string;
 };
 
 const inputClass =
@@ -89,7 +90,7 @@ function YesNo({
   error,
   dict,
 }: {
-  name: "registeredToProgram" | "inWhatsappGroup";
+  name: "inWhatsappGroup";
   label: React.ReactNode;
   note?: string;
   register: ReturnType<typeof useForm<EventFormValues>>["register"];
@@ -190,13 +191,13 @@ export function NewEventForm({
     shouldFocusError: false,
     defaultValues: {
       orgAffiliation: repDefaults.organization || "",
-      registeredToProgram: undefined,
       inWhatsappGroup: undefined,
       name: "",
       startDate: "",
       endDate: "",
       city: repDefaults.city || "",
       country: repDefaults.country || "",
+      state: repDefaults.country === US_COUNTRY_CODE ? repDefaults.state || "" : "",
       hostOrgName: "",
       hostManagerName: "",
       hostManagerPhone: "",
@@ -207,7 +208,6 @@ export function NewEventForm({
       track: "one_time",
       ongoingProgramDescription: "",
       requestedAmount: "",
-      transferAmountNote: "",
       budgetItems: [
         { description: "", localAmount: "", currency: "", exchangeRate: "" },
       ],
@@ -226,9 +226,6 @@ export function NewEventForm({
           swiftNumber: "",
         },
       ],
-      quote1: { file: null, contactPhone: "", contactEmail: "" },
-      quote2: { file: null, contactPhone: "", contactEmail: "" },
-      quote3: { file: null, contactPhone: "", contactEmail: "" },
       kkalPresenceSelections: [],
       notes: "",
     },
@@ -281,27 +278,16 @@ export function NewEventForm({
         setServerError(d.errorNotLoggedIn);
         return;
       }
-      const uid = userData.user.id;
-
-      const [quote1Path, quote2Path, quote3Path] = await Promise.all([
-        uploadEventFile(supabase, uid, values.quote1.file as File),
-        values.quote2.file
-          ? uploadEventFile(supabase, uid, values.quote2.file)
-          : Promise.resolve(""),
-        values.quote3.file
-          ? uploadEventFile(supabase, uid, values.quote3.file)
-          : Promise.resolve(""),
-      ]);
 
       const payload: EventInput = {
         orgAffiliation: values.orgAffiliation,
-        registeredToProgram: values.registeredToProgram,
         inWhatsappGroup: values.inWhatsappGroup,
         name: values.name,
         startDate: values.startDate,
         endDate: values.endDate,
         city: values.city,
         country: values.country,
+        state: values.country === US_COUNTRY_CODE ? values.state : "",
         hostOrgName: values.hostOrgName,
         hostManagerName: values.hostManagerName,
         hostManagerPhone: values.hostManagerPhone,
@@ -312,7 +298,6 @@ export function NewEventForm({
         track: values.track,
         ongoingProgramDescription: values.ongoingProgramDescription,
         requestedAmount: Number(values.requestedAmount),
-        transferAmountNote: values.transferAmountNote,
         budgetItems: values.budgetItems.map((item) => ({
           description: item.description,
           localAmount: Number(item.localAmount),
@@ -320,21 +305,6 @@ export function NewEventForm({
           exchangeRate: Number(item.exchangeRate),
         })),
         suppliers: values.suppliers,
-        quote1: {
-          filePath: quote1Path,
-          contactPhone: values.quote1.contactPhone,
-          contactEmail: values.quote1.contactEmail,
-        },
-        quote2: {
-          filePath: quote2Path || undefined,
-          contactPhone: values.quote2.contactPhone || undefined,
-          contactEmail: values.quote2.contactEmail || undefined,
-        },
-        quote3: {
-          filePath: quote3Path || undefined,
-          contactPhone: values.quote3.contactPhone || undefined,
-          contactEmail: values.quote3.contactEmail || undefined,
-        },
         kkalPresenceSelections: values.kkalPresenceSelections,
         consentNoCommitment: values.consentNoCommitment,
         consentCommitteeReview: values.consentCommitteeReview,
@@ -424,13 +394,6 @@ export function NewEventForm({
         </div>
 
         <YesNo
-          name="registeredToProgram"
-          label={d.registeredToProgramLabel}
-          register={register}
-          error={errors.registeredToProgram?.message}
-          dict={dict}
-        />
-        <YesNo
           name="inWhatsappGroup"
           label={d.inWhatsappGroupLabel}
           note={d.inWhatsappGroupNote}
@@ -495,7 +458,12 @@ export function NewEventForm({
               {d.countryLabel}
               <Required />
             </label>
-            <select className={inputClass} {...register("country")}>
+            <select
+              className={inputClass}
+              {...register("country", {
+                onChange: () => setValue("state", ""),
+              })}
+            >
               <option value="">{dict.register.selectCountry}</option>
               {countries.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -505,6 +473,23 @@ export function NewEventForm({
             </select>
             <FieldError message={errors.country?.message} dict={dict} />
           </div>
+          {watch("country") === US_COUNTRY_CODE && (
+            <div>
+              <label className={labelClass}>
+                {dict.register.usState}
+                <Required />
+              </label>
+              <select className={inputClass} {...register("state")}>
+                <option value="">{dict.register.selectUsState}</option>
+                {usStatesFor(locale).map((st) => (
+                  <option key={st.code} value={st.code}>
+                    {st.name}
+                  </option>
+                ))}
+              </select>
+              <FieldError message={errors.state?.message} dict={dict} />
+            </div>
+          )}
         </div>
 
         <div>
@@ -645,16 +630,6 @@ export function NewEventForm({
             {...register("requestedAmount")}
           />
           <FieldError message={errors.requestedAmount?.message} dict={dict} />
-        </div>
-
-        <div>
-          <label className={labelClass}>
-            {d.transferAmountNoteLabel}
-            <Required />
-          </label>
-          <p className={noteClass}>{d.transferAmountNoteHint}</p>
-          <input className={inputClass} {...register("transferAmountNote")} />
-          <FieldError message={errors.transferAmountNote?.message} dict={dict} />
         </div>
 
         <div data-field-name="budgetItems">
@@ -1019,74 +994,6 @@ export function NewEventForm({
             );
           })}
         </div>
-      </section>
-
-      {/* Quotes */}
-      <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>{d.sectionQuotes}</h2>
-        <p className="text-xs text-black/50">{d.quotesHint}</p>
-
-        {(["quote1", "quote2", "quote3"] as const).map((key, i) => {
-          const required = key === "quote1";
-          return (
-            <div key={key} className="rounded-lg border border-black/10 p-4 space-y-3">
-              <div className="font-medium text-sm">
-                {t(d.quoteTitle, { n: i + 1 })}
-                {required && <Required />}
-              </div>
-              <div>
-                <label className={labelClass}>{d.quoteFileLabel}</label>
-                <input
-                  type="file"
-                  name={`${key}.file`}
-                  className={inputClass}
-                  onChange={(e) =>
-                    setValue(
-                      `${key}.file`,
-                      e.target.files?.[0] ?? null,
-                      { shouldValidate: true }
-                    )
-                  }
-                />
-                <FieldError
-                  message={errors[key]?.file?.message as string | undefined}
-                  dict={dict}
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>
-                    {d.quoteContactPhoneLabel}
-                    {required && <Required />}
-                  </label>
-                  <input
-                    className={inputClass}
-                    {...register(`${key}.contactPhone`)}
-                  />
-                  <FieldError
-                    message={errors[key]?.contactPhone?.message as string | undefined}
-                    dict={dict}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>
-                    {d.quoteContactEmailLabel}
-                    {required && <Required />}
-                  </label>
-                  <input
-                    type="email"
-                    className={inputClass}
-                    {...register(`${key}.contactEmail`)}
-                  />
-                  <FieldError
-                    message={errors[key]?.contactEmail?.message as string | undefined}
-                    dict={dict}
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </section>
 
       {/* KKL presence checklist */}

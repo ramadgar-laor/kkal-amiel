@@ -12,7 +12,7 @@ export default async function NewEventPage() {
   const { data: rep } = await supabase
     .from("reps")
     .select(
-      "status, first_name_he, last_name_he, whatsapp_phone, mission_phone, organization, city, country"
+      "status, first_name_he, last_name_he, whatsapp_phone, mission_phone, organization, city, country, state"
     )
     .eq("profile_id", userData.user!.id)
     .single();
@@ -55,6 +55,7 @@ export default async function NewEventPage() {
             organization: rep.organization ?? "",
             city: rep.city ?? "",
             country: rep.country ?? "",
+            state: rep.state ?? "",
           }}
         />
       </div>

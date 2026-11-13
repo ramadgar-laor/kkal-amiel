@@ -18,16 +18,17 @@ export default async function KkalEventsPage({
   const { data: allEvents } = await supabase
     .from("events")
     .select(
-      "id, name, start_date, end_date, city, country, requested_amount, requested_currency, approved_amount, status, created_at, rep_id, org_affiliation, reps(first_name_he, last_name_he, state), invoices(amount, paid_amount, payment_status)"
+      "id, name, start_date, end_date, city, country, state, requested_amount, requested_currency, approved_amount, status, created_at, rep_id, org_affiliation, reps(first_name_he, last_name_he, state), invoices(amount, paid_amount, payment_status)"
     )
     .order("start_date", { ascending: true });
 
   // "My countries" filter (see lib/kkal/scope.ts). A US event is matched
-  // on its ambassador's state, since events don't record a state.
+  // on its own state; older events without one fall back to the
+  // ambassador's state.
   const repOf = (e: NonNullable<typeof allEvents>[number]) =>
     Array.isArray(e.reps) ? e.reps[0] : e.reps;
   const events = (allEvents ?? []).filter((e) =>
-    inScope(scope, e.country, repOf(e)?.state)
+    inScope(scope, e.country, e.state ?? repOf(e)?.state)
   );
   const hiddenCount = (allEvents?.length ?? 0) - events.length;
 
@@ -50,6 +51,7 @@ export default async function KkalEventsPage({
       repCountry: null,
       city: e.city,
       country: e.country,
+      state: e.state,
       startDate: e.start_date,
       endDate: e.end_date,
       status: e.status,

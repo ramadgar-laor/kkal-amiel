@@ -26,13 +26,13 @@ export async function createEvent(input: EventInput) {
       end_date: v.endDate,
       city: v.city || null,
       country: v.country,
+      state: v.country === "US" ? v.state || null : null,
       target_audience: v.targetAudience,
       program_description: v.programDescription,
       track: v.track,
       requested_amount: v.requestedAmount,
       requested_currency: "ILS",
       org_affiliation: v.orgAffiliation,
-      registered_to_program: v.registeredToProgram === "yes",
       in_whatsapp_group: v.inWhatsappGroup === "yes",
       host_org_name: v.hostOrgName,
       host_manager_name: v.hostManagerName,
@@ -40,7 +40,6 @@ export async function createEvent(input: EventInput) {
       host_manager_email: v.hostManagerEmail,
       participants_count: v.participantsCount,
       ongoing_program_description: v.ongoingProgramDescription || null,
-      transfer_amount_note: v.transferAmountNote,
       kkal_presence_selections: v.kkalPresenceSelections,
       consent_no_commitment: v.consentNoCommitment === "yes",
       consent_committee_review: v.consentCommitteeReview === "yes",
@@ -56,31 +55,6 @@ export async function createEvent(input: EventInput) {
   if (error || !event) {
     // RLS blocks this insert for a rep whose registration isn't approved yet.
     return { error: error?.message ?? "insert_failed" };
-  }
-
-  const quoteRows = [
-    { slot: 1, q: v.quote1 },
-    { slot: 2, q: v.quote2 },
-    { slot: 3, q: v.quote3 },
-  ]
-    .filter(({ q }) => q?.filePath)
-    .map(({ slot, q }) => ({
-      event_id: event.id,
-      slot,
-      quote_file_path: q!.filePath as string,
-      contact_phone: q!.contactPhone || null,
-      contact_email: q!.contactEmail || null,
-    }));
-
-  if (quoteRows.length > 0) {
-    const { error: quotesError } = await supabase
-      .from("event_quotes")
-      .insert(quoteRows);
-    if (quotesError) {
-      // The event itself was created successfully; surface this as a
-      // partial-failure message rather than losing the submission.
-      return { error: `quotes_failed: ${quotesError.message}` };
-    }
   }
 
   const budgetItemRows = v.budgetItems.map((item, i) => ({

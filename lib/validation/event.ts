@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { KKAL_PRESENCE_MIN_SELECTIONS } from "@/lib/data/kkal-presence";
+import { US_COUNTRY_CODE, US_STATE_CODES } from "@/lib/data/us-states";
 
 export const EVENT_TRACKS = ["one_time", "ongoing"] as const;
 
@@ -90,26 +91,18 @@ const supplierSchema = z
     });
   });
 
-// A single competing price quote: a file plus the local supplier contact's
-// phone/email. Quote 1 is mandatory (per the real form); quotes 2 and 3 are
-// optional extra slots for when there is more than one competing supplier.
-const quoteSchema = z.object({
-  filePath: z.string().trim().min(1),
-  contactPhone: z.string().trim().min(1),
-  contactEmail: z.string().trim().email(),
-});
-const optionalQuoteSchema = z.object({
-  filePath: z.string().trim().optional().or(z.literal("")),
-  contactPhone: z.string().trim().optional().or(z.literal("")),
-  contactEmail: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal(""))
-    .refine((v) => !v || z.string().email().safeParse(v).success, {
-      message: "invalid_email",
-    }),
-});
+function usStateRequired(
+  v: { country: string; state?: string },
+  ctx: z.RefinementCtx
+) {
+  if (v.country === US_COUNTRY_CODE && !US_STATE_CODES.has(v.state ?? "")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["state"],
+      message: "required",
+    });
+  }
+}
 
 function endNotBeforeStart<
   T extends { startDate: string; endDate: string },
@@ -133,7 +126,6 @@ export const eventSchema = z
   .object({
     // Ambassador / affiliation confirmation questions.
     orgAffiliation: z.string().trim().min(1),
-    registeredToProgram: yesNo,
     inWhatsappGroup: yesNo,
 
     // Event basics.
@@ -142,6 +134,8 @@ export const eventSchema = z
     endDate: z.string().trim().min(1),
     city: z.string().trim().optional().or(z.literal("")),
     country: z.string().trim().min(1),
+    // US state code -- required when country is the US (KKL, 11/2026).
+    state: z.string().trim().optional().or(z.literal("")),
 
     // Host organization / community running the event.
     hostOrgName: z.string().trim().min(1),
@@ -157,7 +151,6 @@ export const eventSchema = z
     ongoingProgramDescription: z.string().trim().optional().or(z.literal("")),
 
     requestedAmount: z.coerce.number().positive(),
-    transferAmountNote: z.string().trim().min(1),
 
     budgetItems: z
       .array(budgetItemSchema)
@@ -166,10 +159,6 @@ export const eventSchema = z
     suppliers: z
       .array(supplierSchema)
       .min(1, { message: "required_at_least_one" }),
-
-    quote1: quoteSchema,
-    quote2: optionalQuoteSchema,
-    quote3: optionalQuoteSchema,
 
     kkalPresenceSelections: z
       .array(z.string())
@@ -193,6 +182,7 @@ export const eventSchema = z
       });
     }
     endNotBeforeStart(v, ctx);
+    usStateRequired(v, ctx);
   });
 
 export type EventInput = z.infer<typeof eventSchema>;
@@ -201,30 +191,10 @@ export type EventInput = z.infer<typeof eventSchema>;
 // File objects (or null) since nothing has been uploaded yet at the point
 // the form validates. The component swaps File -> storage path and calls
 // `eventSchema` (via the createEvent server action) on actual submit.
-const optionalFile = z.instanceof(File).optional().nullable();
-
-const quoteFormSchema = z.object({
-  file: z.instanceof(File).nullable(),
-  contactPhone: z.string().trim().min(1),
-  contactEmail: z.string().trim().email(),
-});
-const optionalQuoteFormSchema = z.object({
-  file: optionalFile,
-  contactPhone: z.string().trim().optional().or(z.literal("")),
-  contactEmail: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal(""))
-    .refine((v) => !v || z.string().email().safeParse(v).success, {
-      message: "invalid_email",
-    }),
-});
 
 export const eventFormSchema = z
   .object({
     orgAffiliation: z.string().trim().min(1),
-    registeredToProgram: yesNo,
     inWhatsappGroup: yesNo,
 
     name: z.string().trim().min(1),
@@ -232,6 +202,8 @@ export const eventFormSchema = z
     endDate: z.string().trim().min(1),
     city: z.string().trim().optional().or(z.literal("")),
     country: z.string().trim().min(1),
+    // US state code -- required when country is the US (KKL, 11/2026).
+    state: z.string().trim().optional().or(z.literal("")),
 
     hostOrgName: z.string().trim().min(1),
     hostManagerName: z.string().trim().min(1),
@@ -256,7 +228,6 @@ export const eventFormSchema = z
       .trim()
       .min(1)
       .refine((v) => Number(v) > 0, { message: "must_be_positive" }),
-    transferAmountNote: z.string().trim().min(1),
 
     budgetItems: z
       .array(budgetItemFormSchema)
@@ -265,10 +236,6 @@ export const eventFormSchema = z
     suppliers: z
       .array(supplierSchema)
       .min(1, { message: "required_at_least_one" }),
-
-    quote1: quoteFormSchema,
-    quote2: optionalQuoteFormSchema,
-    quote3: optionalQuoteFormSchema,
 
     kkalPresenceSelections: z
       .array(z.string())
@@ -291,14 +258,8 @@ export const eventFormSchema = z
         message: "required_for_ongoing_track",
       });
     }
-    if (!v.quote1.file) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["quote1", "file"],
-        message: "required",
-      });
-    }
     endNotBeforeStart(v, ctx);
+    usStateRequired(v, ctx);
   });
 
 export type EventFormValues = z.infer<typeof eventFormSchema>;

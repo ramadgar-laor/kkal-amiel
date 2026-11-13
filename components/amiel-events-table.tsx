@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import { getCountryName } from "@/lib/data/countries";
+import { formatCountryWithState } from "@/lib/data/us-states";
 import { formatDateDMY } from "@/lib/utils/date";
 
 type Timing = "upcoming" | "ongoing" | "past";
@@ -29,6 +30,7 @@ export type AmielEventRow = {
   repName: string;
   city: string | null;
   country: string | null;
+  state?: string | null;
   startDate: string;
   endDate: string;
   status: string;
@@ -130,7 +132,7 @@ export function AmielEventsTable({ rows }: { rows: AmielEventRow[] }) {
                       {r.repName}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-black/70">
-                      {[getCountryName(r.country) || r.country, r.city]
+                      {[formatCountryWithState(r.country, r.state) || r.country, r.city]
                         .filter(Boolean)
                         .join(" · ") || "—"}
                     </td>

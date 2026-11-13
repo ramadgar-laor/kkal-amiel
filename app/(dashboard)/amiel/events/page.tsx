@@ -13,7 +13,7 @@ export default async function AmielEventsPage() {
   const { data: events } = await supabase
     .from("events")
     .select(
-      "id, name, start_date, end_date, city, country, requested_currency, approved_amount, status, rep_id, reps(first_name_he, last_name_he)"
+      "id, name, start_date, end_date, city, country, state, requested_currency, approved_amount, status, rep_id, reps(first_name_he, last_name_he)"
     )
     .in("status", ["approved", "partially_approved"])
     .order("start_date", { ascending: true });
@@ -61,6 +61,7 @@ export default async function AmielEventsPage() {
         : "—",
       city: e.city,
       country: e.country,
+      state: e.state,
       startDate: e.start_date,
       endDate: e.end_date,
       status: e.status,

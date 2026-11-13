@@ -22,7 +22,7 @@ export default async function KkalInvoicesPage({
   const { data: allInvoices } = await supabase
     .from("invoices")
     .select(
-      "id, supplier_name, amount, currency, invoice_date, kkal_status, payment_status, created_at, events(id, name, country, rep_id, reps(first_name_he, last_name_he, state))"
+      "id, supplier_name, amount, currency, invoice_date, kkal_status, payment_status, created_at, events(id, name, country, state, rep_id, reps(first_name_he, last_name_he, state))"
     )
     .order("created_at", { ascending: false });
 
@@ -31,7 +31,7 @@ export default async function KkalInvoicesPage({
   const invoices = (allInvoices ?? []).filter((inv) => {
     const ev = Array.isArray(inv.events) ? inv.events[0] : inv.events;
     const rep = ev ? (Array.isArray(ev.reps) ? ev.reps[0] : ev.reps) : null;
-    return inScope(scope, ev?.country, rep?.state);
+    return inScope(scope, ev?.country, ev?.state ?? rep?.state);
   });
   const hiddenCount = (allInvoices?.length ?? 0) - invoices.length;
 

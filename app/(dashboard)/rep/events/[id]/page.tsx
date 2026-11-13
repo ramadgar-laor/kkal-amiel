@@ -1,3 +1,4 @@
+import { formatCountryWithState } from "@/lib/data/us-states";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +32,7 @@ export default async function RepEventDetailPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, name, purpose, start_date, end_date, city, country, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, transfer_amount_note, supplier_name, supplier_field, kkal_presence_selections, notes"
+      "id, name, purpose, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, transfer_amount_note, supplier_name, supplier_field, kkal_presence_selections, notes"
     )
     .eq("id", id)
     .single();
@@ -85,7 +86,7 @@ export default async function RepEventDetailPage({
     ],
     [
       d.locationLabel,
-      [event.city, getCountryName(event.country, locale)].filter(Boolean).join(", "),
+      [event.city, formatCountryWithState(event.country, event.state, locale)].filter(Boolean).join(", "),
     ],
     [d.hostOrgLabel, event.host_org_name],
     [
