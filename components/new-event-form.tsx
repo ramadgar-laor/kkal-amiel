@@ -12,6 +12,11 @@ import {
 import { createEvent } from "@/lib/actions/events";
 import { createClient } from "@/lib/supabase/client";
 import { US_COUNTRY_CODE, usStatesFor } from "@/lib/data/us-states";
+import {
+  SHORT_NOTICE_DAYS,
+  daysBetween,
+  localTodayIso,
+} from "@/lib/events/short-notice";
 import { COUNTRIES_HE, COUNTRIES_EN } from "@/lib/data/countries";
 import {
   focusFirstInvalidField,
@@ -237,6 +242,13 @@ export function NewEventForm({
 
   const track = watch("track");
   const startDate = watch("startDate");
+  // Less than 3 weeks between today (the request date) and the event start
+  // -> show a clear warning; submitting is still allowed.
+  const shortNoticeDaysLeft = (() => {
+    if (!startDate) return null;
+    const days = daysBetween(localTodayIso(), startDate);
+    return days < SHORT_NOTICE_DAYS ? days : null;
+  })();
   const selections = watch("kkalPresenceSelections") || [];
 
   const budgetItemsArray = useFieldArray({ control, name: "budgetItems" });
@@ -453,6 +465,27 @@ export function NewEventForm({
             />
             <FieldError message={errors.endDate?.message} dict={dict} />
           </div>
+          {shortNoticeDaysLeft !== null && (
+            <div
+              role="alert"
+              className="sm:col-span-2 flex gap-3 rounded-lg border-2 border-(--color-gold) bg-(--color-gold-light) px-4 py-3 text-sm"
+            >
+              <span aria-hidden="true" className="text-xl leading-none text-(--color-gold)">
+                ⚠
+              </span>
+              <div className="space-y-1">
+                <p className="font-semibold text-(--color-gold)">{d.shortNoticeTitle}</p>
+                <p>
+                  {shortNoticeDaysLeft < 0
+                    ? d.shortNoticePast
+                    : shortNoticeDaysLeft === 0
+                      ? d.shortNoticeToday
+                      : t(d.shortNoticeInDays, { n: shortNoticeDaysLeft })}
+                </p>
+                <p className="text-black/70">{d.shortNoticeBody}</p>
+              </div>
+            </div>
+          )}
           <div>
             <label className={labelClass}>{d.cityLabel}</label>
             <input className={inputClass} {...register("city")} />

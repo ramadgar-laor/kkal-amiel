@@ -345,6 +345,11 @@ export const dictionaries = {
       eventNameNote:
         "אירוע משמעותו יכולה להיות: מיזם, תוכנית מתמשכת, פעילות, מסיבה סביב חג, סמינר, שבתון וכדומה",
       startDateLabel: "תאריך האירוע (התחלה)",
+      shortNoticeTitle: "שימו לב: לוח זמנים צפוף",
+      shortNoticeInDays: "האירוע מתחיל בעוד {n} ימים בלבד — פחות מ-3 שבועות ממועד הבקשה.",
+      shortNoticeToday: "האירוע מתחיל היום — פחות מ-3 שבועות ממועד הבקשה.",
+      shortNoticePast: "תאריך ההתחלה שנבחר כבר עבר.",
+      shortNoticeBody: 'בקשה לאירוע בלוח זמנים כזה דורשת אישור מיוחד של קק"ל כדי שניתן יהיה לעמוד בלוחות הזמנים. אפשר להמשיך ולהגיש את הבקשה.',
       startDateNote: "גם אם התאריך לא סופי",
       endDateLabel: "תאריך סיום (אם מדובר בתוכנית מתמשכת)",
       cityLabel: "עיר האירוע",
@@ -853,6 +858,11 @@ export const dictionaries = {
       eventNameNote:
         "An event can be: a project, an ongoing program, an activity, a holiday party, a seminar, a Shabbaton, etc.",
       startDateLabel: "Event date (start)",
+      shortNoticeTitle: "Please note: tight timeline",
+      shortNoticeInDays: "The event starts in only {n} days — less than 3 weeks from the request date.",
+      shortNoticeToday: "The event starts today — less than 3 weeks from the request date.",
+      shortNoticePast: "The selected start date has already passed.",
+      shortNoticeBody: "A request on such a short timeline needs special approval from KKL to meet the schedule. You can still go ahead and submit the request.",
       startDateNote: "Even if the date isn't final yet",
       endDateLabel: "End date (if this is an ongoing program)",
       cityLabel: "Event city",

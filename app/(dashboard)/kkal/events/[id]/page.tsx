@@ -7,6 +7,7 @@ import { getCountryName } from "@/lib/data/countries";
 import { formatCountryWithState } from "@/lib/data/us-states";
 import { getSignedEventFileUrl } from "@/lib/storage/event-files";
 import { formatDateDMY } from "@/lib/utils/date";
+import { SHORT_NOTICE_DAYS, noticeDays } from "@/lib/events/short-notice";
 import { KKAL_PRESENCE_OPTIONS } from "@/lib/data/kkal-presence";
 
 const TRACK_LABEL: Record<string, string> = {
@@ -160,6 +161,8 @@ export default async function KkalEventDetailPage({
   const ilsOverage =
     approvedAmountIls != null ? invoicesIlsTotal - approvedAmountIls : null;
 
+  const shortNoticeDays = noticeDays(event.created_at, event.start_date);
+
   const isActionable =
     event.status === "submitted" || event.status === "info_requested";
 
@@ -191,6 +194,24 @@ export default async function KkalEventDetailPage({
           {profile?.email ? ` · ${profile.email}` : ""}
         </p>
       </div>
+
+      {shortNoticeDays !== null && shortNoticeDays < SHORT_NOTICE_DAYS && (
+        <div className="flex gap-3 rounded-lg border-2 border-(--color-gold) bg-(--color-gold-light) px-4 py-3 text-sm">
+          <span aria-hidden="true" className="text-xl leading-none text-(--color-gold)">
+            ⚠
+          </span>
+          <div>
+            <p className="font-semibold text-(--color-gold)">
+              לוח זמנים צפוף — נדרש אישור מיוחד
+            </p>
+            <p className="text-black/70 mt-0.5">
+              {shortNoticeDays < 0
+                ? `הבקשה הוגשה ${formatDateDMY(event.created_at)}, אחרי מועד תחילת האירוע.`
+                : `הבקשה הוגשה ${formatDateDMY(event.created_at)}, ${shortNoticeDays} ימים בלבד לפני תחילת האירוע (פחות מ-3 שבועות). השגריר קיבל התראה על כך בעת הגשת הבקשה.`}
+            </p>
+          </div>
+        </div>
+      )}
 
       <section className={sectionClass}>
         <h2 className={sectionTitleClass}>פרטי השגריר</h2>

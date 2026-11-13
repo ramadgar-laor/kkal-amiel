@@ -4,6 +4,7 @@ import {
   type EventDirectoryRow,
 } from "@/components/events-directory-table";
 import { getKkalScope, inScope } from "@/lib/kkal/scope";
+import { isShortNotice } from "@/lib/events/short-notice";
 import { KkalScopeBanner } from "@/components/kkal-scope-banner";
 
 export default async function KkalEventsPage({
@@ -61,6 +62,7 @@ export default async function KkalEventsPage({
       invoicesPendingCount,
       invoicesPaidTotal,
       createdAt: e.created_at,
+      shortNotice: isShortNotice(e.created_at, e.start_date),
     } satisfies EventDirectoryRow;
   });
 

@@ -124,7 +124,11 @@ export function DateFieldDMY({
   if (value !== prevValue) {
     setPrevValue(value);
     const incoming = isoToDmy(value);
-    setText((current) => (dmyToIso(current) ? incoming : current));
+    // Also fill an empty field (e.g. the end date auto-copied from the
+    // start date), but never overwrite a half-typed date.
+    setText((current) =>
+      current === "" || dmyToIso(current) ? incoming : current
+    );
   }
 
   useEffect(() => {

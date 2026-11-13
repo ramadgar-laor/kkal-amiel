@@ -43,6 +43,8 @@ export type EventDirectoryRow = {
   country: string | null;
   state?: string | null;
   startDate: string;
+  // Requested less than 3 weeks before the event (lib/events/short-notice.ts).
+  shortNotice?: boolean;
   endDate: string;
   status: string;
   requestedAmount: number;
@@ -249,6 +251,14 @@ export function EventsDirectoryTable({
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-black/70">
                       {formatDate(r.startDate)} – {formatDate(r.endDate)}
+                      {r.shortNotice && (
+                        <span
+                          title='הבקשה הוגשה פחות מ-3 שבועות לפני האירוע'
+                          className="ms-2 inline-block rounded-full bg-(--color-gold-light) text-(--color-gold) px-2 py-0.5 text-xs font-medium"
+                        >
+                          ⚠ לו״ז צפוף
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       <span

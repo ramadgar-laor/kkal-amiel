@@ -1,5 +1,6 @@
 import { formatCountryWithState } from "@/lib/data/us-states";
 import { getKkalScope, inScope } from "@/lib/kkal/scope";
+import { isShortNotice } from "@/lib/events/short-notice";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCountryName } from "@/lib/data/countries";
@@ -40,6 +41,7 @@ const HEADERS = [
   "שם האירוע שלגביו מבוקשת התמיכה",
   "תאריך התחלה",
   "תאריך סיום",
+  "לוח זמנים צפוף (פחות מ-3 שבועות)",
   "עיר האירוע",
   "מדינת האירוע",
   "שם הארגון/המוסד/הקהילה המארחת",
@@ -203,6 +205,7 @@ export async function GET(request: Request) {
       e.name,
       formatDateDMY(e.start_date),
       formatDateDMY(e.end_date),
+      isShortNotice(e.created_at, e.start_date) ? "כן" : "לא",
       e.city,
       e.country ? formatCountryWithState(e.country, e.state) : null,
       e.host_org_name,
