@@ -50,7 +50,7 @@ export default async function RepEventDetailPage({
   const { data: invoices } = await supabase
     .from("invoices")
     .select(
-      "id, supplier_name, supplier_field, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, payment_status, amiel_notes, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name"
+      "id, supplier_name, supplier_field, supplier_contact_phone, supplier_contact_email, amount, currency, payment_amount, payment_amount_currency, ils_amount, invoice_date, file_path, kkal_status, kkal_notes, payment_status, amiel_notes, paid_at, payment_receipt_file_path, supplier_bank_name, supplier_bank_address, supplier_bank_country, supplier_iban, supplier_swift, supplier_beneficiary_name"
     )
     .eq("event_id", event.id)
     .order("created_at", { ascending: false });
@@ -66,6 +66,23 @@ export default async function RepEventDetailPage({
     )
   );
   const invoiceFileUrlById = new Map(invoiceFileUrlEntries);
+
+  // Amiel's proof-of-payment file, for invoices marked paid. It lives in
+  // Amiel's Storage folder; the rep can read it through the
+  // event_files_rep_read_payment_receipts policy (receipts of their own
+  // paid invoices only).
+  const receiptUrlEntries = await Promise.all(
+    (invoices ?? [])
+      .filter((inv) => inv.payment_status === "paid")
+      .map(
+        async (inv) =>
+          [
+            inv.id,
+            await getSignedEventFileUrl(supabase, inv.payment_receipt_file_path),
+          ] as const
+      )
+  );
+  const receiptUrlById = new Map(receiptUrlEntries);
 
   const suppliersSummary = (suppliers ?? []).length
     ? (suppliers ?? [])
@@ -230,6 +247,25 @@ export default async function RepEventDetailPage({
                         )}
                       </div>
                     </div>
+
+                    {inv.payment_status === "paid" && (
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-(--color-accent-light) px-3 py-2 text-sm text-(--color-accent-dark)">
+                        <span>
+                          {d.paidOnLabel}
+                          {inv.paid_at ? ` · ${formatDateDMY(inv.paid_at)}` : ""}
+                        </span>
+                        {receiptUrlById.get(inv.id) && (
+                          <a
+                            href={receiptUrlById.get(inv.id) ?? undefined}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium underline"
+                          >
+                            {d.paymentReceiptLink}
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                     {inv.payment_status === "returned_to_rep" && (
                       <div className="mt-3 rounded-lg bg-(--color-gold-light) p-3 space-y-2">

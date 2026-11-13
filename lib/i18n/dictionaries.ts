@@ -321,6 +321,8 @@ export const dictionaries = {
       budgetStatusApprovedLabel: "אושר לאירוע (₪)",
       budgetStatusInvoicesTotalLabel: "סה״כ חשבוניות שהוזנו (₪)",
       budgetStatusOverageLabel: "חריגה של ₪{amount}",
+      paidOnLabel: "שולם",
+      paymentReceiptLink: "הצגת אסמכתת התשלום",
       invoiceDetailsToggle: "צפייה בפרטי החשבונית המלאים",
     },
     newEvent: {
@@ -817,6 +819,8 @@ export const dictionaries = {
       budgetStatusApprovedLabel: "Approved for event (₪)",
       budgetStatusInvoicesTotalLabel: "Total invoices entered (₪)",
       budgetStatusOverageLabel: "Over budget by ₪{amount}",
+      paidOnLabel: "Paid",
+      paymentReceiptLink: "View payment receipt",
       invoiceDetailsToggle: "View full invoice details",
     },
     newEvent: {

@@ -58,7 +58,7 @@ export default async function KkalEventDetailPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, rep_id, name, purpose, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, reviewed_at, org_affiliation, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, ongoing_program_description, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, invoices(id, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, paid_amount, supplier_name)"
+      "id, rep_id, name, purpose, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, reviewed_at, org_affiliation, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, ongoing_program_description, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, invoices(id, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, paid_amount, paid_at, payment_receipt_file_path, supplier_name)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -111,6 +111,21 @@ export default async function KkalEventDetailPage({
       getSignedEventFileUrl(supabase, event.supplier_bank_details_file_path),
       getSignedEventFileUrl(supabase, event.ongoing_program_file_path),
     ]);
+
+  // Proof-of-payment links for paid invoices (uploaded by Amiel).
+  const receiptUrlById = new Map(
+    await Promise.all(
+      invoices
+        .filter((inv) => inv.payment_status === "paid")
+        .map(
+          async (inv) =>
+            [
+              inv.id,
+              await getSignedEventFileUrl(supabase, inv.payment_receipt_file_path),
+            ] as const
+        )
+    )
+  );
 
   const presenceLabels = (event.kkal_presence_selections ?? []).map(
     (key: string) =>
@@ -483,8 +498,22 @@ export default async function KkalEventDetailPage({
                 className="py-2 flex items-center justify-between text-sm"
               >
                 <div>
-                  {inv.supplier_name} · {inv.amount} {inv.currency}
-                  {inv.ils_amount != null ? ` (₪${inv.ils_amount})` : ""}
+                  <Link
+                    href={`/kkal/invoices/${inv.id}`}
+                    className="hover:text-(--color-brand) hover:underline"
+                  >
+                    {inv.supplier_name} · {inv.amount} {inv.currency}
+                    {inv.ils_amount != null ? ` (₪${inv.ils_amount})` : ""}
+                  </Link>
+                  {inv.payment_status === "paid" && (
+                    <div className="text-xs text-black/50 mt-0.5 flex gap-2">
+                      {inv.paid_at && <span>שולם {formatDateDMY(inv.paid_at)}</span>}
+                      <FileLink
+                        label="אסמכתת תשלום"
+                        url={receiptUrlById.get(inv.id) ?? null}
+                      />
+                    </div>
+                  )}
                 </div>
                 <StatusBadge status={inv.payment_status} />
               </div>
