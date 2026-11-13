@@ -240,12 +240,16 @@ export function NewEventForm({
   const selections = watch("kkalPresenceSelections") || [];
 
   const budgetItemsArray = useFieldArray({ control, name: "budgetItems" });
+  // Shown next to the estimate total, so the ambassador can see the
+  // estimate adds up to what they're asking for (KKL approves in NIS).
+  const requestedAmountNum = Number(watch("requestedAmount")) || 0;
   const watchedBudgetItems = watch("budgetItems") || [];
   const budgetItemsTotalIls = watchedBudgetItems.reduce((sum, item) => {
     const local = Number(item.localAmount);
     const rate = Number(item.exchangeRate);
     return sum + (Number.isFinite(local) && Number.isFinite(rate) ? local * rate : 0);
   }, 0);
+  const budgetGap = budgetItemsTotalIls - requestedAmountNum;
 
   const suppliersArray = useFieldArray({ control, name: "suppliers" });
   const watchedSuppliers = watch("suppliers") || [];
@@ -654,6 +658,16 @@ export function NewEventForm({
             </button>
           </div>
           <p className={noteClass}>{d.budgetItemsHint}</p>
+          <div className="mt-2 rounded-lg border border-(--color-brand)/25 bg-(--color-brand-light)/60 px-4 py-3 text-sm">
+            <p className="font-semibold text-(--color-brand-dark) mb-1.5">
+              ⓘ {d.budgetEstimateNoteTitle}
+            </p>
+            <ul className="list-disc ps-5 space-y-1 text-black/75">
+              {d.budgetEstimateNotePoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          </div>
           <FieldError message={budgetItemsRootError} dict={dict} />
 
           <div className="space-y-3 mt-2">
@@ -759,14 +773,49 @@ export function NewEventForm({
             })}
           </div>
 
-          <div className="flex items-center justify-between rounded-lg bg-black/[0.03] px-4 py-2.5 text-sm font-medium">
-            <span>{d.budgetTotalLabel}</span>
-            <span>
-              {budgetItemsTotalIls.toLocaleString(
-                locale === "en" ? "en-US" : "he-IL",
-                { maximumFractionDigits: 2 }
-              )}
-            </span>
+          <div className="rounded-lg bg-black/[0.03] px-4 py-2.5 text-sm space-y-1">
+            <div className="flex items-center justify-between font-medium">
+              <span>{d.budgetTotalLabel}</span>
+              <span>
+                {budgetItemsTotalIls.toLocaleString(
+                  locale === "en" ? "en-US" : "he-IL",
+                  { maximumFractionDigits: 2 }
+                )}
+              </span>
+            </div>
+            {requestedAmountNum > 0 && (
+              <>
+                <div className="flex items-center justify-between text-black/60">
+                  <span>{d.budgetRequestedCompareLabel}</span>
+                  <span>
+                    {requestedAmountNum.toLocaleString(
+                      locale === "en" ? "en-US" : "he-IL",
+                      { maximumFractionDigits: 2 }
+                    )}
+                  </span>
+                </div>
+                {budgetItemsTotalIls > 0 && (
+                  <div
+                    className={`flex items-center justify-between ${
+                      Math.abs(budgetGap) < 1
+                        ? "text-(--color-accent-dark)"
+                        : "text-(--color-gold)"
+                    }`}
+                  >
+                    <span>{d.budgetGapLabel}</span>
+                    <span dir="ltr">
+                      {Math.abs(budgetGap) < 1
+                        ? "✓"
+                        : (budgetGap > 0 ? "+" : "") +
+                          budgetGap.toLocaleString(
+                            locale === "en" ? "en-US" : "he-IL",
+                            { maximumFractionDigits: 2 }
+                          )}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </section>
