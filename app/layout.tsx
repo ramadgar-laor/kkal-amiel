@@ -23,11 +23,13 @@ export const metadata: Metadata = {
   description: 'מערכת לניהול שליחים, אירועים, תקציבים וחשבוניות עבור קק"ל',
 };
 
-// Published Claude Artifact (screenshots + step-by-step instructions) for the
-// rep role. It's a standalone page with no navigation to the other roles'
-// guides, so sharing this link never exposes KKL/Amiel/admin workflow info --
-// see the matching links added for those roles once their guides exist.
-const REP_GUIDE_URL = "https://claude.ai/artifact/VEDqGbkjeTDQHPTarTrJD1";
+// Self-hosted guide (screenshots + step-by-step instructions) for the rep
+// role, served as a static page from /public so it lives on our own domain
+// instead of claude.ai (and so it's reachable by reps without a Claude
+// account). It's a standalone page with no navigation to the other roles'
+// guides, so sharing it never exposes KKL/Amiel/admin workflow info -- see
+// the matching pages added for those roles once their guides exist.
+const REP_GUIDE_URL = "/guides/rep/index.html";
 
 export default async function RootLayout({
   children,

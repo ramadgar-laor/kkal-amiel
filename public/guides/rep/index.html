@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מדריך למשתמש השליח — מערכת ניהול שליחים | קק״ל × עמיאל</title>
+<style>
+  :root{
+    --bg:#f3f6f8;
+    --surface:#ffffff;
+    --surface-2:#eef3f6;
+    --fg:#17262d;
+    --muted:#5c7079;
+    --border:#dbe4e8;
+    --blue:#0572ba;
+    --blue-dark:#063e61;
+    --blue-tint:#eaf4fb;
+    --green:#51b848;
+    --green-dark:#3d8a36;
+    --green-tint:#eaf7ea;
+    --brown:#926427;
+    --brown-tint:#f8f1e6;
+    --red:#c1392d;
+    --red-tint:#fbebe9;
+    --amber:#a9780a;
+    --amber-tint:#fbf2e1;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(23,38,45,.06), 0 8px 24px -12px rgba(23,38,45,.18);
+    --font-sans:"Segoe UI", system-ui, "Noto Sans Hebrew", "Arial Hebrew", Arial, sans-serif;
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0; padding:0}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--font-sans);
+    line-height:1.6;
+  }
+  h1,h2,h3,h4{font-family:var(--font-sans); margin:0}
+  a{color:var(--blue)}
+  img{max-width:100%}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:30;
+    background:var(--surface); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:14px;
+    padding:10px 16px;
+  }
+  .logo-badge{
+    width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;
+  }
+  .logo-badge img{width:26px;height:26px;object-fit:contain}
+  .brand{display:flex;flex-direction:column;line-height:1.2;white-space:nowrap}
+  .brand b{font-size:15px;font-weight:700}
+  .brand span{font-size:11.5px;color:var(--muted)}
+  .menu-btn{
+    display:none; margin-inline-end:auto; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:10px; width:38px;height:38px; align-items:center;justify-content:center; cursor:pointer; flex:none;
+  }
+  .menu-btn svg{width:18px;height:18px;stroke:var(--fg)}
+
+  .search-wrap{position:relative; flex:1; max-width:420px; margin-inline-start:auto}
+  .search-wrap input{
+    width:100%; border:1px solid var(--border); background:var(--surface-2); color:var(--fg);
+    border-radius:10px; padding:9px 38px 9px 12px; font:inherit; font-size:14px;
+  }
+  .search-wrap input:focus{outline:2px solid var(--blue); outline-offset:1px}
+  .search-wrap svg{position:absolute; inset-inline-end:12px; top:50%; translate:0 -50%; width:16px;height:16px; stroke:var(--muted); pointer-events:none}
+  .search-results{
+    position:absolute; inset-inline:0; top:calc(100% + 6px); background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; box-shadow:var(--shadow); max-height:60vh; overflow:auto; z-index:40; display:none;
+  }
+  .search-results.open{display:block}
+  .search-results a{
+    display:block; padding:10px 14px; text-decoration:none; color:var(--fg); border-bottom:1px solid var(--border); font-size:13.5px;
+  }
+  .search-results a:last-child{border-bottom:none}
+  .search-results a:hover, .search-results a:focus{background:var(--surface-2)}
+  .search-results a b{color:var(--blue); font-weight:700}
+  .search-results .hit-section{display:block; font-size:11px; color:var(--muted); margin-bottom:2px}
+  .search-empty{padding:14px; font-size:13px; color:var(--muted)}
+
+  .back-link{
+    flex:none; white-space:nowrap; font-size:13px; font-weight:600; color:var(--blue);
+    text-decoration:none; padding:8px 10px; border-radius:8px;
+  }
+  .back-link:hover{background:var(--blue-tint)}
+
+  /* ---------- shell ---------- */
+  .shell{
+    display:flex; align-items:flex-start; gap:28px; max-width:1180px; margin-inline:auto;
+    padding:24px 16px 64px;
+  }
+  nav.rail{
+    position:sticky; top:70px;
+    width:252px; flex:none; max-height:calc(100vh - 90px); overflow:auto;
+  }
+  .rail-group{margin-bottom:18px}
+  .rail-label{font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.06em; padding-inline-start:10px; margin-bottom:6px; display:block}
+  .rail a{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; text-decoration:none;
+    color:var(--fg); font-size:13.5px; font-weight:500;
+  }
+  .rail a:hover{background:var(--surface-2)}
+  .rail a.active{background:var(--blue-tint); color:var(--blue-dark); font-weight:700}
+  .rail .num{
+    flex:none; width:22px;height:22px;border-radius:7px;background:var(--surface-2); color:var(--muted);
+    display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;
+  }
+  .rail a.active .num{background:var(--blue); color:#fff}
+
+  main{flex:1; min-width:0}
+
+  /* ---------- hero ---------- */
+  .hero{
+    background:linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+    border-radius:var(--radius); padding:28px 26px; color:#fff; margin-bottom:26px; box-shadow:var(--shadow);
+  }
+  .hero .eyebrow{font-size:12.5px; opacity:.85; font-weight:600; letter-spacing:.03em; margin-bottom:8px}
+  .hero h1{font-size:26px; margin-bottom:10px}
+  .hero p{font-size:14.5px; opacity:.92; max-width:62ch; margin:0}
+  .hero .roles{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap}
+  .hero .roles span{
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3); border-radius:999px;
+    padding:5px 12px; font-size:12px; font-weight:600;
+  }
+  .hero .roles span.me{background:#fff; color:var(--blue-dark)}
+
+  /* ---------- sections ---------- */
+  section.topic{scroll-margin-top:76px; margin-bottom:44px}
+  .topic-head{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+  .topic-head .num{
+    flex:none; width:34px;height:34px;border-radius:10px; background:var(--blue); color:#fff;
+    display:flex;align-items:center;justify-content:center; font-weight:700; font-size:14px;
+  }
+  .topic-head h2{font-size:20px}
+  .topic-sub{color:var(--muted); font-size:14px; margin:0 0 18px 46px; max-width:68ch}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .card h3{font-size:15.5px; margin-bottom:10px}
+  .card h3.with-rule{padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .card p{margin:0 0 10px; font-size:14px}
+  .card p:last-child{margin-bottom:0}
+
+  ol.steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px}
+  ol.steps li{display:flex; gap:12px; font-size:14px}
+  ol.steps li .n{
+    flex:none; width:24px;height:24px;border-radius:50%; background:var(--surface-2); color:var(--blue-dark);
+    display:flex;align-items:center;justify-content:center; font-weight:700; font-size:12px;
+    border:1px solid var(--border);
+  }
+  ol.steps li div{padding-top:2px}
+  ol.steps li b{display:block; margin-bottom:2px}
+
+  .callout{
+    border-radius:12px; padding:13px 16px; font-size:13.5px; margin:14px 0;
+    border-inline-start:4px solid var(--c); background:var(--bgc);
+  }
+  .callout b{display:block; margin-bottom:3px; font-size:13px}
+  .callout.tip{--c:var(--green-dark); --bgc:var(--green-tint)}
+  .callout.warn{--c:var(--amber); --bgc:var(--amber-tint)}
+  .callout.rule{--c:var(--brown); --bgc:var(--brown-tint)}
+  .callout.info{--c:var(--blue); --bgc:var(--blue-tint)}
+
+  /* screenshot frames */
+  .shots{display:flex; gap:14px; flex-wrap:wrap; margin:14px 0}
+  .shot{flex:1 1 320px; min-width:0}
+  .shot figure{margin:0; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--surface-2); box-shadow:var(--shadow)}
+  .shot .chrome{display:flex; gap:5px; padding:7px 10px; background:var(--surface-2); border-bottom:1px solid var(--border)}
+  .shot .chrome i{width:8px;height:8px;border-radius:50%; background:var(--border)}
+  .shot img{display:block; width:100%; height:auto}
+  .shot figcaption{font-size:12px; color:var(--muted); padding:7px 2px 0; text-align:center}
+  .shot.full{flex-basis:100%}
+
+  /* status pills reused from the app's own palette */
+  .pill{display:inline-flex; align-items:center; font-size:12px; font-weight:700; border-radius:999px; padding:3px 10px; white-space:nowrap}
+  .pill.ok{background:var(--green-tint); color:var(--green-dark)}
+  .pill.wait{background:var(--brown-tint); color:var(--brown)}
+  .pill.bad{background:var(--red-tint); color:var(--red)}
+  .pill.fix{background:var(--amber-tint); color:var(--amber)}
+  .pill.info{background:var(--blue-tint); color:var(--blue)}
+
+  /* state reference table */
+  .state-table{width:100%; border-collapse:separate; border-spacing:0; font-size:13.5px}
+  .state-table th,.state-table td{text-align:start; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  .state-table th{color:var(--muted); font-weight:600; font-size:12px}
+  .state-table tr:last-child td{border-bottom:none}
+  .table-scroll{overflow-x:auto}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0}
+  .chip{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 12px; font-size:13px; flex:1 1 160px; min-width:0}
+  .chip b{display:block; font-size:12px; color:var(--muted); margin-bottom:2px; font-weight:600}
+
+  footer{
+    max-width:1180px; margin-inline:auto; color:var(--muted); font-size:12.5px; text-align:center;
+    padding:18px 16px 40px;
+  }
+
+  mark{background:#ffe39a; color:#1c1400; border-radius:3px; padding:0 2px}
+
+  @media (max-width: 880px){
+    .brand span{display:none}
+    .menu-btn{display:flex}
+    nav.rail{
+      position:fixed; inset-inline:0; top:58px; bottom:0;
+      background:var(--surface); z-index:25; width:auto; max-height:none;
+      padding:14px 16px 24px;
+      transform:translateY(-110%); transition:transform .22s ease; overflow:auto;
+    }
+    nav.rail.open{transform:translateY(0)}
+    .shell{flex-direction:column}
+    .search-wrap{max-width:none}
+    .back-link{display:none}
+  }
+  @media (prefers-reduced-motion: reduce){ nav.rail{transition:none} }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="פתיחת תפריט נושאים" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div class="logo-badge"><img src="/kkl-logo.svg" alt="סמל קק״ל"></div>
+  <div class="brand"><b>מדריך למשתמש</b><span>מערכת ניהול שליחים · קק״ל × עמיאל</span></div>
+  <div class="search-wrap">
+    <input id="searchInput" type="text" placeholder="חיפוש בנושא... (למשל: חשבונית, תקציב, הרשמה)" autocomplete="off" aria-label="חיפוש בנושא">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+  <a class="back-link" href="/rep">חזרה למערכת ←</a>
+</header>
+
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="ניווט בין נושאי המדריך">
+    <div class="rail-group">
+      <span class="rail-label">התחלת העבודה</span>
+      <a href="#intro"><span class="num">·</span>פתיחה</a>
+      <a href="#register"><span class="num">1</span>הרשמה למערכת</a>
+      <a href="#login"><span class="num">2</span>התחברות</a>
+      <a href="#dashboard"><span class="num">3</span>מסך הבית</a>
+    </div>
+    <div class="rail-group">
+      <span class="rail-label">אירוע ותקציב</span>
+      <a href="#newevent"><span class="num">4</span>פתיחת בקשה לאירוע</a>
+      <a href="#eventtrack"><span class="num">5</span>מעקב אחר האירוע</a>
+    </div>
+    <div class="rail-group">
+      <span class="rail-label">חשבוניות</span>
+      <a href="#invoices"><span class="num">6</span>הגשת חשבוניות</a>
+      <a href="#invoicestates"><span class="num">7</span>מעקב וטיפול בחשבונית</a>
+      <a href="#reference"><span class="num">8</span>טבלת מצבים מהירה</a>
+    </div>
+    <div class="rail-group">
+      <span class="rail-label">עזרה</span>
+      <a href="#faq"><span class="num">9</span>שאלות נפוצות</a>
+    </div>
+  </nav>
+
+  <main id="main">
+
+    <div class="hero" id="intro">
+      <div class="eyebrow">מדריך למשתמש השליח</div>
+      <h1>כל מה שצריך לדעת כדי לעבוד במערכת — משליחות ועד תשלום</h1>
+      <p>
+        המדריך הזה מסכם, שלב אחר שלב, איך שליח עובד עם המערכת: מהרשמה והתחברות,
+        דרך פתיחת בקשה לאירוע ומעקב אחר התקציב שאושר, ועד הגשת חשבוניות ומעקב אחרי
+        הסטטוס שלהן מול קק״ל ועמיאל. כל שלב מלווה בצילומי מסך מהמערכת עצמה. אפשר
+        לקרוא ברצף מההתחלה, או לחפש נושא ספציפי בתיבת החיפוש למעלה.
+      </p>
+      <div class="roles">
+        <span class="me">שליח — המדריך הנוכחי</span>
+        <span>קק״ל</span>
+        <span>עמיאל</span>
+        <span>מנהל מערכת</span>
+      </div>
+    </div>
+
+    <section class="topic" id="register">
+      <div class="topic-head"><span class="num">1</span><h2>הרשמה למערכת</h2></div>
+      <p class="topic-sub">שליח שמגיע למערכת בפעם הראשונה נרשם דרך טופס הרשמה אחד, שמחליף את טופס הקבלה המודפס הישן לתוכנית השגרירים.</p>
+
+      <div class="card">
+        <h3 class="with-rule">למה זה מיועד</h3>
+        <p>
+          טופס ההרשמה פתוח לכל מי שמצטרף לתוכנית השגרירות של קק״ל. הטופס אוסף את כל
+          הפרטים שבעבר נאספו בטופס קבלה נפרד — פרטי זהות ויצירת קשר, פרטי המוסד
+          והארגון השולח, תפקיד ורמת מעורבות בתוכנית, ותאריכי השליחות הצפויים.
+        </p>
+        <div class="shots">
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/register-intro.jpg" alt="מסך פתיחה של טופס ההרשמה">
+          </figure><figcaption>מסך הפתיחה של טופס ההרשמה</figcaption></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="with-rule">שלבי המילוי</h3>
+        <ol class="steps">
+          <li><div class="n">1</div><div><b>פרטי התחברות וזהות</b>שם מלא בעברית ובשפה המקומית, כתובת מייל (זו שתשמש להתחברות בעתיד) ומספרי טלפון ליצירת קשר.</div></li>
+          <li><div class="n">2</div><div><b>פרטי הארגון והמוסד</b>הארגון השולח, סוג המוסד והעיר שבה פועל השליח, לצד התפקיד המדויק בשליחות.</div></li>
+          <li><div class="n">3</div><div><b>רמת המעורבות בתוכנית ותאריכי השליחות</b>בחירה בין נאמן קק״ל, עמית קק״ל או רכז קק״ל, וטווח התאריכים הצפוי של השליחות — נקודת ההתחלה והסיום המשוער.</div></li>
+          <li><div class="n">4</div><div><b>שליחה לאישור</b>לאחר השליחה הבקשה עוברת לבדיקת צוות קק״ל (ראו <a href="#login">התחברות</a>), והשליח מקבל גישה למערכת רק לאחר האישור.</div></li>
+        </ol>
+        <div class="shots">
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/register-login-details.jpg" alt="מסך פרטי זהות והתחברות בטופס ההרשמה">
+          </figure><figcaption>פרטי זהות ויצירת קשר</figcaption></div>
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/register-participation.jpg" alt="מסך רמת מעורבות ותאריכי שליחות">
+          </figure><figcaption>רמת מעורבות ותאריכי השליחות</figcaption></div>
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/register-participation-expanded.jpg" alt="מסך רמת מעורבות עם פירוט מורחב">
+          </figure><figcaption>פירוט מורחב של תפקיד ומעורבות</figcaption></div>
+        </div>
+        <div class="callout warn">
+          <b>חשוב לדעת</b>
+          חשבון שנפתח ישירות על ידי הצוות (למשל במסך ״הוספת משתמש״) ולא דרך טופס
+          ההרשמה, מגיע ללא פרטי הרשמה מלאים — ולכן אין לצוות קק״ל מה לאשר בו. אם
+          שליח מדווח שהחשבון שלו ״תקוע״, הפתרון הוא להפנות אותו להירשם דרך טופס
+          ההרשמה הרגיל.
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="login">
+      <div class="topic-head"><span class="num">2</span><h2>התחברות למערכת</h2></div>
+      <p class="topic-sub">לשליחים אין סיסמה — ההתחברות נעשית בלחיצה על קישור חד-פעמי שמגיע למייל.</p>
+      <div class="card">
+        <p>
+          בעמוד הכניסה יש שתי כרטיסיות: כרטיסיית ״שליח״ וכרטיסיית ״צוות״. שליח
+          מזין את כתובת המייל שאיתה נרשם ולוחץ על שליחת קישור כניסה. בתוך דקה
+          מגיע למייל הודעה עם קישור כניסה חד-פעמי — לחיצה עליו מתחברת אוטומטית
+          למערכת, בלי צורך בסיסמה.
+        </p>
+        <div class="shots">
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/login-1.jpg" alt="עמוד הכניסה, כרטיסיית שליח">
+          </figure><figcaption>עמוד הכניסה — כרטיסיית שליח</figcaption></div>
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/login-2-sent.jpg" alt="אישור שליחת קישור הכניסה למייל">
+          </figure><figcaption>אישור שהקישור נשלח למייל</figcaption></div>
+        </div>
+        <div class="callout tip">
+          <b>טיפ</b>
+          הקישור הוא חד-פעמי ותקף לזמן מוגבל. אם לא נכנסים דרכו בתוך כמה דקות,
+          או שהוא כבר נפתח במכשיר אחר, הפתרון הפשוט הוא לבקש קישור חדש במסך
+          הכניסה — אין צורך ליצור קשר עם התמיכה בשביל זה.
+        </div>
+        <div class="callout info">
+          <b>לצוות קק״ל ועמיאל</b>
+          חברי צוות קק״ל ועמיאל מתחברים דרך כרטיסיית ה״צוות״ באותו עמוד, עם שם
+          משתמש וסיסמה קבועים — לא עם קישור חד-פעמי.
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="dashboard">
+      <div class="topic-head"><span class="num">3</span><h2>מסך הבית (הדשבורד)</h2></div>
+      <p class="topic-sub">מסך הבית הוא נקודת המוצא בכל כניסה למערכת — הוא מרכז את כל האירועים של השליח ואת הסטטוס העדכני של כל אחד מהם.</p>
+      <div class="card">
+        <p>
+          כל אירוע מוצג כשורה או כרטיס נפרד, עם תגית סטטוס צבעונית שמראה במבט
+          חטוף איפה הוא עומד — ממתין לאישור תקציב, מאושר ופעיל, או שיש בו חשבונית
+          שדורשת תשומת לב. מכאן אפשר גם לפתוח בקשה לאירוע חדש.
+        </p>
+        <div class="shots">
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/dashboard-1.jpg" alt="מסך הבית של השליח, רשימת אירועים">
+          </figure><figcaption>מסך הבית — רשימת האירועים</figcaption></div>
+          <div class="shot"><figure>
+            <div class="chrome"><i></i><i></i><i></i></div>
+            <img src="assets/dashboard-2-full.jpg" alt="מסך הבית עם מספר אירועים ותגיות סטטוס">
+          </figure><figcaption>תגיות הסטטוס מראות מה דורש תשומת לב</figcaption></div>
+        </div>
+        <div class="callout tip">
+          <b>טיפ</b>
+          אם יש חשבונית שקק״ל החזיר לתיקון, או אירוע שמחכה לאישור, זה בדיוק
+          המקום שבו זה יבלוט — אין צורך לחפש בתוך כל אירוע בנפרד כדי לדעת שמשהו
+          ממתין.
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="newevent">
+      <div class="topic-head"><span class="num">4</span><h2>פתיחת בקשה לאירוע חדש</h2></div>
+      <p class="topic-sub">בקשה לאירוע היא הצעד הראשון בכל פעילות: היא כוללת את פרטי האירוע, בקשת התקציב, ורשימת הספקים המתוכננים — ועוברת לאישור קק״ל לפני שמתחילים להוציא כספים בפועל.</p>
+      <div class="card">
+        <p>הטופס בנוי כמה שלבים רצופים, כדי שלא יהיה עמוד אחד עמוס מדי:</p>
+        <ol class="steps">
+          <li><div class="n">1</div><div><b>פתיחה</b>שם האירוע, סוג הפעילות והמקום (עיר ומדינה) שבו הוא מתקיים.</div></li>
+          <li><div class="n">2</div><div><b>פרטי האירוע</b>תאריכים, קהל היעד ותיאור קצר של מטרת האירוע — המידע שעל בסיסו קק״ל בודק את הבקשה.</div></li>
+          <li><div class="n">3</div><div><b>בקשת תקציב</b>הסכום המבוקש לאירוע ופירוט הסעיפים שעליהם הוא מתבסס (למשל אולם, הסעה, קייטרינג) — זה הסכום שקק״ל יבדוק ויאשר, במלואו או בחלקו.</div></li>
+          <li><div class="n">4</div><div><b>פרטי ספקים</b>רשימת הספקים שמתוכננים לעבוד עם השליח באירוע, כולל תחום הפעילות של כל ספק.</div></li>
+          <li><div class="n">5</div><div><b>נוכחות ומידע לוגיסטי</b>פרטים נוספים על אופן ביצוע האירוע וההיערכות אליו.</div></li>
+          <li><div class="n">6</div><div><b>הצהרות</b>אישור השליח שהפרטים נכונים ושהוא מכיר בכללי השימוש בתקציב ובדיווח על הוצאות.</div></li>
+          <li><div class="n">7</div><div><b>שליחה לאישור</b>האירוע עובר לטיפול צוות קק״ל, והשליח יכול לעקוב אחרי הסטטוס במסך הבית.</div></li>
+        </ol>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/newevent-intro.jpg" alt="שלב הפתיחה בטופס בקשת אירוע"></figure><figcaption>1. פתיחה</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/newevent-details.jpg" alt="שלב פרטי האירוע בטופס"></figure><figcaption>2. פרטי האירוע</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/newevent-budget.jpg" alt="שלב בקשת התקציב בטופס"></figure><figcaption>3. בקשת תקציב</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/newevent-supplier.jpg" alt="שלב פרטי הספקים בטופס"></figure><figcaption>4. פרטי ספקים</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/newevent-presence.jpg" alt="שלב נוכחות ומידע לוגיסטי בטופס"></figure><figcaption>5. נוכחות ומידע לוגיסטי</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/newevent-declarations.jpg" alt="שלב ההצהרות בטופס"></figure><figcaption>6. הצהרות</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/newevent-submit.jpg" alt="שלב סיכום ושליחה בטופס"></figure><figcaption>7. סיכום ושליחה</figcaption></div>
+        </div>
+        <div class="callout rule">
+          <b>כלל עבודה</b>
+          אפשר לשמור את הטופס ולהתקדם בו בכמה פעמים לפני השליחה הסופית — לא חייבים
+          למלא את כל השלבים ברצף אחד. השליחה בפועל קורית רק בשלב האחרון, אחרי
+          ההצהרות.
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="eventtrack">
+      <div class="topic-head"><span class="num">5</span><h2>מעקב אחר האירוע והתקציב</h2></div>
+      <p class="topic-sub">מרגע שהבקשה נשלחה, עמוד האירוע הופך למקום שבו רואים את סטטוס האישור ואת היחס בין התקציב שאושר להוצאות בפועל.</p>
+      <div class="card">
+        <p>
+          קק״ל בודק את הבקשה ויכול לאשר אותה במלואה, לאשר חלק מהסכום המבוקש, או
+          לבקש פרטים נוספים לפני שמחליטים. עמוד האירוע מציג את הסכום שאושר בסופו
+          של דבר, ולצדו את סך החשבוניות שהוגשו עד כה — כך שקל לראות כמה מהתקציב
+          נוצל וכמה עדיין נותר.
+        </p>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/event-detail-1.jpg" alt="עמוד פרטי אירוע עם סטטוס אישור ותקציב"></figure><figcaption>עמוד האירוע — סטטוס אישור ומעקב תקציבי</figcaption></div>
+        </div>
+        <div class="callout info">
+          <b>טיפ מעקב</b>
+          אם סך החשבוניות שהוגשו מתקרב לתקציב שאושר, זה הזמן לבדוק עם קק״ל אם
+          נדרשת תוספת — לפני שמוציאים כספים נוספים באירוע.
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="invoices">
+      <div class="topic-head"><span class="num">6</span><h2>הגשת חשבוניות</h2></div>
+      <p class="topic-sub">אחרי שהתקציב אושר ושליח ביצע הוצאה בפועל מול ספק, הוא מגיש את החשבונית במערכת לבדיקת קק״ל.</p>
+      <div class="card">
+        <p>רשימת החשבוניות של האירוע נגישה מתוך עמוד האירוע, ומכאן מוסיפים חשבונית חדשה:</p>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/event-invoices-1.jpg" alt="רשימת החשבוניות של האירוע"></figure><figcaption>רשימת החשבוניות של האירוע</figcaption></div>
+        </div>
+        <h3 class="with-rule" style="margin-top:18px">הפרטים שצריך למלא</h3>
+        <div class="chips">
+          <div class="chip"><b>פרטי הספק</b>שם הספק, תחום הפעילות ודרכי יצירת קשר</div>
+          <div class="chip"><b>פרטי בנק</b>שם הבנק, מוטב החשבון, IBAN ו-SWIFT, לרבות כתובת וארץ הבנק</div>
+          <div class="chip"><b>סכום ומטבע</b>סכום החשבונית, מטבע החיוב ותאריך החשבונית</div>
+          <div class="chip"><b>קובץ החשבונית</b>העלאת תמונה או קובץ סרוק של החשבונית המקורית</div>
+        </div>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/invoice-form-1.jpg" alt="טופס הזנת חשבונית - פרטי ספק וסכום"></figure><figcaption>פרטי הספק והסכום</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/invoice-form-2.jpg" alt="טופס הזנת חשבונית - פרטי בנק והעלאת קובץ"></figure><figcaption>פרטי בנק והעלאת קובץ החשבונית</figcaption></div>
+        </div>
+        <div class="callout warn">
+          <b>חשוב לדעת</b>
+          פרטי הבנק הם מה שעמיאל משתמש בהם בפועל כדי להעביר את התשלום לספק —
+          כדאי להעתיק אותם בדיוק כפי שמופיעים במסמכי הספק (כולל רישום נכון של
+          IBAN ו-SWIFT), כדי לא לגרום לעיכוב בתשלום.
+        </div>
+        <p>
+          אחרי ההגשה אפשר לפתוח כל חשבונית ולראות את כל הפרטים שהוזנו, כולל קובץ
+          החשבונית שהועלה:
+        </p>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/invoice-view-details.jpg" alt="צפייה בפרטי חשבונית שהוגשה"></figure><figcaption>צפייה בפרטי חשבונית שהוגשה</figcaption></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="invoicestates">
+      <div class="topic-head"><span class="num">7</span><h2>מעקב וטיפול בחשבונית</h2></div>
+      <p class="topic-sub">לכל חשבונית יש סטטוס שמלווה אותה בדרך מהשליח, דרך בדיקת קק״ל, ועד התשלום בפועל על ידי עמיאל. חלק מהסטטוסים דורשים פעולה מהשליח.</p>
+
+      <div class="card">
+        <h3 class="with-rule">ממתינה לבדיקה <span class="pill wait">ממתינה</span></h3>
+        <p>
+          חשבונית שהוגשה ועדיין לא נבדקה על ידי קק״ל. אין צורך לעשות דבר בשלב
+          הזה — היא תמתין בתור הבדיקה.
+        </p>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/pending-1.jpg" alt="חשבונית בסטטוס ממתינה לבדיקה"></figure><figcaption>חשבונית ממתינה לבדיקת קק״ל</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/pending-2.jpg" alt="רשימת חשבוניות עם חשבונית ממתינה"></figure><figcaption>כך זה נראה ברשימת החשבוניות</figcaption></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="with-rule">דורשת תיקון <span class="pill fix">דורשת תיקון</span></h3>
+        <p>
+          קק״ל מצא בעיה בחשבונית — למשל פער בין הסכום בקובץ לסכום שהוזן בטופס —
+          ומחזיר אותה לשליח עם הערה מדויקת, מבלי לדחות אותה. השליח יכול לפתוח את
+          החשבונית, לקרוא את ההערה ולתקן את הפרטים השגויים ולשלוח שוב.
+        </p>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/correction-1.jpg" alt="חשבונית בסטטוס דורשת תיקון עם הערת קק״ל"></figure><figcaption>הערת התיקון שהשאיר קק״ל</figcaption></div>
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/correction-2.jpg" alt="עריכת חשבונית שהוחזרה לתיקון"></figure><figcaption>עריכת הפרטים ותיקונם</figcaption></div>
+        </div>
+        <div class="callout tip">
+          <b>טיפ</b>
+          אפשר לפתוח מראש את קובץ החשבונית המקורי לצד הערת התיקון, כדי לבדוק
+          בדיוק מה ההבדל שגרם לבעיה (למשל סכום שונה, פרטי בנק חלקיים) לפני
+          השליחה החזרה.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="with-rule">הוחזרה מעמיאל לתיקון <span class="pill fix">הוחזרה לשליח</span></h3>
+        <p>
+          לעיתים הבעיה מתגלה רק בשלב התשלום בפועל — למשל פרטי בנק שלא תואמים
+          למטבע שהוזן, או אסמכתא חסרה. במקרה כזה עמיאל מחזיר את החשבונית לשליח,
+          באופן דומה להחזרה לתיקון מקק״ל: יש הערה מדויקת, ואפשר לערוך ולשלוח שוב
+          בלי לפתוח חשבונית חדשה מאפס.
+        </p>
+        <div class="shots">
+          <div class="shot"><figure><div class="chrome"><i></i><i></i><i></i></div><img src="assets/pending-edit-1.jpg" alt="עריכת חשבונית שהוחזרה על ידי עמיאל"></figure><figcaption>עריכת חשבונית שהוחזרה לתיקון</figcaption></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="with-rule">מאושרת <span class="pill ok">מאושרת</span> / שולם לספק <span class="pill ok">שולם</span></h3>
+        <p>
+          לאחר אישור קק״ל והעברת התשלום בפועל על ידי עמיאל, פרטי החשבונית
+          נשארים נגישים לצפייה — כולל הסכום ששולם בסופו של דבר, גם אם היה בו
+          הבדל שער מול הסכום המקורי בחשבונית.
+        </p>
+      </div>
+    </section>
+
+    <section class="topic" id="reference">
+      <div class="topic-head"><span class="num">8</span><h2>טבלת מצבי חשבונית — מדריך מהיר</h2></div>
+      <p class="topic-sub">סיכום של כל מצב שחשבונית יכולה להיות בו, ומה נדרש מהשליח בכל אחד מהם.</p>
+      <div class="card">
+        <div class="table-scroll">
+          <table class="state-table">
+            <thead><tr><th>סטטוס</th><th>מה קרה</th><th>מה נדרש מהשליח</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill wait">ממתינה</span></td><td>הוגשה וממתינה לבדיקת קק״ל</td><td>אין פעולה נדרשת</td></tr>
+              <tr><td><span class="pill fix">דורשת תיקון</span></td><td>קק״ל מצא פער או חוסר ורוצה לתקן ולא לדחות</td><td>לקרוא את ההערה, לתקן ולשלוח שוב</td></tr>
+              <tr><td><span class="pill ok">מאושרת</span></td><td>קק״ל אישר, עוברת לטיפול עמיאל לתשלום</td><td>אין פעולה נדרשת</td></tr>
+              <tr><td><span class="pill fix">הוחזרה לשליח</span></td><td>עמיאל מצא בעיה בשלב התשלום (למשל בפרטי הבנק)</td><td>לקרוא את ההערה, לתקן ולשלוח שוב</td></tr>
+              <tr><td><span class="pill ok">שולם</span></td><td>התשלום הועבר בפועל לספק</td><td>אין פעולה נדרשת — החשבונית סגורה</td></tr>
+              <tr><td><span class="pill bad">נדחתה</span></td><td>קק״ל קבע שהחשבונית לא תאושר</td><td>אין פעולה נדרשת במערכת; לפנות לקק״ל במידת הצורך</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="faq">
+      <div class="topic-head"><span class="num">9</span><h2>שאלות נפוצות</h2></div>
+      <p class="topic-sub">כמה שאלות שחוזרות על עצמן בעבודה היומיומית עם המערכת.</p>
+
+      <div class="card">
+        <h3>לא קיבלתי קישור כניסה למייל, מה עושים?</h3>
+        <p>
+          לרוב הקישור מגיע תוך דקה. אם הוא לא הגיע, שווה לבדוק תיקיית ספאם/דואר
+          זבל, ואז פשוט לבקש קישור כניסה חדש במסך הכניסה — אפשר לבקש קישור חדש
+          כמה פעמים שצריך.
+        </p>
+      </div>
+      <div class="card">
+        <h3>לחצתי על הקישור אבל קיבלתי הודעת שגיאה</h3>
+        <p>
+          קישור כניסה הוא חד-פעמי: אם הוא נפתח כבר פעם אחת (למשל בטעות בלחיצה
+          מקדימה, או במכשיר אחר), הוא כבר לא תקף. הפתרון הוא לבקש קישור חדש
+          ולהקפיד לפתוח אותו פעם אחת בלבד, במכשיר שבו רוצים להישאר מחוברים.
+        </p>
+      </div>
+      <div class="card">
+        <h3>אפשר להגיש חשבונית לפני שאושר תקציב לאירוע?</h3>
+        <p>
+          לא — יש להגיש בקשה לאירוע ולקבל אישור תקציב (מלא או חלקי) לפני שמגישים
+          חשבוניות על הוצאות באותו אירוע. ראו <a href="#newevent">פתיחת בקשה לאירוע חדש</a>.
+        </p>
+      </div>
+      <div class="card">
+        <h3>החשבונית שלי חזרה אלי פעמיים — זה תקין?</h3>
+        <p>
+          כן, זה אפשרי: בפעם הראשונה קק״ל יכול להחזיר לתיקון פרטים בטופס, ובהמשך
+          עמיאל יכול להחזיר שוב אם מתגלה בעיה נקודתית בשלב התשלום (למשל אסמכתא
+          חסרה). בשני המקרים יש הערה מפורטת שמסבירה מה לתקן.
+        </p>
+      </div>
+      <div class="card">
+        <h3>הסכום ששולם בפועל שונה מהסכום בחשבונית — למה?</h3>
+        <p>
+          כשהחשבונית במטבע שונה מהמטבע שבו בוצע התשלום בפועל, מתבצעת המרה לפי
+          שער החליפין בעת התשלום — לכן יכול להיות הבדל קטן בין הסכום המקורי
+          לסכום ששולם בסופו של דבר.
+        </p>
+      </div>
+      <div class="card">
+        <h3>איפה אני רואה כמה מהתקציב שאושר כבר נוצל?</h3>
+        <p>
+          בעמוד האירוע עצמו — ראו <a href="#eventtrack">מעקב אחר האירוע והתקציב</a>.
+          הוא מציג את הסכום שאושר לצד סך כל החשבוניות שהוגשו עד כה.
+        </p>
+      </div>
+    </section>
+
+    <p style="color:var(--muted); font-size:13px; text-align:center; margin-top:8px">
+      לא מצאתם תשובה למה שחיפשתם? אפשר לפנות לצוות קק״ל או עמיאל שעובד איתכם.
+    </p>
+  </main>
+</div>
+
+<footer>מדריך למשתמש השליח · מערכת ניהול שליחים, אירועים וחשבוניות — קק״ל × עמיאל</footer>
+
+<script>
+(function(){
+  try{
+    var railLinks = Array.prototype.slice.call(document.querySelectorAll('nav.rail a'));
+    var sections = railLinks.map(function(a){ return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
+
+    // active-section highlighting while scrolling
+    function onScroll(){
+      var y = window.scrollY + 110;
+      var current = sections[0];
+      for (var i = 0; i < sections.length; i++){
+        if (sections[i].offsetTop <= y) current = sections[i];
+      }
+      railLinks.forEach(function(a){
+        var target = document.querySelector(a.getAttribute('href'));
+        a.classList.toggle('active', target === current);
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // mobile rail toggle
+    var menuBtn = document.getElementById('menuBtn');
+    var rail = document.getElementById('rail');
+    if (menuBtn && rail){
+      menuBtn.addEventListener('click', function(){
+        var open = rail.classList.toggle('open');
+        menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      railLinks.forEach(function(a){
+        a.addEventListener('click', function(){ rail.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); });
+      });
+    }
+
+    // lightweight topic search: index each .topic section + each .card inside it
+    var index = [];
+    document.querySelectorAll('section.topic').forEach(function(section){
+      var sectionTitle = (section.querySelector('h2') || {}).textContent || '';
+      var cards = section.querySelectorAll('.card');
+      if (cards.length === 0){
+        index.push({ id: section.id, section: sectionTitle, title: sectionTitle, text: section.textContent });
+      } else {
+        cards.forEach(function(card){
+          var h3 = card.querySelector('h3');
+          index.push({
+            id: section.id,
+            section: sectionTitle,
+            title: h3 ? h3.textContent.trim() : sectionTitle,
+            text: card.textContent
+          });
+        });
+      }
+    });
+
+    var input = document.getElementById('searchInput');
+    var results = document.getElementById('searchResults');
+
+    function escapeHtml(s){
+      return s.replace(/[&<>]/g, function(c){ return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'; });
+    }
+
+    function snippet(text, q){
+      var idx = text.toLowerCase().indexOf(q.toLowerCase());
+      if (idx === -1) return escapeHtml(text.trim().slice(0, 90)) + '…';
+      var start = Math.max(0, idx - 40);
+      var raw = text.slice(start, idx) + '::' + text.slice(idx, idx + q.length) + '::' + text.slice(idx + q.length, idx + q.length + 50);
+      var parts = raw.split('::');
+      return (start > 0 ? '…' : '') + escapeHtml(parts[0]) + '<b>' + escapeHtml(parts[1]) + '</b>' + escapeHtml(parts[2]) + '…';
+    }
+
+    function runSearch(q){
+      q = q.trim();
+      if (!q){ results.classList.remove('open'); results.innerHTML=''; return; }
+      var ql = q.toLowerCase();
+      var hits = index.filter(function(item){ return item.text.toLowerCase().indexOf(ql) !== -1; }).slice(0, 12);
+      if (hits.length === 0){
+        results.innerHTML = '<div class="search-empty">לא נמצאו תוצאות עבור &quot;' + escapeHtml(q) + '&quot;</div>';
+      } else {
+        results.innerHTML = hits.map(function(h){
+          return '<a href="#' + h.id + '"><span class="hit-section">' + escapeHtml(h.section) + '</span>' +
+                 (h.title && h.title !== h.section ? '<b>' + escapeHtml(h.title) + '</b> — ' : '') +
+                 snippet(h.text, q) + '</a>';
+        }).join('');
+      }
+      results.classList.add('open');
+    }
+
+    if (input && results){
+      input.addEventListener('input', function(){ runSearch(input.value); });
+      input.addEventListener('focus', function(){ if (input.value.trim()) runSearch(input.value); });
+      results.addEventListener('click', function(e){
+        var a = e.target.closest('a');
+        if (a){ results.classList.remove('open'); input.value=''; }
+      });
+      document.addEventListener('click', function(e){
+        if (!e.target.closest('.search-wrap')) results.classList.remove('open');
+      });
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape'){ results.classList.remove('open'); input.blur(); }
+      });
+    }
+  } catch(err){ /* never let the help page break on script errors */ }
+})();
+</script>
+</body>
+</html>
