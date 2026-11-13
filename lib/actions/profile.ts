@@ -4,10 +4,15 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { COUNTRIES_EN } from "@/lib/data/countries";
 import { US_COUNTRY_CODE, US_STATE_CODES } from "@/lib/data/us-states";
+import { OTHER_OPTION } from "@/lib/data/kkal-reps-options";
+import {
+  repProfileSchema,
+  type RepProfileInput,
+} from "@/lib/validation/rep-profile";
 
 // Self-service actions behind /profile. The database enforces the real
 // limits (see the profiles_guard_self_update trigger and the
-// update_my_rep_name function): a user can change only their own name and,
+// update_my_rep_details function): a user can change only their own details and,
 // for KKL staff, their own responsibility areas -- never their role or
 // email.
 
@@ -38,25 +43,48 @@ export async function updateMyDisplayName(displayName: string): Promise<Result> 
   return { success: true };
 }
 
-// Ambassadors: Hebrew + local-language first/last names (the display name
-// is derived from the Hebrew name, same as at registration).
-export async function updateMyRepName(values: {
-  firstNameHe: string;
-  lastNameHe: string;
-  firstNameLocal: string;
-  lastNameLocal: string;
-}): Promise<Result> {
-  if (!values.firstNameHe.trim() || !values.lastNameHe.trim()) {
-    return { error: "name_required" };
-  }
+// Ambassadors: every registration detail that can change over time (see
+// lib/validation/rep-profile.ts for what's included and what isn't). The
+// update_my_rep_details DB function only touches those columns, keeps the
+// display name in sync, and records a self_edit entry in the audit log so
+// KKL can see what the ambassador changed.
+export async function updateMyRepDetails(input: RepProfileInput): Promise<Result> {
+  const parsed = repProfileSchema.safeParse(input);
+  if (!parsed.success) return { error: "invalid_input" };
+  const v = parsed.data;
+
   const { supabase, user } = await currentUser();
   if (!user) return { error: "not_authenticated" };
 
-  const { error } = await supabase.rpc("update_my_rep_name", {
-    p_first_name_he: values.firstNameHe,
-    p_last_name_he: values.lastNameHe,
-    p_first_name_local: values.firstNameLocal,
-    p_last_name_local: values.lastNameLocal,
+  const resolve = (value: string | undefined, other: string | undefined) =>
+    value === OTHER_OPTION ? (other ?? "") : (value ?? "");
+
+  const { error } = await supabase.rpc("update_my_rep_details", {
+    p: {
+      first_name_he: v.firstNameHe,
+      last_name_he: v.lastNameHe,
+      first_name_local: v.firstNameLocal,
+      last_name_local: v.lastNameLocal,
+      whatsapp_phone: v.whatsappPhone,
+      mission_phone: v.missionPhone ?? "",
+      marital_status:
+        v.maritalStatus === "other"
+          ? (v.maritalStatusOther ?? "")
+          : (v.maritalStatus ?? ""),
+      mailing_institution: v.mailingInstitution,
+      address: v.address ?? "",
+      city: v.city,
+      state: v.state ?? "",
+      zip: v.zip ?? "",
+      country: v.country,
+      organization: resolve(v.organization, v.organizationOther),
+      mission_location_name: v.missionLocationName,
+      institution_type: resolve(v.institutionType, v.institutionTypeOther),
+      institution_city: v.institutionCity,
+      main_role: v.mainRole,
+      mission_start_date: v.missionStartDate ?? "",
+      mission_end_date_expected: v.missionEndDateExpected ?? "",
+    },
   });
   if (error) return { error: error.message };
 

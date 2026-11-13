@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "@/lib/i18n/server";
-import { formatCountryWithState } from "@/lib/data/us-states";
 import {
   ChangePasswordForm,
   RegionsForm,
-  RepNameForm,
   StaffNameForm,
 } from "@/components/profile-forms";
+import { RepProfileForm } from "@/components/rep-profile-form";
+import { formatDateDMY } from "@/lib/utils/date";
 
 // Personal profile for every signed-in user (ambassador, KKL, Amiel,
 // admin). Reachable from the profile menu in the header. Email is shown
@@ -51,7 +51,7 @@ export default async function ProfilePage() {
       ? await supabase
           .from("reps")
           .select(
-            "first_name_he, last_name_he, first_name_local, last_name_local, whatsapp_phone, country, state, organization, activity_level, status"
+            "first_name_he, last_name_he, first_name_local, last_name_local, whatsapp_phone, mission_phone, date_of_birth, marital_status, mailing_institution, address, city, state, zip, country, organization, activity_level, mission_location_name, institution_type, institution_city, main_role, mission_start_date, mission_end_date_expected, status"
           )
           .eq("profile_id", user.id)
           .maybeSingle()
@@ -76,30 +76,24 @@ export default async function ProfilePage() {
         </div>
 
         {role === "rep" ? (
-          <RepNameForm
-            d={d}
-            initial={{
-              firstNameHe: rep?.first_name_he ?? "",
-              lastNameHe: rep?.last_name_he ?? "",
-              firstNameLocal: rep?.first_name_local ?? "",
-              lastNameLocal: rep?.last_name_local ?? "",
-            }}
-          />
+          <p className="text-sm text-black/60">{d.repEditIntro}</p>
         ) : (
           <StaffNameForm d={d} initialName={profile.display_name ?? ""} />
         )}
       </section>
 
       {role === "rep" && rep && (
+        <RepProfileForm dict={dict} locale={locale} rep={rep} />
+      )}
+
+      {role === "rep" && rep && (
         <section className={sectionClass}>
           <h2 className={sectionTitleClass}>{d.sectionRepDetails}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Row label={d.phone} value={rep.whatsapp_phone} />
             <Row
-              label={d.country}
-              value={formatCountryWithState(rep.country, rep.state, locale)}
+              label={dict.register.dateOfBirth}
+              value={formatDateDMY(rep.date_of_birth)}
             />
-            <Row label={d.organization} value={rep.organization} />
             <Row
               label={d.participation}
               value={

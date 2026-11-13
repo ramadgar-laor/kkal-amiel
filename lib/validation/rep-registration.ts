@@ -28,8 +28,7 @@ const INSTITUTION_TYPE_VALUES = new Set<string>([
   OTHER_OPTION,
 ]);
 
-export const repRegistrationSchema = z
-  .object({
+export const repRegistrationBase = z.object({
     email: z.string().trim().email(),
     firstNameHe: z.string().trim().min(1),
     lastNameHe: z.string().trim().min(1),
@@ -68,8 +67,25 @@ export const repRegistrationSchema = z
     missionEndDateExpected: z.string().trim().optional().or(z.literal("")),
     participationLevel: z.enum(PARTICIPATION_LEVELS),
     registrationNotes: z.string().trim().optional().or(z.literal("")),
-  })
-  .superRefine((values, ctx) => {
+  });
+
+// Cross-field rules shared by the registration form and the ambassador's
+// own profile edit (lib/validation/rep-profile.ts).
+type CrossFieldValues = {
+  country?: string;
+  state?: string;
+  organization?: string;
+  organizationOther?: string;
+  institutionType?: string;
+  institutionTypeOther?: string;
+  maritalStatus?: string;
+  maritalStatusOther?: string;
+};
+
+export function refineRepCrossFields(
+  values: CrossFieldValues,
+  ctx: z.RefinementCtx
+) {
     // A rep based in the US must also pick their state (KKL, 11/2026).
     if (
       values.country === US_COUNTRY_CODE &&
@@ -101,6 +117,9 @@ export const repRegistrationSchema = z
         message: "required",
       });
     }
-  });
+}
+
+export const repRegistrationSchema =
+  repRegistrationBase.superRefine(refineRepCrossFields);
 
 export type RepRegistrationInput = z.infer<typeof repRegistrationSchema>;

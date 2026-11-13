@@ -9,7 +9,6 @@ import { US_COUNTRY_CODE, usStatesFor } from "@/lib/data/us-states";
 import {
   updateMyDisplayName,
   updateMyRegions,
-  updateMyRepName,
 } from "@/lib/actions/profile";
 
 type ProfileDict = Dictionary["profile"];
@@ -71,72 +70,6 @@ export function StaffNameForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-      </div>
-      <Feedback ok={ok} error={error} />
-      <button type="submit" disabled={busy} className={buttonClass}>
-        {busy ? d.saving : d.save}
-      </button>
-    </form>
-  );
-}
-
-export function RepNameForm({
-  d,
-  initial,
-}: {
-  d: ProfileDict;
-  initial: {
-    firstNameHe: string;
-    lastNameHe: string;
-    firstNameLocal: string;
-    lastNameLocal: string;
-  };
-}) {
-  const [values, setValues] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [ok, setOk] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const set = (k: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setValues((v) => ({ ...v, [k]: e.target.value }));
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setOk(null);
-    setError(null);
-    if (!values.firstNameHe.trim() || !values.lastNameHe.trim()) {
-      return setError(d.nameRequired);
-    }
-    setBusy(true);
-    const res = await updateMyRepName(values);
-    setBusy(false);
-    if ("error" in res) setError(d.saveError);
-    else setOk(d.saved);
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>
-            {d.firstNameHe} <span className="text-red-600">*</span>
-          </label>
-          <input className={inputClass} value={values.firstNameHe} onChange={set("firstNameHe")} />
-        </div>
-        <div>
-          <label className={labelClass}>
-            {d.lastNameHe} <span className="text-red-600">*</span>
-          </label>
-          <input className={inputClass} value={values.lastNameHe} onChange={set("lastNameHe")} />
-        </div>
-        <div>
-          <label className={labelClass}>{d.firstNameLocal}</label>
-          <input className={inputClass} value={values.firstNameLocal} onChange={set("firstNameLocal")} />
-        </div>
-        <div>
-          <label className={labelClass}>{d.lastNameLocal}</label>
-          <input className={inputClass} value={values.lastNameLocal} onChange={set("lastNameLocal")} />
-        </div>
       </div>
       <Feedback ok={ok} error={error} />
       <button type="submit" disabled={busy} className={buttonClass}>
