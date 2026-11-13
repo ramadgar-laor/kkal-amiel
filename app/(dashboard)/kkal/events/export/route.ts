@@ -1,3 +1,4 @@
+import { getKkalScope, inScope } from "@/lib/kkal/scope";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCountryName } from "@/lib/data/countries";
@@ -68,7 +69,11 @@ const HEADERS = [
   "חשבוניות ממתינות לתשלום",
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Same "my countries" scope as the list the export button sits on.
+  const scope = await getKkalScope(
+    Object.fromEntries(new URL(request.url).searchParams)
+  );
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
@@ -96,7 +101,7 @@ export async function GET() {
       ? supabase
           .from("reps")
           .select(
-            "profile_id, first_name_he, last_name_he, first_name_local, last_name_local, mission_phone, whatsapp_phone, organization, country"
+            "profile_id, first_name_he, last_name_he, first_name_local, last_name_local, mission_phone, whatsapp_phone, organization, country, state"
           )
           .in("profile_id", repIds)
       : Promise.resolve({ data: [] as never[] }),
@@ -152,7 +157,10 @@ export async function GET() {
     quotesByEvent.set(q.event_id, list);
   }
 
-  const rows = (events ?? []).map((e) => {
+  const scopedEvents = (events ?? []).filter((e) =>
+    inScope(scope, e.country, repById.get(e.rep_id)?.state)
+  );
+  const rows = scopedEvents.map((e) => {
     const rep = repById.get(e.rep_id);
     const budgetItems = budgetItemsByEvent.get(e.id) ?? [];
     const suppliers = suppliersByEvent.get(e.id) ?? [];

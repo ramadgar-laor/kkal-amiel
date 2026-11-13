@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getKkalScope, inScope } from "@/lib/kkal/scope";
+import { KkalScopeBanner } from "@/components/kkal-scope-banner";
 
 // The payment-status breakdown below is purely informational for KKL -- once
 // an invoice is approved by KKL it moves into Amiel's payment pipeline, and
@@ -52,62 +54,77 @@ const PAYMENT_STAGES: {
   },
 ];
 
-export default async function KkalDashboardPage() {
+export default async function KkalDashboardPage({
+  searchParams,
+}: PageProps<"/kkal">) {
+  const sp = await searchParams;
+  const scope = await getKkalScope(sp);
   const supabase = await createClient();
 
-  const [
-    { count: pendingReps },
-    { count: pendingEvents },
-    { count: pendingInvoices },
-    { count: needsCorrectionInvoices },
-    paymentStageCounts,
-  ] = await Promise.all([
-    supabase
-      .from("reps")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("events")
-      .select("*", { count: "exact", head: true })
-      .in("status", ["submitted", "info_requested"]),
-    supabase
-      .from("invoices")
-      .select("*", { count: "exact", head: true })
-      .eq("kkal_status", "pending"),
-    supabase
-      .from("invoices")
-      .select("*", { count: "exact", head: true })
-      .eq("kkal_status", "needs_correction"),
-    Promise.all(
-      PAYMENT_STAGES.map(async (stage) => {
-        const { count } = await supabase
-          .from("invoices")
-          .select("*", { count: "exact", head: true })
-          .eq("kkal_status", "approved")
-          .eq("payment_status", stage.key);
-        return count ?? 0;
-      })
-    ),
-  ]);
+  // Rows (not head-only counts) so the "my countries" filter can apply --
+  // the numbers here must match what each linked list shows by default.
+  const [{ data: reps }, { data: events }, { data: invoices }] =
+    await Promise.all([
+      supabase.from("reps").select("status, country, state"),
+      supabase.from("events").select("status, country, reps(state)"),
+      supabase
+        .from("invoices")
+        .select("kkal_status, payment_status, events(country, reps(state))"),
+    ]);
+
+  const first = <T,>(v: T | T[] | null | undefined): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
+
+  const myReps = (reps ?? []).filter((r) => inScope(scope, r.country, r.state));
+  const myEvents = (events ?? []).filter((e) =>
+    inScope(scope, e.country, first(e.reps)?.state)
+  );
+  const myInvoices = (invoices ?? []).filter((inv) => {
+    const ev = first(inv.events);
+    return inScope(scope, ev?.country, first(ev?.reps)?.state);
+  });
+
+  const pendingReps = myReps.filter((r) => r.status === "pending").length;
+  const pendingEvents = myEvents.filter(
+    (e) => e.status === "submitted" || e.status === "info_requested"
+  ).length;
+  const pendingInvoices = myInvoices.filter(
+    (i) => i.kkal_status === "pending"
+  ).length;
+  const needsCorrectionInvoices = myInvoices.filter(
+    (i) => i.kkal_status === "needs_correction"
+  ).length;
+  const paymentStageCounts = PAYMENT_STAGES.map(
+    (stage) =>
+      myInvoices.filter(
+        (i) => i.kkal_status === "approved" && i.payment_status === stage.key
+      ).length
+  );
+
+  // Carry an explicit "all countries" choice into the linked lists.
+  const link = (href: string) => {
+    if (!scope.showAll) return href;
+    return href + (href.includes("?") ? "&" : "?") + "scope=all";
+  };
 
   const paymentStagesTotal = paymentStageCounts.reduce((a, b) => a + b, 0);
 
   const cards = [
-    { label: "שגרירים לאישור", value: pendingReps ?? 0, href: "/kkal/reps" },
+    { label: "שגרירים לאישור", value: pendingReps, href: link("/kkal/reps") },
     {
       label: "בקשות תקציב לאישור",
-      value: pendingEvents ?? 0,
-      href: "/kkal/events?status=actionable",
+      value: pendingEvents,
+      href: link("/kkal/events?status=actionable"),
     },
     {
       label: "חשבוניות לאישור",
-      value: pendingInvoices ?? 0,
-      href: "/kkal/invoices",
+      value: pendingInvoices,
+      href: link("/kkal/invoices"),
     },
     {
       label: "חשבוניות בתיקון אצל השגריר",
-      value: needsCorrectionInvoices ?? 0,
-      href: "/kkal/invoices?status=needs_correction",
+      value: needsCorrectionInvoices,
+      href: link("/kkal/invoices?status=needs_correction"),
     },
   ];
 
@@ -116,6 +133,7 @@ export default async function KkalDashboardPage() {
       <h1 className="text-xl font-bold text-(--color-brand-dark)">
         לוח בקרה — קק&quot;ל
       </h1>
+      <KkalScopeBanner scope={scope} path="/kkal" searchParams={sp} />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => {
           const content = (
@@ -147,7 +165,7 @@ export default async function KkalDashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
-          href="/kkal/reps#directory"
+          href={link("/kkal/reps") + "#directory"}
           className="flex items-center justify-between rounded-xl bg-white border border-black/5 p-5 shadow-sm hover:border-(--color-brand)/30 transition"
         >
           <div>
@@ -162,7 +180,7 @@ export default async function KkalDashboardPage() {
         </Link>
 
         <Link
-          href="/kkal/events"
+          href={link("/kkal/events")}
           className="flex items-center justify-between rounded-xl bg-white border border-black/5 p-5 shadow-sm hover:border-(--color-brand)/30 transition"
         >
           <div>
@@ -192,7 +210,7 @@ export default async function KkalDashboardPage() {
           {PAYMENT_STAGES.map((stage, i) => (
             <Link
               key={stage.key}
-              href={`/kkal/invoices?paymentStatus=${stage.key}`}
+              href={link(`/kkal/invoices?paymentStatus=${stage.key}`)}
               className={`rounded-lg p-4 transition hover:opacity-80 ${stage.classes}`}
             >
               <div className="text-2xl font-bold">{paymentStageCounts[i]}</div>

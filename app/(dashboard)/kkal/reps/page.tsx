@@ -4,6 +4,8 @@ import { RepReviewButtons } from "@/components/rep-review-buttons";
 import { RepsDirectoryTable, type RepDirectoryRow } from "@/components/reps-directory-table";
 import { formatCountryWithState } from "@/lib/data/us-states";
 import { formatDateDMY } from "@/lib/utils/date";
+import { getKkalScope, inScope } from "@/lib/kkal/scope";
+import { KkalScopeBanner } from "@/components/kkal-scope-banner";
 
 const PARTICIPATION_LABEL_HE: Record<string, string> = {
   trustee: 'נאמן קק"ל',
@@ -11,7 +13,11 @@ const PARTICIPATION_LABEL_HE: Record<string, string> = {
   coordinator: 'רכז קק"ל',
 };
 
-export default async function KkalRepsPage() {
+export default async function KkalRepsPage({
+  searchParams,
+}: PageProps<"/kkal/reps">) {
+  const sp = await searchParams;
+  const scope = await getKkalScope(sp);
   const supabase = await createClient();
 
   // Two separate queries instead of an embedded `profiles:profile_id(...)`
@@ -39,8 +45,10 @@ export default async function KkalRepsPage() {
 
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
 
-  const pending = reps?.filter((r) => r.status === "pending") ?? [];
-  const all = reps ?? [];
+  // "My countries" filter (see lib/kkal/scope.ts).
+  const all = (reps ?? []).filter((r) => inScope(scope, r.country, r.state));
+  const hiddenCount = (reps?.length ?? 0) - all.length;
+  const pending = all.filter((r) => r.status === "pending");
 
   function displayNameFor(r: {
     profile_id: string;
@@ -61,6 +69,13 @@ export default async function KkalRepsPage() {
       <h1 className="text-xl font-bold text-(--color-brand-dark)">
         שגרירים — ממתינים לאישור
       </h1>
+
+      <KkalScopeBanner
+        scope={scope}
+        path="/kkal/reps"
+        searchParams={sp}
+        hiddenCount={hiddenCount}
+      />
 
       {pending.length === 0 ? (
         <p className="text-sm text-black/50">אין הרשמות הממתינות לאישור.</p>
@@ -153,7 +168,7 @@ export default async function KkalRepsPage() {
 
       <div id="directory">
         <h2 className="font-semibold text-(--color-brand-dark) mb-1">
-          כל השגרירים במערכת
+          {scope.active ? "כל השגרירים במדינות שלי" : "כל השגרירים במערכת"}
         </h2>
         <p className="text-xs text-black/50 mb-3">
           רשימה מלאה של כל השגרירים בכל הסטטוסים, עם סינון וחיפוש חכם. אפשר
@@ -161,10 +176,16 @@ export default async function KkalRepsPage() {
           השליחות), או ללחוץ &quot;עריכה&quot; לעדכון מלא של הפרטים.
         </p>
         {all.length === 0 ? (
-          <p className="text-sm text-black/50">אין עדיין שגרירים במערכת.</p>
+          <p className="text-sm text-black/50">
+            {scope.active
+              ? "אין שגרירים במדינות שבאחריותך."
+              : "אין עדיין שגרירים במערכת."}
+          </p>
         ) : (
           <RepsDirectoryTable
-            exportHref="/kkal/reps/export"
+            exportHref={
+              scope.showAll ? "/kkal/reps/export?scope=all" : "/kkal/reps/export"
+            }
             rows={all.map((r) => {
               const profile = profileById.get(r.profile_id);
               return {

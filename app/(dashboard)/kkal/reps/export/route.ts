@@ -1,3 +1,4 @@
+import { getKkalScope, inScope } from "@/lib/kkal/scope";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCountryName } from "@/lib/data/countries";
@@ -55,7 +56,11 @@ const HEADERS = [
   "תאריך הרשמה",
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Same "my countries" scope as the list the export button sits on.
+  const scope = await getKkalScope(
+    Object.fromEntries(new URL(request.url).searchParams)
+  );
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) {
@@ -77,14 +82,17 @@ export async function GET() {
     )
     .order("created_at", { ascending: false });
 
-  const profileIds = (reps ?? []).map((r) => r.profile_id);
+  const scopedReps = (reps ?? []).filter((r) =>
+    inScope(scope, r.country, r.state)
+  );
+  const profileIds = scopedReps.map((r) => r.profile_id);
   const { data: profiles } =
     profileIds.length > 0
       ? await supabase.from("profiles").select("id, email").in("id", profileIds)
       : { data: [] as { id: string; email: string | null }[] };
   const emailById = new Map((profiles ?? []).map((p) => [p.id, p.email]));
 
-  const rows = (reps ?? []).map((r) => [
+  const rows = scopedReps.map((r) => [
     STATUS_LABEL[r.status] ?? r.status,
     r.first_name_he,
     r.last_name_he,

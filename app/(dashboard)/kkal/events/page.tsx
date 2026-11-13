@@ -3,6 +3,8 @@ import {
   EventsDirectoryTable,
   type EventDirectoryRow,
 } from "@/components/events-directory-table";
+import { getKkalScope, inScope } from "@/lib/kkal/scope";
+import { KkalScopeBanner } from "@/components/kkal-scope-banner";
 
 export default async function KkalEventsPage({
   searchParams,
@@ -11,16 +13,26 @@ export default async function KkalEventsPage({
   const statusParam = sp.status;
   const initialStatus = Array.isArray(statusParam) ? statusParam[0] : statusParam;
 
+  const scope = await getKkalScope(sp);
   const supabase = await createClient();
-  const { data: events } = await supabase
+  const { data: allEvents } = await supabase
     .from("events")
     .select(
-      "id, name, start_date, end_date, city, country, requested_amount, requested_currency, approved_amount, status, created_at, rep_id, org_affiliation, reps(first_name_he, last_name_he), invoices(amount, paid_amount, payment_status)"
+      "id, name, start_date, end_date, city, country, requested_amount, requested_currency, approved_amount, status, created_at, rep_id, org_affiliation, reps(first_name_he, last_name_he, state), invoices(amount, paid_amount, payment_status)"
     )
     .order("start_date", { ascending: true });
 
-  const rows = (events ?? []).map((e) => {
-    const rep = Array.isArray(e.reps) ? e.reps[0] : e.reps;
+  // "My countries" filter (see lib/kkal/scope.ts). A US event is matched
+  // on its ambassador's state, since events don't record a state.
+  const repOf = (e: NonNullable<typeof allEvents>[number]) =>
+    Array.isArray(e.reps) ? e.reps[0] : e.reps;
+  const events = (allEvents ?? []).filter((e) =>
+    inScope(scope, e.country, repOf(e)?.state)
+  );
+  const hiddenCount = (allEvents?.length ?? 0) - events.length;
+
+  const rows = events.map((e) => {
+    const rep = repOf(e);
     const invoices = e.invoices ?? [];
     const invoicesPendingCount = invoices.filter(
       (inv) => inv.payment_status !== "paid"
@@ -59,7 +71,7 @@ export default async function KkalEventsPage({
   // below counts by -- a snapshot of where KKL's reps are currently
   // operating, not a lifetime total of every event ever submitted.
   const todayIso = new Date().toISOString().slice(0, 10);
-  const activeEvents = (events ?? []).filter(
+  const activeEvents = events.filter(
     (e) => e.status !== "rejected" && e.end_date >= todayIso
   );
   const activeCountries = new Set(
@@ -89,10 +101,19 @@ export default async function KkalEventsPage({
         </p>
       </div>
 
-      {!!events?.length && (
+      <KkalScopeBanner
+        scope={scope}
+        path="/kkal/events"
+        searchParams={sp}
+        hiddenCount={hiddenCount}
+      />
+
+      {!!events.length && (
         <div className="rounded-xl bg-gradient-to-br from-(--color-brand) to-(--color-brand-dark) text-white p-6 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="font-semibold">תמונת מצב כלל-מערכתית</h2>
+            <h2 className="font-semibold">
+              {scope.active ? "תמונת מצב — המדינות שלי" : "תמונת מצב כלל-מערכתית"}
+            </h2>
             <span className="text-xs text-white/70">
               לפי אירועים פעילים — לא נדחו וטרם הסתיימו
             </span>
@@ -133,12 +154,18 @@ export default async function KkalEventsPage({
       )}
 
       {rows.length === 0 ? (
-        <p className="text-sm text-black/50">אין עדיין אירועים במערכת.</p>
+        <p className="text-sm text-black/50">
+          {scope.active
+            ? "אין אירועים במדינות שבאחריותך."
+            : "אין עדיין אירועים במערכת."}
+        </p>
       ) : (
         <EventsDirectoryTable
           rows={rows}
           initialStatus={initialStatus}
-          exportHref="/kkal/events/export"
+          exportHref={
+            scope.showAll ? "/kkal/events/export?scope=all" : "/kkal/events/export"
+          }
         />
       )}
     </div>
