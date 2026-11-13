@@ -335,7 +335,7 @@ export async function updateInvoiceBankDetails(input: {
     action: "payment_update",
     from_value: "returned_to_rep",
     to_value: "received_for_review",
-    notes: "השליח עדכן פרטי בנק",
+    notes: "השגריר עדכן פרטי בנק",
   });
 
   return { success: true as const };
@@ -413,8 +413,8 @@ export async function updatePendingInvoice(
 
   const changedFile = before?.file_path && filePath !== before.file_path;
   const snapshot = before
-    ? `השליח ערך את החשבונית לפני בדיקת קק"ל. קודם: סכום ${before.amount} ${before.currency}, לתשלום ${before.payment_amount} ${before.payment_amount_currency}, ש"ח ${before.ils_amount}${changedFile ? ", הקובץ הוחלף" : ""} ← חדש: סכום ${v.amount} ${v.currency}, לתשלום ${v.paymentAmount} ${v.paymentAmountCurrency}, ש"ח ${v.ilsAmount}`
-    : "השליח ערך את החשבונית לפני בדיקת קק\"ל";
+    ? `השגריר ערך את החשבונית לפני בדיקת קק"ל. קודם: סכום ${before.amount} ${before.currency}, לתשלום ${before.payment_amount} ${before.payment_amount_currency}, ש"ח ${before.ils_amount}${changedFile ? ", הקובץ הוחלף" : ""} ← חדש: סכום ${v.amount} ${v.currency}, לתשלום ${v.paymentAmount} ${v.paymentAmountCurrency}, ש"ח ${v.ilsAmount}`
+    : "השגריר ערך את החשבונית לפני בדיקת קק\"ל";
 
   await supabase.from("status_audit_log").insert({
     entity_type: "invoice",
@@ -503,8 +503,8 @@ export async function resubmitCorrectedInvoice(
 
   const changedFile = before?.file_path && filePath !== before.file_path;
   const snapshot = before
-    ? `השליח תיקן ושלח מחדש. קודם: סכום ${before.amount} ${before.currency}, לתשלום ${before.payment_amount} ${before.payment_amount_currency}, ש"ח ${before.ils_amount}${changedFile ? ", הקובץ הוחלף" : ""} ← חדש: סכום ${v.amount} ${v.currency}, לתשלום ${v.paymentAmount} ${v.paymentAmountCurrency}, ש"ח ${v.ilsAmount}`
-    : "השליח תיקן ושלח מחדש את החשבונית";
+    ? `השגריר תיקן ושלח מחדש. קודם: סכום ${before.amount} ${before.currency}, לתשלום ${before.payment_amount} ${before.payment_amount_currency}, ש"ח ${before.ils_amount}${changedFile ? ", הקובץ הוחלף" : ""} ← חדש: סכום ${v.amount} ${v.currency}, לתשלום ${v.paymentAmount} ${v.paymentAmountCurrency}, ש"ח ${v.ilsAmount}`
+    : "השגריר תיקן ושלח מחדש את החשבונית";
 
   await supabase.from("status_audit_log").insert({
     entity_type: "invoice",

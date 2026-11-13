@@ -16,6 +16,7 @@ import {
   INSTITUTION_TYPES,
 } from "@/lib/data/kkal-reps-options";
 import { COUNTRIES_HE } from "@/lib/data/countries";
+import { US_COUNTRY_CODE, US_STATES_HE } from "@/lib/data/us-states";
 import { updateRepDetails } from "@/lib/actions/reps";
 import { DateFieldDMY } from "@/components/date-field-dmy";
 import {
@@ -161,7 +162,7 @@ export function RepEditForm({
         <h2 className="font-semibold text-(--color-brand-dark)">סטטוס</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>סטטוס השליח</label>
+            <label className={labelClass}>סטטוס השגריר</label>
             <select className={inputClass} {...register("status")}>
               {REP_STATUSES.map((s) => (
                 <option key={s} value={s}>
@@ -180,7 +181,7 @@ export function RepEditForm({
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass}>
-              הערות השליח (מולאו בטופס ההרשמה)
+              הערות השגריר (מולאו בטופס ההרשמה)
             </label>
             <textarea
               rows={2}
@@ -338,16 +339,17 @@ export function RepEditForm({
             <input className={inputClass} {...register("city")} />
           </div>
           <div>
-            <label className={labelClass}>מדינה/מחוז</label>
-            <input className={inputClass} {...register("state")} />
-          </div>
-          <div>
             <label className={labelClass}>מיקוד</label>
             <input className={inputClass} {...register("zip")} />
           </div>
           <div>
             <label className={labelClass}>מדינה</label>
-            <select className={inputClass} {...register("country")}>
+            <select
+              className={inputClass}
+              {...register("country", {
+                onChange: () => setValue("state", ""),
+              })}
+            >
               <option value=""></option>
               {COUNTRIES_HE.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -359,6 +361,27 @@ export function RepEditForm({
               <p className={errorClass}>מדינה לא תקינה</p>
             )}
           </div>
+          {watch("country") === US_COUNTRY_CODE ? (
+            <div>
+              <label className={labelClass}>מדינה בארה״ב *</label>
+              <select className={inputClass} {...register("state")}>
+                <option value="">בחר/י מדינה בארה״ב</option>
+                {US_STATES_HE.map((st) => (
+                  <option key={st.code} value={st.code}>
+                    {st.name}
+                  </option>
+                ))}
+              </select>
+              {errors.state && (
+                <p className={errorClass}>יש לבחור מדינה בארה״ב</p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <label className={labelClass}>מדינה/מחוז</label>
+              <input className={inputClass} {...register("state")} />
+            </div>
+          )}
         </div>
       </section>
 

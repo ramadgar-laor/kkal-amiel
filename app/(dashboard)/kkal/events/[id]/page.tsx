@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/status-badge";
 import { EventReviewPanel } from "@/components/event-review-panel";
 import { getCountryName } from "@/lib/data/countries";
+import { formatCountryWithState } from "@/lib/data/us-states";
 import { getSignedEventFileUrl } from "@/lib/storage/event-files";
 import { formatDateDMY } from "@/lib/utils/date";
 import { KKAL_PRESENCE_OPTIONS } from "@/lib/data/kkal-presence";
@@ -67,7 +68,7 @@ export default async function KkalEventDetailPage({
   const { data: rep } = await supabase
     .from("reps")
     .select(
-      "first_name_he, last_name_he, first_name_local, last_name_local, whatsapp_phone, mission_phone, country, organization"
+      "first_name_he, last_name_he, first_name_local, last_name_local, whatsapp_phone, mission_phone, country, state, organization"
     )
     .eq("profile_id", event.rep_id)
     .maybeSingle();
@@ -181,7 +182,7 @@ export default async function KkalEventDetailPage({
       </div>
 
       <section className={sectionClass}>
-        <h2 className={sectionTitleClass}>פרטי השליח</h2>
+        <h2 className={sectionTitleClass}>פרטי השגריר</h2>
         <Field
           label="שם"
           value={
@@ -207,7 +208,7 @@ export default async function KkalEventDetailPage({
         <Field label="ארגון השליחות" value={rep?.organization} />
         <Field
           label="מדינת השליחות"
-          value={rep?.country ? getCountryName(rep.country) : null}
+          value={rep?.country ? formatCountryWithState(rep.country, rep.state) : null}
         />
       </section>
 
@@ -397,7 +398,7 @@ export default async function KkalEventDetailPage({
                 ) : (
                   <div className="py-2">
                     <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 inline-block">
-                      פרטי חשבון הבנק טרם נמסרו על ידי השליח — יידרשו בעת
+                      פרטי חשבון הבנק טרם נמסרו על ידי השגריר — יידרשו בעת
                       הזנת החשבונית, לפני ביצוע התשלום בפועל.
                     </p>
                   </div>
@@ -460,14 +461,14 @@ export default async function KkalEventDetailPage({
         <h2 className={sectionTitleClass}>הצהרות</h2>
         <p className="text-sm py-2">
           {allConsentsConfirmed
-            ? "כל 6 ההצהרות הנדרשות (אי-התחייבות, בחינה בוועדה, מיתוג, שער המרה, עמלות בנק, שליחת תמונות וסיכום) אושרו על ידי השליח בעת ההגשה."
-            : "לא כל ההצהרות הנדרשות אושרו — כדאי לבדוק עם השליח לפני אישור."}
+            ? "כל 6 ההצהרות הנדרשות (אי-התחייבות, בחינה בוועדה, מיתוג, שער המרה, עמלות בנק, שליחת תמונות וסיכום) אושרו על ידי השגריר בעת ההגשה."
+            : "לא כל ההצהרות הנדרשות אושרו — כדאי לבדוק עם השגריר לפני אישור."}
         </p>
       </section>
 
       {event.notes && (
         <section className={sectionClass}>
-          <h2 className={sectionTitleClass}>הערות השליח</h2>
+          <h2 className={sectionTitleClass}>הערות השגריר</h2>
           <p className="text-sm py-2 whitespace-pre-wrap">{event.notes}</p>
         </section>
       )}

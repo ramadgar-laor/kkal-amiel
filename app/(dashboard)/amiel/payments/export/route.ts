@@ -6,7 +6,7 @@ import { formatDateDMY } from "@/lib/utils/date";
 
 const HEADERS = [
   "ספק",
-  "שליח",
+  "שגריר",
   "מדינה",
   "אירוע",
   "סכום החשבונית (מקורי)",

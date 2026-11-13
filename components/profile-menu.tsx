@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { SignOutButton } from "@/components/sign-out-button";
 
 export function ProfileMenu({
   displayName,
   roleLabel,
   logoutLabel,
+  profileLabel,
 }: {
   displayName: string;
   roleLabel: string;
   logoutLabel: string;
+  profileLabel: string;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +63,14 @@ export function ProfileMenu({
           role="menu"
           className="absolute end-0 top-full mt-1 w-44 rounded-lg bg-white border border-black/10 shadow-lg py-1 z-20"
         >
+          <Link
+            href="/profile"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block w-full text-start px-3 py-2 text-sm text-black/70 hover:bg-black/5"
+          >
+            {profileLabel}
+          </Link>
           <SignOutButton
             label={logoutLabel}
             className="w-full text-start px-3 py-2 text-sm text-black/70 hover:bg-black/5"

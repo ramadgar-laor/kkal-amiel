@@ -35,8 +35,8 @@ const STAGES: {
   },
   {
     key: "returned_to_rep",
-    label: "הוחזר לשליח",
-    hint: "חסרים פרטי בנק — ממתין לעדכון מהשליח",
+    label: "הוחזר לשגריר",
+    hint: "חסרים פרטי בנק — ממתין לעדכון מהשגריר",
   },
   {
     // Last on purpose -- the pipeline's terminal/success state, after the

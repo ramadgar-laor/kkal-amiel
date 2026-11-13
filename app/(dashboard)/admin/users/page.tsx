@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminRoleSelect } from "@/components/admin-role-select";
 import { AdminCreateUserForm } from "@/components/admin-create-user-form";
+import { getCountryName } from "@/lib/data/countries";
+import { getUsStateName } from "@/lib/data/us-states";
 
 const ROLE_LABEL: Record<string, string> = {
-  rep: "שליח",
+  rep: "שגריר",
   kkal: 'קק"ל',
   amiel: "עמיאל",
   admin: "מנהל מערכת",
@@ -16,7 +18,7 @@ export default async function AdminUsersPage() {
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, role, email, display_name, created_at")
+    .select("id, role, email, display_name, created_at, responsible_countries, responsible_us_states")
     .order("created_at", { ascending: false });
 
   const counts = (profiles ?? []).reduce<Record<string, number>>((acc, p) => {
@@ -77,6 +79,19 @@ export default async function AdminUsersPage() {
                   <div className="text-xs text-black/50 truncate">
                     {p.email}
                   </div>
+                  {p.role === "kkal" &&
+                    (p.responsible_countries ?? []).length > 0 && (
+                      <div className="text-xs text-black/60 mt-0.5">
+                        מדינות באחריות:{" "}
+                        {(p.responsible_countries as string[])
+                          .map((c) => getCountryName(c))
+                          .join(", ")}
+                        {(p.responsible_us_states ?? []).length > 0 &&
+                          ` (ארה״ב: ${(p.responsible_us_states as string[])
+                            .map((s) => getUsStateName(s))
+                            .join(", ")})`}
+                      </div>
+                    )}
                 </div>
                 <AdminRoleSelect
                   profileId={p.id}

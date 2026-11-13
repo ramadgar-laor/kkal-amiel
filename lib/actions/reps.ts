@@ -160,7 +160,7 @@ export async function updateRepDetails(profileId: string, input: RepEditInput) {
       action: "edit",
       from_value: before?.status ?? null,
       to_value: values.status,
-      notes: 'עריכה ידנית של פרטי השליח על ידי צוות קק"ל',
+      notes: 'עריכה ידנית של פרטי השגריר על ידי צוות קק"ל',
     });
   }
 

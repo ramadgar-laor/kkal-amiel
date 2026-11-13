@@ -85,7 +85,7 @@ export default async function KkalEventsPage({
             ? `${actionableCount} בקשות ממתינות לאישור. `
             : "אין כרגע בקשות הממתינות לאישור. "}
           אפשר לחפש ולסנן לפי סטטוס, תזמון ומדינה, וללחוץ על אירוע כדי לראות
-          את כל הפרטים שהשליח מילא ולהחליט על אישור או דחייה.
+          את כל הפרטים שהשגריר מילא ולהחליט על אישור או דחייה.
         </p>
       </div>
 
@@ -104,7 +104,7 @@ export default async function KkalEventsPage({
             </div>
             <div>
               <div className="text-3xl font-bold">{activeReps.size}</div>
-              <div className="text-sm text-white/80 mt-0.5">שליחים פעילים</div>
+              <div className="text-sm text-white/80 mt-0.5">שגרירים פעילים</div>
             </div>
             <div>
               <div className="text-3xl font-bold">{activeOrgs.size}</div>

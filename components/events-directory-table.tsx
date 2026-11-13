@@ -134,7 +134,7 @@ export function EventsDirectoryTable({
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="חיפוש לפי שם אירוע, שליח, עיר, מדינה..."
+          placeholder="חיפוש לפי שם אירוע, שגריר, עיר, מדינה..."
           className="w-full sm:w-72 rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)"
         />
         <select
@@ -197,7 +197,7 @@ export function EventsDirectoryTable({
             <thead>
               <tr className="border-b border-black/10 text-black/50 text-start">
                 <th className="px-3 py-2 font-medium text-start">אירוע</th>
-                <th className="px-3 py-2 font-medium text-start">שליח</th>
+                <th className="px-3 py-2 font-medium text-start">שגריר</th>
                 <th className="px-3 py-2 font-medium text-start">מדינה / עיר</th>
                 <th className="px-3 py-2 font-medium text-start">תאריכים</th>
                 <th className="px-3 py-2 font-medium text-start">תזמון</th>

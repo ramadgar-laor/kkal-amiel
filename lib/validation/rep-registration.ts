@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { COUNTRIES_EN } from "@/lib/data/countries";
+import { US_COUNTRY_CODE, US_STATE_CODES } from "@/lib/data/us-states";
 import {
   SENDING_ORGANIZATIONS,
   INSTITUTION_TYPES,
@@ -69,6 +70,13 @@ export const repRegistrationSchema = z
     registrationNotes: z.string().trim().optional().or(z.literal("")),
   })
   .superRefine((values, ctx) => {
+    // A rep based in the US must also pick their state (KKL, 11/2026).
+    if (
+      values.country === US_COUNTRY_CODE &&
+      !US_STATE_CODES.has(values.state ?? "")
+    ) {
+      ctx.addIssue({ code: "custom", path: ["state"], message: "required" });
+    }
     if (values.organization === OTHER_OPTION && !values.organizationOther) {
       ctx.addIssue({
         code: "custom",

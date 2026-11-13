@@ -38,8 +38,8 @@ const PAYMENT_STAGES: {
   },
   {
     key: "returned_to_rep",
-    label: "הוחזר לשליח",
-    hint: "חסרים פרטי בנק — ממתין לעדכון מהשליח",
+    label: "הוחזר לשגריר",
+    hint: "חסרים פרטי בנק — ממתין לעדכון מהשגריר",
     classes: "bg-(--color-gold-light) text-(--color-gold)",
   },
   {
@@ -93,7 +93,7 @@ export default async function KkalDashboardPage() {
   const paymentStagesTotal = paymentStageCounts.reduce((a, b) => a + b, 0);
 
   const cards = [
-    { label: "שליחים לאישור", value: pendingReps ?? 0, href: "/kkal/reps" },
+    { label: "שגרירים לאישור", value: pendingReps ?? 0, href: "/kkal/reps" },
     {
       label: "בקשות תקציב לאישור",
       value: pendingEvents ?? 0,
@@ -105,7 +105,7 @@ export default async function KkalDashboardPage() {
       href: "/kkal/invoices",
     },
     {
-      label: "חשבוניות בתיקון אצל השליח",
+      label: "חשבוניות בתיקון אצל השגריר",
       value: needsCorrectionInvoices ?? 0,
       href: "/kkal/invoices?status=needs_correction",
     },
@@ -152,7 +152,7 @@ export default async function KkalDashboardPage() {
         >
           <div>
             <div className="font-semibold text-(--color-brand-dark)">
-              כל השליחים במערכת
+              כל השגרירים במערכת
             </div>
             <div className="text-sm text-black/50 mt-0.5">
               רשימה מלאה, חיפוש וסינון לפי סטטוס — לא רק הממתינים לאישור

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { COUNTRIES_EN } from "@/lib/data/countries";
+import { US_COUNTRY_CODE, US_STATE_CODES } from "@/lib/data/us-states";
 import { PARTICIPATION_LEVELS } from "@/lib/validation/rep-registration";
 
 const COUNTRY_CODES = new Set(COUNTRIES_EN.map((c) => c.code));
@@ -38,6 +39,13 @@ export const repEditSchema = z.object({
   status: z.enum(REP_STATUSES),
   kkalNotes: z.string().trim().optional().or(z.literal("")),
   registrationNotes: z.string().trim().optional().or(z.literal("")),
+}).superRefine((values, ctx) => {
+  if (
+    values.country === US_COUNTRY_CODE &&
+    !US_STATE_CODES.has(values.state ?? "")
+  ) {
+    ctx.addIssue({ code: "custom", path: ["state"], message: "required" });
+  }
 });
 
 export type RepEditInput = z.infer<typeof repEditSchema>;

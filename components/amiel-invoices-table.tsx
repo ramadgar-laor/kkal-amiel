@@ -13,7 +13,7 @@ const STATUS_FILTER_LABEL: Record<string, string> = {
   received_for_review: "התקבל לבדיקה",
   approved_for_payment: "אושר לתשלום",
   returned_to_kkal: 'הוחזר לקק"ל',
-  returned_to_rep: "הוחזר לשליח",
+  returned_to_rep: "הוחזר לשגריר",
   paid: "שולם",
 };
 
@@ -69,7 +69,7 @@ export function AmielInvoicesTable({
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="חיפוש לפי ספק, אירוע, שליח או מדינה..."
+          placeholder="חיפוש לפי ספק, אירוע, שגריר או מדינה..."
           className="w-full sm:w-80 rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)"
         />
         <select
@@ -106,7 +106,7 @@ export function AmielInvoicesTable({
               <thead>
                 <tr className="border-b border-black/10 text-black/50 text-start">
                   <th className="px-3 py-2 font-medium text-start">ספק</th>
-                  <th className="px-3 py-2 font-medium text-start">שליח</th>
+                  <th className="px-3 py-2 font-medium text-start">שגריר</th>
                   <th className="px-3 py-2 font-medium text-start">מדינה</th>
                   <th className="px-3 py-2 font-medium text-start">אירוע</th>
                   <th className="px-3 py-2 font-medium text-start">סכום</th>

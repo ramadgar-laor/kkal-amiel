@@ -59,7 +59,7 @@ export function InvoiceReviewPanel({ invoiceId }: { invoiceId: string }) {
             {pending
               ? "שולח..."
               : isCorrection
-                ? "שליחה לתיקון השליח"
+                ? "שליחה לתיקון השגריר"
                 : "אישור דחייה"}
           </button>
           <button
@@ -86,7 +86,7 @@ export function InvoiceReviewPanel({ invoiceId }: { invoiceId: string }) {
         onClick={() => setMode("needs_correction")}
         className="rounded-md border border-(--color-gold) text-(--color-gold) text-sm font-medium px-3 py-1.5 hover:bg-(--color-gold-light)"
       >
-        דורש תיקון מהשליח
+        דורש תיקון מהשגריר
       </button>
       <button
         onClick={() => setMode("rejected")}

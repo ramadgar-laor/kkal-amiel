@@ -32,7 +32,7 @@ export default async function AdminDashboardPage() {
   ]);
 
   const cards = [
-    { label: "שליחים לאישור", value: pendingReps ?? 0, href: "/kkal/reps" },
+    { label: "שגרירים לאישור", value: pendingReps ?? 0, href: "/kkal/reps" },
     {
       label: "בקשות תקציב לאישור",
       value: pendingEvents ?? 0,

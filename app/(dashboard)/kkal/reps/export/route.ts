@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCountryName } from "@/lib/data/countries";
+import { US_COUNTRY_CODE, getUsStateName } from "@/lib/data/us-states";
 import { buildExcelWorkbook, excelResponseHeaders } from "@/lib/export/excel";
 import { formatDateDMY } from "@/lib/utils/date";
 
@@ -49,7 +50,7 @@ const HEADERS = [
   "תאריך תחילת שליחות",
   "תאריך צפי לסיום שליחות",
   "רמת השתתפות בתוכנית",
-  "הערות השליח",
+  "הערות השגריר",
   'הערות קק"ל (פנימי)',
   "תאריך הרשמה",
 ];
@@ -99,7 +100,7 @@ export async function GET() {
     r.organization,
     r.country ? getCountryName(r.country) : null,
     r.city,
-    r.state,
+    r.country === US_COUNTRY_CODE ? getUsStateName(r.state) : r.state,
     r.zip,
     r.address,
     r.mailing_institution,
@@ -118,14 +119,14 @@ export async function GET() {
   ]);
 
   const buffer = await buildExcelWorkbook({
-    sheetName: "שליחים",
+    sheetName: "שגרירים",
     headers: HEADERS,
     rows,
   });
 
   return new NextResponse(new Blob([Uint8Array.from(buffer)]), {
     headers: excelResponseHeaders(
-      `רשימת_שליחים_${new Date().toISOString().slice(0, 10)}.xlsx`
+      `רשימת_שגרירים_${new Date().toISOString().slice(0, 10)}.xlsx`
     ),
   });
 }

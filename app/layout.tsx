@@ -21,7 +21,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: 'פרוייקט קק"ל בקהילה של שגרירי קק"ל',
-  description: 'מערכת לניהול שליחים, אירועים, תקציבים וחשבוניות עבור קק"ל',
+  description: 'מערכת לניהול שגרירים, אירועים, תקציבים וחשבוניות עבור קק"ל',
 };
 
 // Self-hosted guide (screenshots + step-by-step instructions) for the rep
@@ -94,6 +94,7 @@ export default async function RootLayout({
                   displayName={profile.display_name || profile.email || ""}
                   roleLabel={roleLabel ?? profile.role}
                   logoutLabel={dict.nav.logout}
+                  profileLabel={dict.profile.menuLink}
                 />
               )}
             </div>
@@ -101,7 +102,7 @@ export default async function RootLayout({
         </header>
         <main className="flex-1 bg-(--color-brand-light)/40">{children}</main>
         <footer className="border-t border-black/10 py-4 text-center text-xs text-black/50">
-          © {new Date().getFullYear()} קרן קיימת לישראל ועמיאל טורס
+          © {new Date().getFullYear()} קרן קימת לישראל ועמיאל טורס
         </footer>
       </body>
     </html>

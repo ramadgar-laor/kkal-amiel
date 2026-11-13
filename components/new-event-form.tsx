@@ -479,6 +479,7 @@ export function NewEventForm({
             <DateFieldDMY
               className={inputClass}
               value={watch("endDate")}
+              min={startDate || undefined}
               onChange={(iso) =>
                 setValue("endDate", iso, { shouldValidate: true })
               }

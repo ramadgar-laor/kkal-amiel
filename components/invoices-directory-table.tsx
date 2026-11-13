@@ -10,7 +10,7 @@ const STATUS_FILTER_LABEL: Record<string, string> = {
   all: "כל הסטטוסים",
   pending: "ממתינות לאישור",
   approved: "אושרו",
-  needs_correction: "בתיקון אצל השליח",
+  needs_correction: "בתיקון אצל השגריר",
   rejected: "נדחו",
 };
 
@@ -24,7 +24,7 @@ const PAYMENT_STATUS_FILTER_LABEL: Record<string, string> = {
   received_for_review: "התקבל לבדיקה",
   approved_for_payment: "אושר לתשלום",
   returned_to_kkal: 'הוחזר לקק"ל',
-  returned_to_rep: "הוחזר לשליח",
+  returned_to_rep: "הוחזר לשגריר",
   paid: "שולם",
 };
 
@@ -92,7 +92,7 @@ export function InvoicesDirectoryTable({
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="חיפוש לפי ספק, אירוע או שליח..."
+          placeholder="חיפוש לפי ספק, אירוע או שגריר..."
           className="w-full sm:w-80 rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)"
         />
         <select
@@ -135,7 +135,7 @@ export function InvoicesDirectoryTable({
                 <tr className="border-b border-black/10 text-black/50 text-start">
                   <th className="px-3 py-2 font-medium text-start">ספק</th>
                   <th className="px-3 py-2 font-medium text-start">אירוע</th>
-                  <th className="px-3 py-2 font-medium text-start">שליח</th>
+                  <th className="px-3 py-2 font-medium text-start">שגריר</th>
                   <th className="px-3 py-2 font-medium text-start">סכום</th>
                   <th className="px-3 py-2 font-medium text-start">תאריך חשבונית</th>
                   <th className="px-3 py-2 font-medium text-start">סטטוס אישור</th>

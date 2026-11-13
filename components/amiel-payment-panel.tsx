@@ -17,7 +17,7 @@ const STATUS_LABEL: Record<PaymentStatus, string> = {
   approved_for_payment: "נבדק ואושר לתשלום",
   paid: "שולם",
   returned_to_kkal: "לא מאושר לתשלום - החזרה לקק\"ל",
-  returned_to_rep: "פרטים חסרים - החזרה לשליח",
+  returned_to_rep: "פרטים חסרים - החזרה לשגריר",
 };
 
 export function AmielPaymentPanel({
@@ -297,7 +297,7 @@ export function AmielPaymentPanel({
           {status === "returned_to_kkal"
             ? 'סיבת אי-אישור התשלום (יוצג לקק"ל)'
             : status === "returned_to_rep"
-              ? "אילו פרטים חסרים/שגויים? (יוצג לשליח)"
+              ? "אילו פרטים חסרים/שגויים? (יוצג לשגריר)"
               : "מידע רלוונטי נוסף (פנימי, עמיאל)"}
           {notesRequired && <span className="text-red-600"> *</span>}
         </label>

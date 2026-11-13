@@ -16,6 +16,7 @@ import {
   OTHER_OPTION,
 } from "@/lib/data/kkal-reps-options";
 import { COUNTRIES_HE, COUNTRIES_EN } from "@/lib/data/countries";
+import { US_COUNTRY_CODE, usStatesFor } from "@/lib/data/us-states";
 import { createClient } from "@/lib/supabase/client";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
@@ -67,6 +68,7 @@ export function RegisterForm({
   const maritalStatus = watch("maritalStatus");
   const organization = watch("organization");
   const institutionType = watch("institutionType");
+  const country = watch("country");
 
   async function onSubmit(values: RepRegistrationInput) {
     setServerError(null);
@@ -465,10 +467,6 @@ export function RegisterForm({
             {errors.city && <p className={errorClass}>{dict.common.required}</p>}
           </div>
           <div>
-            <label className={labelClass}>{dict.register.state}</label>
-            <input className={inputClass} {...register("state")} />
-          </div>
-          <div>
             <label className={labelClass}>{dict.register.zip}</label>
             <input className={inputClass} {...register("zip")} />
           </div>
@@ -477,7 +475,15 @@ export function RegisterForm({
               {dict.register.country}
               <Required />
             </label>
-            <select className={inputClass} {...register("country")}>
+            <select
+              className={inputClass}
+              {...register("country", {
+                // Switching between the US and another country changes
+                // what the state field means (US state code vs free-text
+                // region), so a stale value is cleared.
+                onChange: () => setValue("state", ""),
+              })}
+            >
               <option value="">{dict.register.selectCountry}</option>
               {(locale === "en" ? COUNTRIES_EN : COUNTRIES_HE).map((c) => (
                 <option key={c.code} value={c.code}>
@@ -489,6 +495,30 @@ export function RegisterForm({
               <p className={errorClass}>{dict.common.required}</p>
             )}
           </div>
+          {country === US_COUNTRY_CODE ? (
+            <div>
+              <label className={labelClass}>
+                {dict.register.usState}
+                <Required />
+              </label>
+              <select className={inputClass} {...register("state")}>
+                <option value="">{dict.register.selectUsState}</option>
+                {usStatesFor(locale).map((st) => (
+                  <option key={st.code} value={st.code}>
+                    {st.name}
+                  </option>
+                ))}
+              </select>
+              {errors.state && (
+                <p className={errorClass}>{dict.common.required}</p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <label className={labelClass}>{dict.register.state}</label>
+              <input className={inputClass} {...register("state")} />
+            </div>
+          )}
         </div>
       </section>
 

@@ -45,7 +45,7 @@ export function AmielPaymentsTable({ rows }: { rows: AmielPaymentRow[] }) {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="חיפוש לפי ספק, אירוע, שליח או מדינה..."
+          placeholder="חיפוש לפי ספק, אירוע, שגריר או מדינה..."
           className="w-full sm:w-80 rounded-md border border-black/15 bg-white px-3 py-2 text-sm focus:outline-2 focus:outline-(--color-brand)"
         />
         <a
@@ -68,7 +68,7 @@ export function AmielPaymentsTable({ rows }: { rows: AmielPaymentRow[] }) {
             <thead>
               <tr className="border-b border-black/10 text-black/50 text-start">
                 <th className="px-3 py-2 font-medium text-start">ספק</th>
-                <th className="px-3 py-2 font-medium text-start">שליח</th>
+                <th className="px-3 py-2 font-medium text-start">שגריר</th>
                 <th className="px-3 py-2 font-medium text-start">מדינה</th>
                 <th className="px-3 py-2 font-medium text-start">אירוע</th>
                 <th className="px-3 py-2 font-medium text-start">סכום ששולם</th>

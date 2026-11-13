@@ -9,13 +9,13 @@ const STATUS_LABEL_HE: Record<string, string> = {
   received_for_review: "התקבל לבדיקה",
   approved_for_payment: "אושר לתשלום",
   returned_to_kkal: 'הוחזר לקק"ל',
-  returned_to_rep: "הוחזר לשליח",
+  returned_to_rep: "הוחזר לשגריר",
   paid: "שולם",
 };
 
 const HEADERS = [
   "ספק",
-  "שליח",
+  "שגריר",
   "מדינה",
   "אירוע",
   "סכום",

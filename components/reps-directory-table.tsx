@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { RepStatusSelect } from "@/components/rep-status-select";
 import { RowSpinner } from "@/components/row-spinner";
 import { useRowNavigation } from "@/lib/hooks/use-row-navigation";
-import { getCountryName } from "@/lib/data/countries";
+import { formatCountryWithState } from "@/lib/data/us-states";
 import { formatDateDMY } from "@/lib/utils/date";
 
 const PARTICIPATION_LABEL_HE: Record<string, string> = {
@@ -30,6 +30,7 @@ export type RepDirectoryRow = {
   whatsappPhone: string | null;
   missionPhone: string | null;
   country: string | null;
+  state: string | null;
   organization: string | null;
   institutionType: string | null;
   institutionCity: string | null;
@@ -66,7 +67,7 @@ export function RepsDirectoryTable({
         r.email,
         r.whatsappPhone,
         r.missionPhone,
-        getCountryName(r.country),
+        formatCountryWithState(r.country, r.state),
         r.organization,
         r.institutionType,
         r.institutionCity,
@@ -102,7 +103,7 @@ export function RepsDirectoryTable({
           ))}
         </select>
         <span className="text-xs text-black/40">
-          {filtered.length} מתוך {rows.length} שליחים
+          {filtered.length} מתוך {rows.length} שגרירים
         </span>
         {exportHref && (
           // Plain <a>, not next/link: this points at a route handler that
@@ -120,10 +121,10 @@ export function RepsDirectoryTable({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-sm text-black/50">לא נמצאו שליחים התואמים לחיפוש.</p>
+        <p className="text-sm text-black/50">לא נמצאו שגרירים התואמים לחיפוש.</p>
       ) : (
         <div className="space-y-1.5">
-          <p className="text-xs text-black/40">לחיצה על שורה פותחת את פרטי השליח לעריכה.</p>
+          <p className="text-xs text-black/40">לחיצה על שורה פותחת את פרטי השגריר לעריכה.</p>
           <div className="rounded-xl bg-white border border-black/5 overflow-x-auto">
           <table className="w-full text-xs min-w-[1100px]">
             <thead>
@@ -180,7 +181,7 @@ export function RepsDirectoryTable({
                     {r.whatsappPhone ?? r.missionPhone ?? "—"}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-black/70">
-                    {getCountryName(r.country) || "—"}
+                    {formatCountryWithState(r.country, r.state) || "—"}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-black/70">
                     {r.organization ?? "—"}

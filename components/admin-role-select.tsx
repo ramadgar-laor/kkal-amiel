@@ -6,7 +6,7 @@ import { changeUserRole } from "@/lib/actions/admin";
 import { ROLES } from "@/lib/validation/admin";
 
 const ROLE_LABEL: Record<string, string> = {
-  rep: "שליח",
+  rep: "שגריר",
   kkal: 'קק"ל',
   amiel: "עמיאל",
   admin: "מנהל מערכת",

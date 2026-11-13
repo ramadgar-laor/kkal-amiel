@@ -32,10 +32,10 @@ export default async function RepEditPage({
           href="/kkal/reps"
           className="text-sm text-(--color-brand) underline"
         >
-          ← חזרה לרשימת השליחים
+          ← חזרה לרשימת השגרירים
         </Link>
         <h1 className="text-xl font-bold text-(--color-brand-dark) mt-2">
-          עריכת פרטי שליח
+          עריכת פרטי שגריר
         </h1>
         {(profile?.display_name || profile?.email) && (
           <p className="text-sm text-black/50 mt-1">

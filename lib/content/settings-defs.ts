@@ -11,7 +11,7 @@ export type SettingDef = {
 export const SETTINGS_DEFS: SettingDef[] = [
   {
     key: "register_intro_he",
-    label: 'טקסט מקדים — טופס הרשמת שליח (עברית)',
+    label: 'טקסט מקדים — טופס הרשמת שגריר (עברית)',
     hint: "מוצג בראש טופס ההרשמה (/register) כשהשפה מוגדרת לעברית.",
   },
   {
