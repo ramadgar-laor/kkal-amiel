@@ -9,6 +9,7 @@ import { KklLogo } from "@/components/kkl-logo";
 import { KkalNav } from "@/components/kkal-nav";
 import { AmielNav } from "@/components/amiel-nav";
 import { AdminNav } from "@/components/admin-nav";
+import { RepNav } from "@/components/rep-nav";
 import { ProfileMenu } from "@/components/profile-menu";
 import { createClient } from "@/lib/supabase/server";
 
@@ -69,6 +70,7 @@ export default async function RootLayout({
             {profile?.role === "kkal" && <KkalNav labels={dict.nav} />}
             {profile?.role === "amiel" && <AmielNav labels={dict.nav} />}
             {profile?.role === "admin" && <AdminNav labels={dict.nav} />}
+            {profile?.role === "rep" && <RepNav labels={dict.nav} />}
             {profile?.role === "rep" && (
               <Link
                 href={REP_GUIDE_URL}
