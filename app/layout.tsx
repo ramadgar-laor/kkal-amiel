@@ -23,6 +23,12 @@ export const metadata: Metadata = {
   description: 'מערכת לניהול שליחים, אירועים, תקציבים וחשבוניות עבור קק"ל',
 };
 
+// Published Claude Artifact (screenshots + step-by-step instructions) for the
+// rep role. It's a standalone page with no navigation to the other roles'
+// guides, so sharing this link never exposes KKL/Amiel/admin workflow info --
+// see the matching links added for those roles once their guides exist.
+const REP_GUIDE_URL = "https://claude.ai/artifact/VEDqGbkjeTDQHPTarTrJD1";
+
 export default async function RootLayout({
   children,
 }: LayoutProps<"/">) {
@@ -61,6 +67,16 @@ export default async function RootLayout({
             {profile?.role === "kkal" && <KkalNav labels={dict.nav} />}
             {profile?.role === "amiel" && <AmielNav labels={dict.nav} />}
             {profile?.role === "admin" && <AdminNav labels={dict.nav} />}
+            {profile?.role === "rep" && (
+              <Link
+                href={REP_GUIDE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium text-black/60 hover:bg-black/5 hover:text-(--color-brand-dark) transition"
+              >
+                {dict.nav.repGuide} ↗
+              </Link>
+            )}
 
             <div className="flex items-center gap-4 ms-auto">
               {!user && (

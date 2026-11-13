@@ -21,6 +21,7 @@ export const dictionaries = {
       adminSettings: "הגדרות מערכת",
       groupKkal: 'קק"ל',
       groupAmiel: "עמיאל",
+      repGuide: "מדריך למשתמש",
     },
     roles: {
       rep: "שליח",
@@ -475,6 +476,7 @@ export const dictionaries = {
       adminSettings: "System settings",
       groupKkal: "KKL",
       groupAmiel: "Amiel",
+      repGuide: "User guide",
     },
     roles: {
       rep: "Ambassador",
