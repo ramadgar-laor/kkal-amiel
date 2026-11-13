@@ -58,7 +58,7 @@ export default async function KkalEventDetailPage({
   const { data: event } = await supabase
     .from("events")
     .select(
-      "id, rep_id, name, purpose, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, reviewed_at, org_affiliation, registered_to_program, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, ongoing_program_description, transfer_amount_note, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, event_quotes(slot, quote_file_path, contact_phone, contact_email), invoices(id, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, paid_amount, supplier_name)"
+      "id, rep_id, name, purpose, start_date, end_date, city, country, state, target_audience, program_description, track, requested_amount, requested_currency, approved_amount, approved_amount_ils, status, kkal_notes, reviewed_at, org_affiliation, in_whatsapp_group, host_org_name, host_manager_name, host_manager_phone, host_manager_email, participants_count, ongoing_program_file_path, ongoing_program_description, budget_breakdown_file_path, supplier_name, supplier_field, supplier_bank_details_file_path, kkal_presence_selections, consent_no_commitment, consent_committee_review, consent_follow_branding, consent_exchange_rate, consent_bank_fees, consent_followup_photos, notes, created_at, invoices(id, amount, currency, ils_amount, invoice_date, kkal_status, payment_status, paid_amount, supplier_name)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -103,17 +103,13 @@ export default async function KkalEventDetailPage({
     .order("sort_order", { ascending: true });
   const suppliers = suppliersData ?? [];
 
-  const quotes = (event.event_quotes ?? []).sort((a, b) => a.slot - b.slot);
   const invoices = event.invoices ?? [];
 
-  const [budgetFileUrl, supplierBankFileUrl, ongoingProgramFileUrl, quoteUrls] =
+  const [budgetFileUrl, supplierBankFileUrl, ongoingProgramFileUrl] =
     await Promise.all([
       getSignedEventFileUrl(supabase, event.budget_breakdown_file_path),
       getSignedEventFileUrl(supabase, event.supplier_bank_details_file_path),
       getSignedEventFileUrl(supabase, event.ongoing_program_file_path),
-      Promise.all(
-        quotes.map((q) => getSignedEventFileUrl(supabase, q.quote_file_path))
-      ),
     ]);
 
   const presenceLabels = (event.kkal_presence_selections ?? []).map(
@@ -216,14 +212,6 @@ export default async function KkalEventDetailPage({
         <h2 className={sectionTitleClass}>שיוך ואישורים</h2>
         <Field label="מטעם איזה ארגון" value={event.org_affiliation} />
         <Field
-          label='נרשם/ה לתוכנית שגרירי קק"ל'
-          value={
-            event.registered_to_program == null
-              ? null
-              : YES_NO_LABEL[String(event.registered_to_program)]
-          }
-        />
-        <Field
           label="בקבוצת הוואטסאפ של השגרירים"
           value={
             event.in_whatsapp_group == null
@@ -294,7 +282,6 @@ export default async function KkalEventDetailPage({
           label="סכום מבוקש"
           value={`${event.requested_amount} ${event.requested_currency}`}
         />
-        <Field label="סכום מדויק להעברה" value={event.transfer_amount_note} />
         {event.approved_amount != null && (
           <Field
             label="סכום מאושר"
@@ -419,28 +406,6 @@ export default async function KkalEventDetailPage({
           </>
         )}
       </section>
-
-      {quotes.length > 0 && (
-        <section className={sectionClass}>
-          <h2 className={sectionTitleClass}>הצעות מחיר</h2>
-          {quotes.map((q, i) => (
-            <Field
-              key={q.slot}
-              label={`הצעה ${q.slot}`}
-              value={
-                <div className="space-y-0.5">
-                  <FileLink label="הצגת הקובץ" url={quoteUrls[i]} />
-                  <div className="text-black/60">
-                    {[q.contact_phone, q.contact_email]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </div>
-                </div>
-              }
-            />
-          ))}
-        </section>
-      )}
 
       <section className={sectionClass}>
         <h2 className={sectionTitleClass}>
